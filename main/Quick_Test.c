@@ -65,16 +65,19 @@
 #define SPO2_IR_SAMPLES  600U
 
 /***************************************************/
-uint8_t BT_flash_buffer[DATA_BUFFER3_LENGTH];
-uint32_t PPG_IR_BUFF[TOTAL_SAMPLES];
-uint32_t PPG_RED_BUFF[TOTAL_SAMPLES];
+uint32_t SPO2_PPG_IR_BUFF[TOTAL_SAMPLES];
+uint32_t SPO2_PPG_RED_BUFF[TOTAL_SAMPLES];
 float ECG_Lead1_buff[TOTAL_SAMPLES];
 float ECG_Lead2_buff[TOTAL_SAMPLES];
+float BP_ECG_Lead1_buff[TOTAL_SAMPLES];
+uint32_t BP_PPG_RED_BUFF[TOTAL_SAMPLES];
+uint32_t BP_PPG_IR_BUFF[TOTAL_SAMPLES];
 float FilterOutputBuffer1[TOTAL_SAMPLES];
 float FilterOutputBuffer2[TOTAL_SAMPLES];
 float FilterOutputBuffer3[TOTAL_SAMPLES];
 float FilterOutputBuffer4[TOTAL_SAMPLES];
 
+char date_info[50];
 typedef struct __attribute__((__packed__))
 {
 	uint32_t  		record_len;
@@ -296,7 +299,9 @@ bool QUICK_Test1(void)
 							API_Disp_Quick_test_screen(DISP_QT_PPG_TEST_IN_PROGRESS);
 
 							//while(1){
+							Print_time("\nSPO2 start");
 							Capture_PPG_ECG_Data(CAPTURE_PPG,true);
+							Print_time("\nSPO2 end");
 						//	Filter_Quicktest1_Data();
 						//	}
 							//Capture_BP_Data(true);
@@ -308,18 +313,18 @@ bool QUICK_Test1(void)
 							//if(API_Temperature_Init())
 
 								API_Disp_Quick_test_screen(DISP_QT_ECG_L1_TEST_IN_PROGRESS);
-
+								Print_time("/ECG start");
 								   if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,true)==false)
 									   {
 										   Disable_Power_Supply();
 										   return false;
 									   }
+								   Print_time("\nECG end");
+									 printf("\nCapturing BP................");
 
-									 printf("\nPPG data capture completed................");
-
-									 printf("\Capturing BP................");
-
+                                      Print_time("\nBP START");
 									 Capture_BP_Data(true);
+									 Print_time("\nBP END");
 
 											// Filter_Quicktest1_Data();
 											// Peak detection
@@ -462,12 +467,12 @@ void Dummy_Capture(uint16_t total_samples)
 
 	for(int i=0;i<600;i++)
 			{
-			  printf("\n%f",ECG_Lead1_buff[i]);
+			  printf("%f\n",ECG_Lead1_buff[i]);
 			}
 	printf("\nECG L2");
 	for(int i=0;i<600;i++)
 			{
-			  printf("\n%f",ECG_Lead2_buff[i]);
+			  printf("%f\n",ECG_Lead2_buff[i]);
 			}
 
 	API_ECG_Stop_Conversion();
@@ -483,22 +488,28 @@ void Dummy_Capture(uint16_t total_samples)
 		{
 			for(raw_data_index=0; raw_data_index<300; raw_data_index++)// ~3sec dummy capture
 			{
-				status = API_MAX86150_Raw_Data_capture(PPG_RED_BUFF+raw_data_index, PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
+				status = API_MAX86150_Raw_Data_capture(SPO2_PPG_RED_BUFF+raw_data_index, SPO2_PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
 			}
 		}
 
-		MemSet(PPG_RED_BUFF,0,sizeof(PPG_RED_BUFF));
-		MemSet(PPG_IR_BUFF,0,sizeof(PPG_IR_BUFF));
+		MemSet(SPO2_PPG_RED_BUFF,0,sizeof(SPO2_PPG_RED_BUFF));
+		MemSet(SPO2_PPG_IR_BUFF,0,sizeof(SPO2_PPG_IR_BUFF));
 
 
 		for(raw_data_index=0; raw_data_index<600; raw_data_index++)
 			{
-				status = API_MAX86150_Raw_Data_capture(PPG_RED_BUFF+raw_data_index, PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
+				status = API_MAX86150_Raw_Data_capture(SPO2_PPG_RED_BUFF+raw_data_index, SPO2_PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
 			}
 
+		printf("\nSPO2 PPG-RED DATA:");
 		for(int i=0;i<600;i++)
 			{
-			  printf("\n%ld",PPG_RED_BUFF[i]);
+			  printf("\n%ld",SPO2_PPG_RED_BUFF[i]);
+			}
+		printf("\nSPO2 PPG-IR DATA:");
+		for(int i=0;i<600;i++)
+			{
+			  printf("\n%ld",SPO2_PPG_IR_BUFF[i]);
 			}
 	}
 
@@ -562,26 +573,26 @@ void Dummy_Capture(uint16_t total_samples)
 		{
 			for(raw_data_index=0; raw_data_index<600; raw_data_index++)// ~3sec dummy capture
 			{
-				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-				status = API_MAX86150_Raw_Data_capture(PPG_RED_BUFF+raw_data_index, PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
+				status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+				status = API_MAX86150_Raw_Data_capture(BP_PPG_RED_BUFF+raw_data_index, BP_PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
 			}
 		}
 
-		MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
+		MemSet(BP_ECG_Lead1_buff,0,sizeof(BP_ECG_Lead1_buff));
 		MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
-		MemSet(PPG_RED_BUFF,0,sizeof(PPG_RED_BUFF));
-		MemSet(PPG_IR_BUFF,0,sizeof(PPG_IR_BUFF));
+		MemSet(BP_PPG_RED_BUFF,0,sizeof(BP_PPG_RED_BUFF));
+		MemSet(BP_PPG_IR_BUFF,0,sizeof(BP_PPG_IR_BUFF));
 
 		for(raw_data_index=0; raw_data_index<600; raw_data_index++)
 			{
-				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-				status = API_MAX86150_Raw_Data_capture(PPG_RED_BUFF+raw_data_index, PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
+				status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+				status = API_MAX86150_Raw_Data_capture(BP_PPG_RED_BUFF+raw_data_index, BP_PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
 			}
 
-		printf("\nECG L1 data:\n");
+		printf("\nBP ECG L1 data:\n");
 		for(int i=0;i<600;i++)
 		{
-		  printf("\n%f",ECG_Lead1_buff[i]);
+		  printf("%f\n",BP_ECG_Lead1_buff[i]);
 		}
 		/*
 		printf("\nECG L2 data:\n");
@@ -590,10 +601,10 @@ void Dummy_Capture(uint16_t total_samples)
 		  printf("\n%f",ECG_Lead2_buff[i]);
 		}*/
 
-		printf("\nPPG Red data:\n");
+		printf("\nBP PPG Red data:\n");
 		for(int i=0;i<600;i++)
 		{
-			printf("\n%ld",PPG_RED_BUFF[i]);
+			printf("%ld\n",BP_PPG_RED_BUFF[i]);
 		}
 
 		/*printf("\nPPG IR data:\n");
@@ -611,7 +622,7 @@ void Filter_Quicktest1_Data(void)
 {
 	//filter(ECG_Lead1_buff,FilterOutputBuffer1,TOTAL_SAMPLES,100);
 	//filter(ECG_Lead2_buff,FilterOutputBuffer2,TOTAL_SAMPLES,100);
-	filter((float *)PPG_RED_BUFF,FilterOutputBuffer3,600,100);
+	//filter((float *)PPG_RED_BUFF,FilterOutputBuffer3,600,100);
 	//filter((float *)PPG_IR_BUFF,FilterOutputBuffer4,TOTAL_SAMPLES,100);
 
 	for(int i=0;i<600;i++)
@@ -657,8 +668,8 @@ void Filter_Quicktest2_Data(void)
 {
 	filter(ECG_Lead1_buff,FilterOutputBuffer1,TOTAL_SAMPLES,100);
 	filter(ECG_Lead2_buff,FilterOutputBuffer2,TOTAL_SAMPLES,100);
-	filter((float *)PPG_RED_BUFF,FilterOutputBuffer3,TOTAL_SAMPLES,100);
-	filter((float *)PPG_IR_BUFF,FilterOutputBuffer4,TOTAL_SAMPLES,100);
+	filter((float *)SPO2_PPG_RED_BUFF,FilterOutputBuffer3,TOTAL_SAMPLES,100);
+	filter((float *)SPO2_PPG_IR_BUFF,FilterOutputBuffer4,TOTAL_SAMPLES,100);
 
 	if(ENABLE_DEBUG_MESSAGES)
 	{
@@ -703,10 +714,10 @@ void Store_QuickTest1_Data_To_Flash(void)
 	MemCpy(BT_flash_buffer+offfset,&record_header,REC_HEADER_LEN);
 
 	offfset = REC_HEADER_LEN;
-	MemCpy(BT_flash_buffer+offfset,PPG_RED_BUFF,(BP_PPG_RED_SAMPLES*4));
+	MemCpy(BT_flash_buffer+offfset,BP_PPG_RED_BUFF,(BP_PPG_RED_SAMPLES*4));
 
 	offfset += BP_PPG_RED_SAMPLES*4;
-	MemCpy(BT_flash_buffer+offfset,ECG_Lead1_buff,(BP_ECG_L1_SAMPLES*4));
+	MemCpy(BT_flash_buffer+offfset,BP_ECG_Lead1_buff,(BP_ECG_L1_SAMPLES*4));
 
 	status = API_Flash_Write_Record(BP1,(void*)BT_flash_buffer);
 
@@ -735,10 +746,10 @@ void Store_QuickTest1_Data_To_Flash(void)
 		MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
 		offfset = REC_HEADER_LEN;
 
-		MemCpy(BT_flash_buffer+offfset,PPG_RED_BUFF,(SPO2_RED_SAMPLES*4));
+		MemCpy(BT_flash_buffer+offfset,SPO2_PPG_RED_BUFF,(SPO2_RED_SAMPLES*4));
 
 		offfset += SPO2_RED_SAMPLES*4;
-		MemCpy(BT_flash_buffer+offfset,PPG_IR_BUFF,(SPO2_IR_SAMPLES*4));
+		MemCpy(BT_flash_buffer+offfset,SPO2_PPG_IR_BUFF,(SPO2_IR_SAMPLES*4));
 
 		status = API_Flash_Write_Record(SPO2,(void*)BT_flash_buffer);
 
@@ -767,14 +778,14 @@ void Test_Store_QuickTest1_Data_To_Flash(void)
 
 	offfset = REC_HEADER_LEN;
 
-	MemSet(PPG_RED_BUFF,2,sizeof(PPG_RED_BUFF));
+	MemSet(BP_PPG_RED_BUFF,2,sizeof(BP_PPG_RED_BUFF));
 
-	MemCpy(BT_flash_buffer+offfset,PPG_RED_BUFF,(BP_PPG_RED_SAMPLES*4));
+	MemCpy(BT_flash_buffer+offfset,BP_PPG_RED_BUFF,(BP_PPG_RED_SAMPLES*4));
 
-	MemSet(ECG_Lead1_buff,3,sizeof(ECG_Lead1_buff));
+	MemSet(BP_ECG_Lead1_buff,3,sizeof(BP_ECG_Lead1_buff));
 
 	offfset += BP_PPG_RED_SAMPLES*4;
-	MemCpy(BT_flash_buffer+offfset,ECG_Lead1_buff,(BP_ECG_L1_SAMPLES*4));
+	MemCpy(BT_flash_buffer+offfset,BP_ECG_Lead1_buff,(BP_ECG_L1_SAMPLES*4));
 
 	status = API_Flash_Write_Record(BP1,(void*)BT_flash_buffer);
 
@@ -808,15 +819,15 @@ void Test_Store_QuickTest1_Data_To_Flash(void)
 		MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
 		offfset = REC_HEADER_LEN;
 
-		MemSet(PPG_RED_BUFF,8,sizeof(PPG_RED_BUFF));
+		MemSet(SPO2_PPG_RED_BUFF,8,sizeof(SPO2_PPG_RED_BUFF));
 
-		MemCpy(BT_flash_buffer+offfset,PPG_RED_BUFF,(SPO2_RED_SAMPLES*4));
+		MemCpy(BT_flash_buffer+offfset,SPO2_PPG_RED_BUFF,(SPO2_RED_SAMPLES*4));
 
 		offfset += SPO2_RED_SAMPLES*4;
 
-		MemSet(PPG_IR_BUFF,9,sizeof(PPG_IR_BUFF));
+		MemSet(SPO2_PPG_IR_BUFF,9,sizeof(SPO2_PPG_IR_BUFF));
 
-		MemCpy(BT_flash_buffer+offfset,PPG_IR_BUFF,(SPO2_IR_SAMPLES*4));
+		MemCpy(BT_flash_buffer+offfset,SPO2_PPG_IR_BUFF,(SPO2_IR_SAMPLES*4));
 
 		status = API_Flash_Write_Record(SPO2,(void*)BT_flash_buffer);
 
@@ -839,10 +850,10 @@ void Store_QuickTest2_Data_To_Flash(void)
 	MemCpy(BT_flash_buffer+offfset,&record_header,REC_HEADER_LEN);
 
 	offfset = REC_HEADER_LEN;
-	MemCpy(BT_flash_buffer+offfset,PPG_RED_BUFF,(BP_PPG_RED_SAMPLES*4));
+	MemCpy(BT_flash_buffer+offfset,BP_PPG_RED_BUFF,(BP_PPG_RED_SAMPLES*4));
 
 	offfset += BP_PPG_RED_SAMPLES*4;
-	MemCpy(BT_flash_buffer+offfset,ECG_Lead1_buff,(BP_ECG_L1_SAMPLES*4));
+	MemCpy(BT_flash_buffer+offfset,BP_ECG_Lead1_buff,(BP_ECG_L1_SAMPLES*4));
 
 	status = API_Flash_Write_Record(BP1,(void*)BT_flash_buffer);
 
@@ -873,10 +884,10 @@ void Store_QuickTest2_Data_To_Flash(void)
 		MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
 		offfset = REC_HEADER_LEN;
 
-		MemCpy(BT_flash_buffer+offfset,PPG_RED_BUFF,(SPO2_RED_SAMPLES*4));
+		MemCpy(BT_flash_buffer+offfset,SPO2_PPG_RED_BUFF,(SPO2_RED_SAMPLES*4));
 
 		offfset += SPO2_RED_SAMPLES*4;
-		MemCpy(BT_flash_buffer+offfset,PPG_IR_BUFF,(SPO2_IR_SAMPLES*4));
+		MemCpy(BT_flash_buffer+offfset,SPO2_PPG_IR_BUFF,(SPO2_IR_SAMPLES*4));
 
 		status = API_Flash_Write_Record(SPO2,(void*)BT_flash_buffer);
 
@@ -1878,7 +1889,7 @@ bool Check_PPG_Data_Quality(void)
 
    bool status = false;
 
-   status = spo2_peak_detection(( float *)PPG_IR_BUFF, peakLocations,&total_peak_count,600);
+   status = spo2_peak_detection(( float *)SPO2_PPG_IR_BUFF, peakLocations,&total_peak_count,600);
 
    if(status)
    {

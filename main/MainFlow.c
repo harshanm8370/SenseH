@@ -93,6 +93,9 @@ void TestFlashStorage(void);
 	Selected_PID_type = VALID_PID;
 
 	/***************************************************/
+		char datetime[18]; // Assuming you want to store the result in a char array
+	    const char *customFormat = "%Y-%m-%d %H:%M:%S"; // Example date-time format
+
 
 	while(1)
 	{
@@ -100,12 +103,15 @@ void TestFlashStorage(void);
 		{
 			    if(Detect_low_battery_display_notification()==false)
 				{
-			    	  //state = API_Disp_Select_PID_Screen();
-			    	state = VIEW_SCREEN;
+			    	  state = API_Disp_Select_PID_Screen();
+			    	//state = VIEW_SCREEN;
 
 			    	    if(state == VIEW_SCREEN)
 			    	    {
 			    	    	state = API_Display_View_Screen();
+			    	    	//API_RTC_Update_Date_Time(8, 8, 2023, 16, 24, 17);
+							API_RTC_Get_Date_Time(datetime, customFormat);
+							printf("Formatted Date and Time: %s\n", datetime);
 			    	    }
 
 						if(state == DATA_SYNC)
