@@ -16,6 +16,6 @@ void set_unix(int32_t time);
 void API_RTC_Update_Date_Time(uint8_t day, uint8_t month, uint16_t year, uint8_t hour, uint8_t min, uint8_t sec);
 
 uint8_t set_ntp(const char *server, int8_t timezone);
-		
+void Print_time(char *name);
 
 #endif

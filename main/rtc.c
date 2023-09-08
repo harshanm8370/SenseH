@@ -6,10 +6,8 @@
  * 
  * @return UNIX date.
  */
-
-static int8_t Time_zone;
-
-
+int8_t Time_zone;
+extern char date_info[50];
 int32_t get_unix()
 {
 	time_t now = 0;
@@ -39,6 +37,7 @@ void API_RTC_Get_Date_Time(char *dst, const char *format)
 	stm = gmtime(&now);
 
 	strftime(dst, 18, format, stm);
+	//printf("Data inside dst buffer: %s\n", dst);
 }
 
 
@@ -128,4 +127,12 @@ uint8_t set_ntp(const char *server, int8_t timezone)
 	{
 		return 0;
 	}
+}
+
+
+void Print_time(char *name){
+	memset(date_info,'\0',sizeof(date_info));
+	API_RTC_Get_Date_Time(date_info,"%d/%m/%y %H:%M:%S");
+	printf(name);
+	printf(" Time: %s\n",date_info);
 }

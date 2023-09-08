@@ -87,7 +87,7 @@ static uint8_t retry_count = 0;
 static char mobile_number[10] = {'\0'};
 static bool is_arrived_timesynq_req = FALSE;
 static bool is_OTA_request_arrived  = FALSE;
-
+uint8_t BT_flash_buffer[DATA_BUFFER3_LENGTH];
 /************************strctures*******************************/
 
 bool FW_complete_data_received = false;

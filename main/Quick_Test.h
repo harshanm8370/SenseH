@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <esp_attr.h>
+#include "rtc.h"
 
 typedef enum{
 	CAPTURE_ECG_L1=0,

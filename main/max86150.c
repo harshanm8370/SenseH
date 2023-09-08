@@ -12,7 +12,6 @@
 #include "Error_Handling.h"
 #include "API_IO_Exp.h"
 #include "push_button.h"
-#include "freertos/FreeRTOS.h"
 
 #define DRDY_INPUT_PIN_SEL  (1ULL<<MAX86150_DRDY_INTR_PIN)
 #define DRDY_INTR_FLAG_DEFAULT 0
@@ -272,9 +271,9 @@ void Max86150_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledM
 	//writeRegister8(MAX86150_ADDR,MAX86150_FIFOCONTROL2, (char)(FIFOCode >>8) );
 	/********* END CRITICAL FOR LED GLOW ************/
 
-	writeRegister8(MAX86150_ADDR,MAX86150_PPGCONFIG1,0b11011111);	//
+	writeRegister8(MAX86150_ADDR,MAX86150_PPGCONFIG1,0b11011111);	//0b11011111
 
-	writeRegister8(MAX86150_ADDR,MAX86150_PPGCONFIG2, 0x01);
+	writeRegister8(MAX86150_ADDR,MAX86150_PPGCONFIG2, 0x02);
 	writeRegister8(MAX86150_ADDR,MAX86150_LED_RANGE, 0x00 ); // PPG_ADC_RGE: 32768nA
 
 	writeRegister8(MAX86150_ADDR,MAX86150_SYSCONTROL,0x04);//start FIFO
@@ -384,6 +383,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 	conf.scl_io_num = MAX86150_I2C_MASTER_SCL_PIN;
 	conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
 	conf.master.clk_speed = MAX86150_I2C_MASTER_CLOCK_FREQ_HZ;
+//	conf.clk_flags = 0;
 
 	error = i2c_param_config(i2c_master_port, &conf);
 	error |= i2c_driver_install(i2c_master_port, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);

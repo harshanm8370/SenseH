@@ -53,10 +53,13 @@ extern bool Is_Test_In_Progress;
 
 extern uint8_t BT_flash_buffer[DATA_BUFFER3_LENGTH];
 
-extern uint32_t PPG_IR_BUFF[TOTAL_SAMPLES];
-extern uint32_t PPG_RED_BUFF[TOTAL_SAMPLES];
+extern uint32_t SPO2_PPG_IR_BUFF[TOTAL_SAMPLES];
+extern uint32_t SPO2_PPG_RED_BUFF[TOTAL_SAMPLES];
 extern float ECG_Lead1_buff[TOTAL_SAMPLES];
 extern float ECG_Lead2_buff[TOTAL_SAMPLES];
+extern float BP_ECG_Lead1_buff[TOTAL_SAMPLES];
+extern uint32_t BP_PPG_RED_BUFF[TOTAL_SAMPLES];
+extern uint32_t BP_PPG_IR_BUFF[TOTAL_SAMPLES];
 extern float FilterOutputBuffer1[TOTAL_SAMPLES];
 extern float FilterOutputBuffer2[TOTAL_SAMPLES];
 extern float FilterOutputBuffer3[TOTAL_SAMPLES];

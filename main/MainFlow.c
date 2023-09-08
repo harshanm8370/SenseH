@@ -64,7 +64,7 @@ void TestFlashStorage(void);
 	API_IO_Exp_init();
 
     Interfaces_init();
-	POR_Init();
+
 
 	if(API_Flash_Initialize_Data_pointers() == RECORDS_UPDATE_FAILED)
 	   {
@@ -85,19 +85,16 @@ void TestFlashStorage(void);
 
 	/* Delay Provided for the User to read the Firmware version */
 	Delay_ms(3000);
-
+	POR_Init();
 
 	/** Testing */
 	/***************************************************/
 
-	Selected_PID_type = GUEST_PID;
+	Selected_PID_type = VALID_PID;
 
-	//while(1){
-	//Run_Quick_Vital();
-	//TestFlashStorage();
-//	Run_Multi_Vital();
-	//}
 	/***************************************************/
+		char datetime[18]; // Assuming you want to store the result in a char array
+	    const char *customFormat = "%Y-%m-%d %H:%M:%S"; // Example date-time format
 
 
 	while(1)
@@ -106,13 +103,15 @@ void TestFlashStorage(void);
 		{
 			    if(Detect_low_battery_display_notification()==false)
 				{
-
-			    	  //state = API_Disp_Select_PID_Screen();
-			    	state = VIEW_SCREEN;
+			    	  state = API_Disp_Select_PID_Screen();
+			    	//state = VIEW_SCREEN;
 
 			    	    if(state == VIEW_SCREEN)
 			    	    {
 			    	    	state = API_Display_View_Screen();
+			    	    	//API_RTC_Update_Date_Time(8, 8, 2023, 16, 24, 17);
+							API_RTC_Get_Date_Time(datetime, customFormat);
+							printf("Formatted Date and Time: %s\n", datetime);
 			    	    }
 
 						if(state == DATA_SYNC)
@@ -383,7 +382,7 @@ void HandleDataSync(void)
 
 }
 
-//#ifdef TEST_FLASH
+#ifdef TEST_FLASH
 uint8_t DstBuffer[DATA_BUFFER3_LENGTH];
 
 void TestFlashStorage(void)
@@ -523,4 +522,4 @@ void TestFlashStorage(void)
 
 }
 
-//#endif
+#endif
