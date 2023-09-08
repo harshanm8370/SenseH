@@ -87,7 +87,7 @@ typedef enum
 }IOExpanderNumber_t;
 
 
-uint8_t  SelectedIoExpander;
+extern uint8_t  SelectedIoExpander;
 
 void API_IO_Exp_init(void);
 void API_IO_Exp_Deinit(void);

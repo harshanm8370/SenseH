@@ -66,6 +66,17 @@
 
 /***************************************************/
 
+uint8_t BT_flash_buffer[DATA_BUFFER3_LENGTH];
+uint32_t PPG_IR_BUFF[TOTAL_SAMPLES];
+uint32_t PPG_RED_BUFF[TOTAL_SAMPLES];
+float ECG_Lead1_buff[TOTAL_SAMPLES];
+float ECG_Lead2_buff[TOTAL_SAMPLES];
+float FilterOutputBuffer1[TOTAL_SAMPLES];
+float FilterOutputBuffer2[TOTAL_SAMPLES];
+float FilterOutputBuffer3[TOTAL_SAMPLES];
+float FilterOutputBuffer4[TOTAL_SAMPLES];
+
+
 typedef struct __attribute__((__packed__))
 {
 	uint32_t  		record_len;
@@ -488,13 +499,13 @@ void Dummy_Capture(uint16_t total_samples)
 		printf("\nPPG Red data");
 		for(int i=0;i<600;i++)
 			{
-			  printf("\n%d",PPG_RED_BUFF[i]);
+			  printf("\n%ld",PPG_RED_BUFF[i]);
 			}
 
 		printf("\nPPG IR data");
 		for(int i=0;i<600;i++)
 		{
-			printf("\n%d",PPG_IR_BUFF[i]);
+			printf("\n%ld",PPG_IR_BUFF[i]);
 		}
 	}
 
@@ -590,7 +601,7 @@ void Dummy_Capture(uint16_t total_samples)
 		printf("\nPPG Red data:\n");
 		for(int i=0;i<600;i++)
 		{
-			printf("\n%d",PPG_RED_BUFF[i]);
+			printf("\n%ld",PPG_RED_BUFF[i]);
 		}
 
 		/*printf("\nPPG IR data:\n");
@@ -738,9 +749,9 @@ void Store_QuickTest1_Data_To_Flash(void)
 
 		IsValidRecordsInFlash = true;
 
-		printf("\nTotal SPO2 Records = %d", get_records_count(SPO2));
-		printf("\nTotal BP1 Records = %d", get_records_count(BP1));
-		printf("\nTotal ECG L1 Records = %d", get_records_count(ECG_1_Lead));
+		printf("\nTotal SPO2 Records = %ld", get_records_count(SPO2));
+		printf("\nTotal BP1 Records = %ld", get_records_count(BP1));
+		printf("\nTotal ECG L1 Records = %ld", get_records_count(ECG_1_Lead));
 
 }
 
@@ -814,9 +825,9 @@ void Test_Store_QuickTest1_Data_To_Flash(void)
 
 		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(SPO2_DATA_STORE_TO_FLASH_FAIL);
 
-		printf("\nTotal SPO2 Records = %d", get_records_count(SPO2));
-		printf("\nTotal BP Records = %d", get_records_count(BP1));
-		printf("\nTotal ECG L1 Records = %d", get_records_count(ECG_1_Lead));
+		printf("\nTotal SPO2 Records = %ld", get_records_count(SPO2));
+		printf("\nTotal BP Records = %ld", get_records_count(BP1));
+		printf("\nTotal ECG L1 Records = %ld", get_records_count(ECG_1_Lead));
 
 }
 
@@ -875,9 +886,9 @@ void Store_QuickTest2_Data_To_Flash(void)
 		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(SPO2_DATA_STORE_TO_FLASH_FAIL);
 
 		IsValidRecordsInFlash = true;
-		printf("\nTotal SPO2 Records = %d", get_records_count(SPO2));
-		printf("\nTotal BP Records = %d", get_records_count(BP1));
-		printf("\nTotal ECG L1 Records = %d", get_records_count(ECG_6_Lead));
+		printf("\nTotal SPO2 Records = %ld", get_records_count(SPO2));
+		printf("\nTotal BP Records = %ld", get_records_count(BP1));
+		printf("\nTotal ECG L1 Records = %ld", get_records_count(ECG_6_Lead));
 
 }
 

@@ -36,6 +36,8 @@ static const char *TAG = "ota";
 /*an ota data write buffer ready to write to the flash*/
 static uint8_t ota_write_data[BUFFSIZE + 1] = { 0 };
 
+static FIRMWARE_UPGRADE_STATE_t Upgrade_state;
+
 static void print_sha256 (const uint8_t *image_hash, const char *label)
 {
     char hash_print[HASH_LEN * 2 + 1];
@@ -63,16 +65,16 @@ static bool ota_firmware_upgrade(void)
     const esp_partition_t *running = esp_ota_get_running_partition();
 
     if (configured != running) {
-        ESP_LOGW(TAG, "Configured OTA boot partition at offset 0x%08x, but running from offset 0x%08x",
+        ESP_LOGW(TAG, "Configured OTA boot partition at offset 0x%08lx, but running from offset 0x%08lx",
                  configured->address, running->address);
         ESP_LOGW(TAG, "(This can happen if either the OTA boot data or preferred boot image become corrupted somehow.)");
     }
-    ESP_LOGI(TAG, "Running partition type %d subtype %d (offset 0x%08x)",
+    ESP_LOGI(TAG, "Running partition type %d subtype %d (offset 0x%08lx)",
              running->type, running->subtype, running->address);
 
     update_partition = esp_ota_get_next_update_partition(NULL);
     assert(update_partition != NULL);
-    ESP_LOGI(TAG, "Writing to partition subtype %d at offset 0x%x",
+    ESP_LOGI(TAG, "Writing to partition subtype %d at offset 0x%lx",
              update_partition->subtype, update_partition->address);
 
     int binary_file_length = 0;

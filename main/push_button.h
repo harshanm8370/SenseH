@@ -29,11 +29,11 @@
 
 #define ESP_INTR_FLAG_DEFAULT 1
 
- uint8_t Push_btn_Press;
+extern uint8_t Push_btn_Press;
 
- bool intr_flag;
+extern bool intr_flag;
 
- bool Did_Push_Button_Pressed;
+extern bool Did_Push_Button_Pressed;
 
 void API_Push_Btn_init(void);
 uint32_t API_Push_Btn_Get_hold_time();

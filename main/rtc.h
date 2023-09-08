@@ -9,8 +9,6 @@
 #include <lwip/apps/sntp.h>
 #include "esp_sntp.h"
 
-int8_t Time_zone;
-
 int32_t get_unix();
 void API_RTC_Get_Date_Time(char *dst, const char *format);
 

@@ -70,6 +70,8 @@ static uint16_t spp_handle_table[SPP_IDX_NB];
 
 static esp_ble_gatts_cb_param_t *param_data;
 
+BT_STATUS Is_Device_Paired;
+
 static esp_ble_adv_params_t spp_adv_params = {
     .adv_int_min        = 0x20,
     .adv_int_max        = 0x40,
@@ -285,7 +287,7 @@ static void gatts_profile_event_handler(esp_gatts_cb_event_t event, esp_gatt_if_
         	esp_ble_gatts_create_attr_tab(spp_gatt_db, gatts_if, SPP_IDX_NB, SPP_SVC_INST_ID);
        	break;
     	case ESP_GATTS_READ_EVT:
-            ESP_LOGI(API_BLE_TAG, "GATT_READ_EVT, conn_id %d, trans_id %d, handle %d, gatts_if %d\n",  
+            ESP_LOGI(API_BLE_TAG, "GATT_READ_EVT, conn_id %d, trans_id %ld, handle %d, gatts_if %d\n",
               p_data->read.conn_id, p_data->read.trans_id, p_data->read.handle, gatts_if); 
             
             esp_gatt_rsp_t rsp;  

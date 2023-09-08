@@ -38,6 +38,7 @@
 #define ACK_VAL 0x0                             /*!< I2C ack value */
 #define NACK_VAL 0x1
 
+uint8_t  SelectedIoExpander;
 
 static void print_pin_satus(VoltageLevel_t pin_status , char tag[])
 {

@@ -180,7 +180,7 @@ bool Lead12_Data_Capture(void)
 		}
 	}
 
-	printf("\n12 Lead Total Samples Captured = %d",offfset);
+	printf("\n12 Lead Total Samples Captured = %ld",offfset);
 
 	flash_write_status = API_Flash_Write_Record(ECG_12_LEAD,(void *)BT_flash_buffer);
 
@@ -188,7 +188,7 @@ bool Lead12_Data_Capture(void)
 
 	IsValidRecordsInFlash = true;
 
-	printf("\nTotal 12 Lead Records = %d", get_records_count(ECG_12_LEAD));
+	printf("\nTotal 12 Lead Records = %ld", get_records_count(ECG_12_LEAD));
 
 	return true;
 }

@@ -16,7 +16,6 @@
 
 #define ECG_DRDY_PIN_SEL  ( 1ULL<<ESP32_MCU_DRDY_PIN )
 
-
 /*-------------------------------------MACROS-------------------------------------------------------------------*/
 #define LEAD_ERROR			   		0x08							// to check lead error in error status reg // refer manual //
 #define BAT_LOW_ERROR		   		0x04							// to check battery low error
@@ -28,6 +27,7 @@
 /*--------------------------------------STRUCT-------------------------------------------------------------------*/
 
 extern  spi_device_handle_t disp_spi;
+volatile bool ECG_Drdy_Flag;
 
 typedef struct REG_WRITE
 {

@@ -368,20 +368,20 @@ typedef struct __attribute__((__packed__))
 
 }VITAL_RESULT_t;
 /*---------------------------------- GLOBAL VARIABLES -----------------------------------------------------*/
-  DATA_STORE_FLASH_STRUCT_t flash_data;
-  TOTAL_RECORDS_STRUCT_t total_records;
-  RECORD_HEADER_STRUCT_t record_header;
-  VITAL_RESULT_t Vital_result;
-  PID_STRUCT PatientID;
+extern DATA_STORE_FLASH_STRUCT_t flash_data;
+extern TOTAL_RECORDS_STRUCT_t total_records;
+extern RECORD_HEADER_STRUCT_t record_header;
+extern VITAL_RESULT_t Vital_result;
+extern PID_STRUCT PatientID;
 
-RECORD_HEADER_STRUCT_OFFLINE_CONFIG offline_record_header;
-OFFLINE_RECORD_TESTFIELD test_info;
-VITAL_TYPE_t test_type;
+extern RECORD_HEADER_STRUCT_OFFLINE_CONFIG offline_record_header;
+extern OFFLINE_RECORD_TESTFIELD test_info;
+extern VITAL_TYPE_t test_type;
 
-uint8_t hospital_pid[MAX_PID_RECORDS];
-uint8_t old_pid[MAX_PID_RECORDS];
-uint8_t new_pid[MAX_PID_RECORDS];
-bool IsValidRecordsInFlash;
+extern uint8_t hospital_pid[MAX_PID_RECORDS];
+extern uint8_t old_pid[MAX_PID_RECORDS];
+extern uint8_t new_pid[MAX_PID_RECORDS];
+extern bool IsValidRecordsInFlash;
 /*---------------------------------- GLOBAL FUNCTIONS -----------------------------------------------------*/
 uint8_t API_Flash_Initialize_Data_pointers(void);
 bool Flash_Pointers_Update(void);

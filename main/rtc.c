@@ -6,6 +6,10 @@
  * 
  * @return UNIX date.
  */
+
+static int8_t Time_zone;
+
+
 int32_t get_unix()
 {
 	time_t now = 0;

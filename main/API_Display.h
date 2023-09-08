@@ -248,9 +248,9 @@ typedef enum{
 }SELECTED_TEST_t;
 
 
-bool Test_Exit_Flag;
-PID_TYPE_t   Selected_PID_type;
-bool Is_time_displayed;
+extern bool Test_Exit_Flag;
+extern PID_TYPE_t   Selected_PID_type;
+extern bool Is_time_displayed;
 
 
 void disp_gpio_config();

@@ -11,6 +11,13 @@
 
 #define RECORD_MARKER_VALUE			0xABCD
 
+DATA_STORE_FLASH_STRUCT_t flash_data;
+TOTAL_RECORDS_STRUCT_t total_records;
+RECORD_HEADER_STRUCT_t record_header;
+VITAL_RESULT_t Vital_result;
+PID_STRUCT PatientID;
+bool IsValidRecordsInFlash;
+
 uint8_t API_Flash_Initialize_Data_pointers(void)
 {
 	API_FLASH_Read(DATA_POINTERS_START_ADDR, &flash_data, sizeof(flash_data));

@@ -12,6 +12,7 @@
 #include "Error_Handling.h"
 #include "API_IO_Exp.h"
 #include "push_button.h"
+#include "freertos/FreeRTOS.h"
 
 #define DRDY_INPUT_PIN_SEL  (1ULL<<MAX86150_DRDY_INTR_PIN)
 #define DRDY_INTR_FLAG_DEFAULT 0
@@ -573,7 +574,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 		{
 			 if(API_TIMER_Get_Timeout_Flag(TIMER_5SEC) == true)
 			 {
-				printf("DRDY_count = %d\n", DRDY_count);
+				printf("DRDY_count = %ld\n", DRDY_count);
 				API_TIMER_Register_Timer(TIMER_5SEC);
 				DRDY_count = 0;
 			 }

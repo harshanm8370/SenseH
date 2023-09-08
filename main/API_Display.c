@@ -25,6 +25,8 @@
 #include "ProjectConfiguration.h"
 #include "bluetooth.h"
 
+uint8_t hospital_pid[MAX_PID_RECORDS];
+
 typedef struct __attribute__((__packed__))
 {
     uint8_t day;
@@ -129,7 +131,8 @@ static void send_d_or_c_bit(bool d_or_c);
 
 spi_device_handle_t disp_spi;
 
-
+bool Is_time_displayed;
+PID_TYPE_t   Selected_PID_type;
 
 static void api_disp_write_string(const char *string, float x, uint8_t y, uint16_t fgColour, uint16_t bgColour);
 static void api_disp_write_char(unsigned char c, uint8_t x, uint8_t y, uint16_t fgColour, uint16_t bgColour);
@@ -249,6 +252,8 @@ static bool disp_pids_screen1 = TRUE;
 static bool disp_pids_screen2 = FALSE;
 
 /**************************************************/
+
+bool Test_Exit_Flag;
 
 //This function is called (in irq context!) just before a transmission starts. It will
 //set the D/C line to the value indicated in the user field.
@@ -2544,7 +2549,7 @@ uint8_t left_offset = 0;
   	struct DISPLAY_TEXT mid_qt_text1,mid_qt_text2,mid_qt_text3,mid_qt_text4,mid_qt_text5,mid_qt_text6,mid_qt_text7;
 
   	uint8_t tick_num = 0;
-  	char string_time[3];
+  	char string_time[3]= {"\0"};
       uint8_t button = 0x00;
       bool ret_msg = FALSE;
 

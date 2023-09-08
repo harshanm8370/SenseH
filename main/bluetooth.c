@@ -49,6 +49,7 @@ static void send_record_snapsot_response(void);
 static void store_device_configuration(void);
 static void bt_firmware_request_response(void);
 
+static uint8_t  FW_buffer[BUFFER_SIZE];
 
 /*
 static void bt_send_device_self_diagnosis_response(void);
@@ -89,7 +90,9 @@ static bool is_OTA_request_arrived  = FALSE;
 
 /************************strctures*******************************/
 
-extern bool FW_complete_data_received = false;
+bool FW_complete_data_received = false;
+bool Is_Test_In_Progress;
+bool BT_ongoing_session;
 
 //#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 
@@ -100,6 +103,11 @@ extern bool FW_complete_data_received = false;
 */
 
 static uint32_t countReq =0;
+
+static uint64_t Application_len;
+static uint32_t FW_buff_index;
+static uint32_t FW_data_len;
+
 
 void BT_process_requests(void)
 {
@@ -156,7 +164,7 @@ void BT_process_requests(void)
 			Data_sync_in_progress = TRUE;
 			bt_session_complete = bt_send_multi_response(BP1, BP1_ONE_REC_LEN);
 			printf("bt_session_complete is %d\n",bt_session_complete);
-			printf("\ncount=%d",countReq++);
+			printf("\ncount=%ld",countReq++);
 			if (bt_session_complete){
 		    	BT_ongoing_session = false;
 				client_request_cmd = NO_CMD_REQ;
@@ -169,7 +177,7 @@ void BT_process_requests(void)
 			Data_sync_in_progress = TRUE;
 			bt_session_complete = bt_send_multi_response(BP2, BP2_ONE_REC_LEN);
 			printf("bt_session_complete is %d\n",bt_session_complete);
-			printf("\ncount=%d",countReq++);
+			printf("\ncount=%ld",countReq++);
 			if (bt_session_complete){
 				BT_ongoing_session = false;
 				client_request_cmd = NO_CMD_REQ;
@@ -232,7 +240,7 @@ void BT_process_requests(void)
 			printf("\nSPO2 Sync started");
 
 			bt_session_complete = bt_send_multi_response(SPO2, SPO2_ONE_REC_LEN);
-			printf("\ncount=%d",countReq++);
+			printf("\ncount=%ld",countReq++);
 
 			if (bt_session_complete){
 				BT_ongoing_session = false;
@@ -455,7 +463,7 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 				Load_record_header_to_buffer();
 			}
 			else {
-				printf("1. %s --> Length: %d\n", __func__, total_length_to_send); 
+				printf("1. %s --> Length: %ld\n", __func__, total_length_to_send);
 				API_BLE_Transmit(bt_tx_buff, total_length_to_send);
 			}
 			retry_count++;
@@ -491,16 +499,16 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 				//to send the continuation of the record
 			case WAIT_ACK_SOR_STATE:
 				total_length_to_send = BT_PACKET_SIZE;
-				printf("total_length_to_send: %d\n", total_length_to_send);
+				printf("total_length_to_send: %ld\n", total_length_to_send);
 				//here we are dividing the whole record into 580 bytes of packet and sending packet by packet (MTU: 600)
 				count = (one_record_len - REC_HEADER_LEN)/BT_RAW_DATA_LENGTH;
 				remainder = (one_record_len - REC_HEADER_LEN)%BT_RAW_DATA_LENGTH;
-				printf("count: %d, remainder: %d\n", count, remainder);
+				printf("count: %d, remainder: %ld\n", count, remainder);
 				if(count){
 					Load_Raw_Data_To_Buffer(COR);	//load the raw data to the buffer
 					skip_count ++;					//increment the skip_counter to point to next 240 bytes
 					count --;						//after sending every packet we decrement the count
-					printf("2. %s --> Length: %d\n", __func__, total_length_to_send); 
+					printf("2. %s --> Length: %ld\n", __func__, total_length_to_send);
 					API_BLE_Transmit(bt_tx_buff, total_length_to_send);
 					bt_response_state = WAIT_ACK_COR_STATE;
 				}
@@ -512,11 +520,11 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 				printf("Packet count: %d\n", count);
 				if(count){
 					total_length_to_send = BT_PACKET_SIZE;
-					printf("total_length_to_send: %d\n", total_length_to_send);
+					printf("total_length_to_send: %ld\n", total_length_to_send);
 					if(count == 1 && remainder == 0){
 						Load_Raw_Data_To_Buffer(EOR);								//   IF No remainder then overwrite the COR by EOR
 						bt_response_state = WAIT_ACK_EOR_STATE;
-						printf("3. %s --> Length: %d\n", __func__, total_length_to_send); 
+						printf("3. %s --> Length: %ld\n", __func__, total_length_to_send);
 						API_BLE_Transmit(bt_tx_buff, total_length_to_send);
 					}
 					else{
@@ -540,7 +548,7 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 					bt_tx_buff[remainder + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE)] = EOS;//fill eos after raw data(240)and 4 bytes sos,cor,length 2 bytes
 					crc_value = compute_crc_16(bt_tx_buff,(total_length_to_send-CHKSUM_SIZE));
 					MemCpy(bt_tx_buff + remainder + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE + EOS_SIZE),&crc_value,CHKSUM_SIZE);
-					printf("4. %s --> Length: %d\n", __func__, total_length_to_send); 
+					printf("4. %s --> Length: %ld\n", __func__, total_length_to_send);
 					API_BLE_Transmit(bt_tx_buff, total_length_to_send);
 
 					bt_response_state = WAIT_ACK_EOR_STATE;

@@ -25,13 +25,13 @@ typedef enum
 
 } TIMER_t;
 
-esp_timer_handle_t periodic_timer;
+extern esp_timer_handle_t periodic_timer;
 
-volatile uint32_t Delay_time_out;
+extern uint32_t Delay_time_out;
 void Delay_ms(uint32_t t_ms);
-volatile uint32_t BTN_timing;
+extern uint32_t BTN_timing;
 
-TIMER_t  Fw_upgrading_time_out;
+extern TIMER_t  Fw_upgrading_time_out;
 
 void API_TIMER_Run_1MS_Timer(void);
 void API_TIMER_Register_Timer(TIMER_t timer_type);

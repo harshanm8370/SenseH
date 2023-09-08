@@ -49,15 +49,10 @@ typedef enum
     DEVICE_UPGRADE_FAIL,
 } FIRMWARE_UPGRADE_STATE_t;
 
-uint64_t Application_len;
-uint32_t FW_buff_index;
-uint32_t FW_data_len;
-uint8_t  FW_buffer[BUFFER_SIZE];
-bool     App_Receiving_success;
-bool     BT_ongoing_session;
-bool     Is_arrived_valid_data;
-bool	FW_complete_data_received;
-FIRMWARE_UPGRADE_STATE_t Upgrade_state;
+extern bool     App_Receiving_success;
+extern bool     BT_ongoing_session;
+extern bool     Is_arrived_valid_data;
+extern bool FW_complete_data_received;
 
 int read_firmware_data (uint8_t * ota_write_data, int BUFFSIZE);
 bool is_firmware_data_available (void);

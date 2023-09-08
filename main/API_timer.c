@@ -45,6 +45,8 @@ static uint32_t top_value_5min  = 0x00;
 static uint32_t top_value_10min = 0x00;
 static uint32_t top_value_30min = 0x00;
 
+uint32_t Delay_time_out;
+esp_timer_handle_t periodic_timer;
 
 static void periodic_timer_callback(void* arg)
 {

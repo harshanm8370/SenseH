@@ -14,6 +14,7 @@
 #include "Hardware.h"
 #include "Error_Handling.h"
 #include "driver/rtc_io.h"
+#include "esp_attr.h"
 
 #define WAKEUP_SHORT_PRESS_TIME_START   100 // in millisecond
 #define WAKEUP_SHORT_PRESS_TIME_END     1000
@@ -29,6 +30,10 @@
 #define PUSH_BTN_INPUT_PIN_SEL  ( 1ULL<<PUSH_BTN_PIN )
 
 uint32_t gpio_arg_val = 0x00;
+
+bool Did_Push_Button_Pressed;
+
+uint32_t BTN_timing;
 
 /****** Only testing ********************************/
 /****************************************************/
@@ -140,7 +145,7 @@ uint32_t API_Push_Btn_Get_hold_time()
 
 	if(Did_Push_Button_Pressed)
 	{
-		printf("\nis_wakeup_button_pressd=%d  btn_press_duration=%d",is_wakeup_button_pressd,btn_press_duration);
+		printf("\nis_wakeup_button_pressd=%d  btn_press_duration=%ld",is_wakeup_button_pressd,btn_press_duration);
 
 		if((btn_press_duration >= 100) && (btn_press_duration<=1000) )
 		{

@@ -114,7 +114,7 @@ void API_ADC_Conv_Avg(float ref_vol, uint16_t data_buff[],uint8_t avg_len,char *
        // float voltage = adc_reading*1.1/4095;
 
 	    voltage = avg*ref_vol/4095;
-        printf("%s, Raw: %d\tVoltage: %f\n", tag, avg, voltage);
+        printf("%s, Raw: %ld\tVoltage: %f\n", tag, avg, voltage);
 }
 
 void API_RUN_TEMPERATURE_TEST(void)

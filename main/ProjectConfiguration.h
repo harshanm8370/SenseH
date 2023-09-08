@@ -16,12 +16,5 @@
 #define DATA_SYNC_TIMEOUT			 (TIMER_t)TIMER_30SEC
 #define LEAD_OFF_DETECTION           true
 
-bool Is_Test_in_progress;
-
-
-
-
-
-
 
 #endif

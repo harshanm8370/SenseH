@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "esp_attr.h"
 
 typedef enum
 {
@@ -23,7 +24,7 @@ typedef enum
 	LEAD12=12,
 }ECG_LEADS_t;
 
- volatile bool ECG_Drdy_Flag;
+extern volatile bool ECG_Drdy_Flag;
 
 void API_ADS_Test(void);
 

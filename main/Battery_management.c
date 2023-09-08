@@ -100,7 +100,7 @@ static void Enter_Deep_Sleep(void)
 	API_Display_spi_init();
 	api_disp_write_com(DISPLAY_SLEEP_MODE_CMD);
 
-	adc_power_off();
+//	adc_power_off();
 
 	API_IO_Exp_Write_Reg(IO_EXP1_SLAVE_ADDR, REG_PULLUP_PULLDOWN_EN_0,&allhigh,1);
 	API_IO_Exp_Write_Reg(IO_EXP1_SLAVE_ADDR, REG_ADDR_CONFIGURATION_PORT_0,&allhigh,1);

@@ -191,10 +191,10 @@ typedef enum __attribute__((__packed__))
 	DEFAULT,
 } BT_STATUS;
 
-bool Data_sync_in_progress ;
-bool Prepare_device_to_upgrade;
-bool BT_ongoing_session;
-BT_STATUS Is_Device_Paired;
+extern bool Data_sync_in_progress;
+extern bool Prepare_device_to_upgrade;
+extern bool BT_ongoing_session;
+extern BT_STATUS Is_Device_Paired;
 
 uint8_t BT_Initialize(void);
 void BT_process_requests(void);

@@ -20,7 +20,7 @@ typedef enum
 
 
 
-SYSTEM_POWER_STATE_t Power_up_flag;
+extern SYSTEM_POWER_STATE_t Power_up_flag;
 
 bool Detect_low_battery_display_notification();// Will checks the battery voltage, if the voltage is < 10 % then display low battery notification and holds the
 void EnterSleepMode(SYSTEM_POWER_STATE_t powerMode);
