@@ -65,7 +65,6 @@
 #define SPO2_IR_SAMPLES  600U
 
 /***************************************************/
-
 uint8_t BT_flash_buffer[DATA_BUFFER3_LENGTH];
 uint32_t PPG_IR_BUFF[TOTAL_SAMPLES];
 uint32_t PPG_RED_BUFF[TOTAL_SAMPLES];
@@ -75,7 +74,6 @@ float FilterOutputBuffer1[TOTAL_SAMPLES];
 float FilterOutputBuffer2[TOTAL_SAMPLES];
 float FilterOutputBuffer3[TOTAL_SAMPLES];
 float FilterOutputBuffer4[TOTAL_SAMPLES];
-
 
 typedef struct __attribute__((__packed__))
 {
@@ -244,10 +242,9 @@ bool QUICK_Test1(void)
 	API_DISP_Toggle_Date_Time();
 	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
 
-	//Enable these GPIO's to turn on external PPG when it is connected
-	API_IO_Exp_Power_Control(EN_VLED,HIGH);
-	API_IO_Exp_Power_Control(EN_ANALOG,HIGH);
-	API_IO_Exp_Power_Control(EN_IR,HIGH);
+	 API_IO_Exp_Power_Control(EN_VLED,HIGH);
+	 API_IO_Exp_Power_Control(EN_ANALOG,HIGH);
+	 API_IO_Exp_Power_Control(EN_IR,HIGH);
 
 	if((Selected_PID_type == VALID_PID) || (Selected_PID_type == GUEST_PID))
 	{
@@ -289,7 +286,7 @@ bool QUICK_Test1(void)
 						return false;
 					}
 					API_ECG_Chip_Reset();
-
+				}
 */
 
 				 if(API_MAX86150_Setup())
@@ -298,7 +295,10 @@ bool QUICK_Test1(void)
 						{
 							API_Disp_Quick_test_screen(DISP_QT_PPG_TEST_IN_PROGRESS);
 
+							//while(1){
 							Capture_PPG_ECG_Data(CAPTURE_PPG,true);
+						//	Filter_Quicktest1_Data();
+						//	}
 							//Capture_BP_Data(true);
 
 							//Check_PPG_Data_Quality();
@@ -316,6 +316,8 @@ bool QUICK_Test1(void)
 									   }
 
 									 printf("\nPPG data capture completed................");
+
+									 printf("\Capturing BP................");
 
 									 Capture_BP_Data(true);
 
@@ -336,9 +338,7 @@ bool QUICK_Test1(void)
 											result[3] = 85;
 
 										   API_Disp_Quick_Test_Result(result);
-										  // if(Selected_PID_type != GUEST_PID)
-											   Store_QuickTest1_Data_To_Flash();
-
+										   if(Selected_PID_type != GUEST_PID) Store_QuickTest1_Data_To_Flash();
 							   }
 
 						 }
@@ -496,17 +496,10 @@ void Dummy_Capture(uint16_t total_samples)
 				status = API_MAX86150_Raw_Data_capture(PPG_RED_BUFF+raw_data_index, PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
 			}
 
-		printf("\nPPG Red data");
 		for(int i=0;i<600;i++)
 			{
 			  printf("\n%ld",PPG_RED_BUFF[i]);
 			}
-
-		printf("\nPPG IR data");
-		for(int i=0;i<600;i++)
-		{
-			printf("\n%ld",PPG_IR_BUFF[i]);
-		}
 	}
 
 	else if(captureType == CAPTURE_ECG_L1_AND_L2)
@@ -585,14 +578,13 @@ void Dummy_Capture(uint16_t total_samples)
 				status = API_MAX86150_Raw_Data_capture(PPG_RED_BUFF+raw_data_index, PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
 			}
 
-		printf("\nCapturing BP data:\n");
 		printf("\nECG L1 data:\n");
 		for(int i=0;i<600;i++)
 		{
 		  printf("\n%f",ECG_Lead1_buff[i]);
 		}
-
-		/*printf("\nECG L2 data:\n");
+		/*
+		printf("\nECG L2 data:\n");
 		for(int i=0;i<600;i++)
 		{
 		  printf("\n%f",ECG_Lead2_buff[i]);
@@ -617,10 +609,15 @@ void Dummy_Capture(uint16_t total_samples)
 
 void Filter_Quicktest1_Data(void)
 {
-	filter(ECG_Lead1_buff,FilterOutputBuffer1,TOTAL_SAMPLES,100);
-	filter(ECG_Lead2_buff,FilterOutputBuffer2,TOTAL_SAMPLES,100);
-	filter((float *)PPG_RED_BUFF,FilterOutputBuffer3,TOTAL_SAMPLES,100);
-	filter((float *)PPG_IR_BUFF,FilterOutputBuffer4,TOTAL_SAMPLES,100);
+	//filter(ECG_Lead1_buff,FilterOutputBuffer1,TOTAL_SAMPLES,100);
+	//filter(ECG_Lead2_buff,FilterOutputBuffer2,TOTAL_SAMPLES,100);
+	filter((float *)PPG_RED_BUFF,FilterOutputBuffer3,600,100);
+	//filter((float *)PPG_IR_BUFF,FilterOutputBuffer4,TOTAL_SAMPLES,100);
+
+	for(int i=0;i<600;i++)
+	{
+		//printf("\n%f",FilterOutputBuffer3[i]);
+	}
 
 //	if(ENABLE_DEBUG_MESSAGES)
 //	{
@@ -1812,9 +1809,10 @@ bool Run_Multi_Vital(void)
 		if(Run_Quick_Vital()==TRUE)
 		{
 			//if(Selected_PID_type != GUEST_PID)
-			Store_QuickTest2_Data_To_Flash();
+				Store_QuickTest2_Data_To_Flash();
+
 			Lead12_Test();
-	}
+		}
 	}
 
 	else

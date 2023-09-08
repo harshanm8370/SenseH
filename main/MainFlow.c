@@ -64,7 +64,7 @@ void TestFlashStorage(void);
 	API_IO_Exp_init();
 
     Interfaces_init();
-	POR_Init();
+
 
 	if(API_Flash_Initialize_Data_pointers() == RECORDS_UPDATE_FAILED)
 	   {
@@ -85,20 +85,14 @@ void TestFlashStorage(void);
 
 	/* Delay Provided for the User to read the Firmware version */
 	Delay_ms(3000);
-
+	POR_Init();
 
 	/** Testing */
 	/***************************************************/
 
-	Selected_PID_type = GUEST_PID;
+	Selected_PID_type = VALID_PID;
 
-	//while(1){
-	//Run_Quick_Vital();
-	//TestFlashStorage();
-//	Run_Multi_Vital();
-	//}
 	/***************************************************/
-
 
 	while(1)
 	{
@@ -106,7 +100,6 @@ void TestFlashStorage(void);
 		{
 			    if(Detect_low_battery_display_notification()==false)
 				{
-
 			    	  //state = API_Disp_Select_PID_Screen();
 			    	state = VIEW_SCREEN;
 
@@ -383,7 +376,7 @@ void HandleDataSync(void)
 
 }
 
-//#ifdef TEST_FLASH
+#ifdef TEST_FLASH
 uint8_t DstBuffer[DATA_BUFFER3_LENGTH];
 
 void TestFlashStorage(void)
@@ -523,4 +516,4 @@ void TestFlashStorage(void)
 
 }
 
-//#endif
+#endif

@@ -24,8 +24,7 @@
 #include "API_ADS.h"
 #include "Error_Handling.h"
 #include "API_Flash_org.h"
-
-
+#include "Quick_Test.h"
 
 bool Lead12_Data_Capture(void);
 
@@ -45,9 +44,9 @@ bool Lead12_Test(void)
 			if(API_Flash_Org_Check_For_Memory_Free())
 			{
                 // Disp quick test 1 screen
-				API_IO_Exp_Power_Control(EN_VLED,HIGH);
-				API_IO_Exp_Power_Control(EN_ANALOG,HIGH);
-				API_IO_Exp_Power_Control(EN_IR,HIGH);
+				API_IO_Exp_Power_Control(EN_VLED,LOW);
+				API_IO_Exp_Power_Control(EN_ANALOG,LOW);
+				API_IO_Exp_Power_Control(EN_IR,LOW);
 				API_Buzzer_Sound(SHORT_BEEP);
 
 				API_DISP_Display_Screen(DISP_ECG_12_LEAD_SCREEN);
@@ -55,7 +54,7 @@ bool Lead12_Test(void)
 
 				printf("\nEnteriing into 12 Lead ECG Init");
 
-				//if(1)
+
 				if(API_ECG_Init())
 				{
 					printf("\nECG L2 Init Done!");
@@ -117,29 +116,7 @@ bool Lead12_Data_Capture(void)
 
 	API_Disp_Lead_Count(6);
 
-	for(int raw_data_index=0;raw_data_index<300;raw_data_index++)// Dummy capture
-	{
-		API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-	}
-
-	for(int raw_data_index=0;raw_data_index<600;raw_data_index++)
-	{
-		API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-	}
-
-	printf("\nECG L1 data");
-
-	for(int i=0;i<600;i++)
-	{
-      printf("\n%f",ECG_Lead1_buff[i]);
-	}
-
-	printf("\nECG L2 data");
-
-	for(int i=0;i<600;i++)
-	{
-      printf("\n%f",ECG_Lead2_buff[i]);
-	}
+	Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,true);
 
 	if( API_ECG_Reginit_12Lead() != ECG_NO_ERROR)
 		{

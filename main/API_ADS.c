@@ -16,6 +16,7 @@
 
 #define ECG_DRDY_PIN_SEL  ( 1ULL<<ESP32_MCU_DRDY_PIN )
 
+
 /*-------------------------------------MACROS-------------------------------------------------------------------*/
 #define LEAD_ERROR			   		0x08							// to check lead error in error status reg // refer manual //
 #define BAT_LOW_ERROR		   		0x04							// to check battery low error
@@ -406,9 +407,9 @@ ECG_STATUS API_ECG_Reginit_2Lead()
 		reg_config_status |= api_ecg_reg_write(RLD_CN_REG, RLD_IN5);
 		reg_config_status |= api_ecg_reg_write(OSC_CN_REG, OSC_EXT);
 		reg_config_status |= api_ecg_reg_write(AFE_SHDN_CN_REG, AFE_SHDN_CH1_CH2_CH3_ACTIVE);
-		reg_config_status |= api_ecg_reg_write(R2_RATE_REG, 0x04);//Configures the R2 decimation rate as 5
-		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x40);//Configures the R3 decimation rate as 32 for channel 1.// ODR = 100sps
-		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x40);//Configures the R3 decimation rate as 32 for channel 2.
+		reg_config_status |= api_ecg_reg_write(R2_RATE_REG, 0x04);//Configures the R2 decimation rate as 6
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x40);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 100sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x40);//Configures the R3 decimation rate as 64 for channel 2.
 		reg_config_status |= api_ecg_reg_write(DRDYB_SRC_REG, DRDYB_SRC_CH1);//Configures the DRDYB source to channel 1 ECG (or fastest channel).
 		reg_config_status |= api_ecg_reg_write(CH_CNFG_REG, 0X10);//Enables channel 1 ECG for loop read-back mode.
 		reg_config_status |= api_ecg_reg_write(AFE_RES_REG, 0x01);
@@ -435,7 +436,7 @@ void API_ECG_Registers_Check_For_Corruption(void)
 	ECG_STATUS reg_init = ECG_INIT_ERROR;
 	bool reg_config_status = true;
 
-		/*reg_config_status &= api_ecg_reg_check(FLEX_CH1_CN_REG, CH1_INP_INN);						//Connect channel 1’s INP to IN2 and INN to IN1.
+		reg_config_status &= api_ecg_reg_check(FLEX_CH1_CN_REG, CH1_INP_INN);						//Connect channel 1’s INP to IN2 and INN to IN1.
 		reg_config_status &= api_ecg_reg_check(FLEX_CH2_CN_REG, 0x19);								//DisConnect channel 2’s INP and INN for Single lead configuration
 		reg_config_status &= api_ecg_reg_check(FLEX_CH3_CN_REG, CH3_INP_INN_DISCNCT);				//DisConnect channel 3’s INP and INN for Single lead configuration
 		reg_config_status &= api_ecg_reg_check(FLEX_PACE_CN_REG, PACE_CH_INP_INN_DISCNCT);			//DisConnect pace channel’s INP and INN for Single lead configuration
@@ -469,7 +470,7 @@ void API_ECG_Registers_Check_For_Corruption(void)
 		reg_config_status &= api_ecg_reg_check(MASK_DRDYB_REG, MASK_DRDYB);							//optional mask control for DRDYB
 		reg_config_status &= api_ecg_reg_check(MASK_ERR_REG, ALARM_ACTIVE);							//Alarm condition active
 		reg_config_status &= api_ecg_reg_check(ALARM_FILTER_REG, ALARM_FILTER);						//default value set
-		reg_config_status &= api_ecg_reg_check(CH_CNFG_REG, CH_CNFG_CH1_CH2_CH3);					//Enables channel 1 ECG for loop read-back mode.*/
+		reg_config_status &= api_ecg_reg_check(CH_CNFG_REG, CH_CNFG_CH1_CH2_CH3);					//Enables channel 1 ECG for loop read-back mode.
 
 	if(reg_config_status == false)
 	{
@@ -558,6 +559,7 @@ ECG_STATUS API_ECG_Reginit_12Lead()
 			{
 			reg_config_status = api_ecg_reg_write(CONFIG_REG, STOP_CONV);								//Stops data conversion
 
+			//Since wilson ref. terminals are Disabled & R123 resistor is present
 			/*reg_config_status &= api_ecg_reg_write(FLEX_CH1_CN_REG, CH1_INP_INN);						//Connect channel 1’s INP to IN2 and INN to IN1.
 			reg_config_status &= api_ecg_reg_write(FLEX_CH2_CN_REG, 0x19);				//DisConnect channel 2’s INP and INN for Single lead configuration
 			reg_config_status &= api_ecg_reg_write(FLEX_CH3_CN_REG, 0x26);				//positive connected to V-inp and negative connected to IN6 (which is connected to WCT)
@@ -593,29 +595,58 @@ ECG_STATUS API_ECG_Reginit_12Lead()
 			reg_config_status &= api_ecg_reg_write(MASK_DRDYB_REG, MASK_DRDYB);							//optional mask control for DRDYB
 			reg_config_status &= api_ecg_reg_write(MASK_ERR_REG, ALARM_ACTIVE);							//Alarm condition active
 			reg_config_status &= api_ecg_reg_write(ALARM_FILTER_REG, ALARM_FILTER);						//default value set
-			reg_config_status &= api_ecg_reg_write(CH_CNFG_REG, 0x70);	//0x30						//Enables channel 1 ECG for loop read-back mode.
-			reg_config_status &= api_ecg_reg_write(CONFIG_REG, START_CONV);								//Starts data conversion*/
+			reg_config_status &= api_ecg_reg_write(CH_CNFG_REG, 0x70);	//0x30						//Enables channel 1 ECG for loop read-back mode.*/
 
-			reg_config_status |= api_ecg_reg_write(FLEX_CH1_CN_REG, CH1_INP_INN);
-			reg_config_status |= api_ecg_reg_write(FLEX_CH2_CN_REG, 0x19);
-			reg_config_status |= api_ecg_reg_write(CMDET_EN_REG, CMDET_IN1_IN2_IN3);
-			reg_config_status |= api_ecg_reg_write(RLD_CN_REG, RLD_IN5);
-			reg_config_status |= api_ecg_reg_write(OSC_CN_REG, OSC_EXT);
-			reg_config_status |= api_ecg_reg_write(AFE_SHDN_CN_REG, AFE_SHDN_CH1_CH2_CH3_ACTIVE);
-			reg_config_status |= api_ecg_reg_write(R2_RATE_REG, 0x04);//Configures the R2 decimation rate as 5
-			reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x40);//Configures the R3 decimation rate as 32 for channel 1.// ODR = 100sps
-			reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x40);//Configures the R3 decimation rate as 32 for channel 2.
-			reg_config_status |= api_ecg_reg_write(DRDYB_SRC_REG, DRDYB_SRC_CH1);//Configures the DRDYB source to channel 1 ECG (or fastest channel).
-			reg_config_status |= api_ecg_reg_write(CH_CNFG_REG, 0X10);//Enables channel 1 ECG for loop read-back mode.
-			reg_config_status |= api_ecg_reg_write(AFE_RES_REG, 0x01);
-			reg_config_status |= api_ecg_reg_write(FLEX_CH3_CN_REG, 0X40);
+			//Since wilson ref. terminals are enabled & R123 resistor is removed
+			reg_config_status &= api_ecg_reg_write(FLEX_CH1_CN_REG, CH1_INP_INN);
+			reg_config_status &= api_ecg_reg_write(FLEX_CH2_CN_REG, 0x19);
+			reg_config_status &= api_ecg_reg_write(FLEX_CH3_CN_REG, 0x26);
+			reg_config_status &= api_ecg_reg_write(CMDET_EN_REG, 0x0F);
+			reg_config_status &= api_ecg_reg_write(RLD_CN_REG, RLD_IN5);
+			reg_config_status &= api_ecg_reg_write(WILSON_EN1_REG, 0x01);
+			reg_config_status &= api_ecg_reg_write(WILSON_EN2_REG, 0x02);
+			reg_config_status &= api_ecg_reg_write(WILSON_EN3_REG, 0x03);
+			reg_config_status &= api_ecg_reg_write(WILSON_CN_REG, 0x01);
+			reg_config_status &= api_ecg_reg_write(OSC_CN_REG, OSC_EXT);
+			reg_config_status &= api_ecg_reg_write(AFE_SHDN_CN_REG, AFE_SHDN_CH1_CH2_CH3_ACTIVE);
+			reg_config_status &= api_ecg_reg_write(R2_RATE_REG, 0x02);
+			reg_config_status &= api_ecg_reg_write(R3_RATE_CH1_REG, 0x08);
+			reg_config_status &= api_ecg_reg_write(R3_RATE_CH2_REG, 0x08);
+			reg_config_status &= api_ecg_reg_write(R3_RATE_CH3_REG, 0x08);
+			reg_config_status &= api_ecg_reg_write(DRDYB_SRC_REG, DRDYB_SRC_CH1);
+			//reg_write_ads(CN_CNFG, CH_CNFG_CH1_LPRD);//Enables channel 1 ECG for loop read-back mode.
+			reg_config_status &= api_ecg_reg_write(AFE_RES_REG, 0x01);		//Resolution: 100khz
+			reg_config_status |= api_ecg_reg_write(CONFIG_REG, START_CONV);			//Starts data conversion
+
+			//Since wilson ref. terminals are disabled & R123 resistor is given
+			/*reg_config_status &= api_ecg_reg_write(FLEX_CH1_CN_REG, CH1_INP_INN);
+			reg_config_status &= api_ecg_reg_write(FLEX_CH2_CN_REG, 0x19);
+			reg_config_status &= api_ecg_reg_write(FLEX_CH3_CN_REG, 0x26);
+			reg_config_status &= api_ecg_reg_write(CMDET_EN_REG, 0x0F);
+			reg_config_status &= api_ecg_reg_write(RLD_CN_REG, RLD_IN5);
+			reg_config_status &= api_ecg_reg_write(WILSON_EN1_REG, 0x00);
+			reg_config_status &= api_ecg_reg_write(WILSON_EN2_REG, 0x00);
+			reg_config_status &= api_ecg_reg_write(WILSON_EN3_REG, 0x00);
+			reg_config_status &= api_ecg_reg_write(WILSON_CN_REG, 0x00);
+			reg_config_status &= api_ecg_reg_write(OSC_CN_REG, OSC_EXT);
+			reg_config_status &= api_ecg_reg_write(AFE_SHDN_CN_REG, AFE_SHDN_CH1_CH2_CH3_ACTIVE);
+			reg_config_status &= api_ecg_reg_write(R2_RATE_REG, 0x02);
+			reg_config_status &= api_ecg_reg_write(R3_RATE_CH1_REG, 0x40);
+			reg_config_status &= api_ecg_reg_write(R3_RATE_CH2_REG, 0x40);
+			reg_config_status &= api_ecg_reg_write(R3_RATE_CH3_REG, 0x40);
+			reg_config_status &= api_ecg_reg_write(DRDYB_SRC_REG, DRDYB_SRC_CH1);
+			//reg_write_ads(CN_CNFG, CH_CNFG_CH1_LPRD);//Enables channel 1 ECG for loop read-back mode.
+			reg_config_status &= api_ecg_reg_write(AFE_RES_REG, 0x01);		//Resolution: 100khz
+			reg_config_status |= api_ecg_reg_write(CONFIG_REG, START_CONV);			//Starts data conversion*/
+
+
 
 			}
 
-		if (reg_config_status == FALSE)
+		if (reg_config_status == ECG_NO_ERROR)
 		{
 			reg_init = ECG_NO_ERROR;
-			API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);							// make CS pin low
+			API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);							// make CS pin low
 		}
 
 		return reg_init;
