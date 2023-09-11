@@ -383,7 +383,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 	conf.scl_io_num = MAX86150_I2C_MASTER_SCL_PIN;
 	conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
 	conf.master.clk_speed = MAX86150_I2C_MASTER_CLOCK_FREQ_HZ;
-//	conf.clk_flags = 0;
+	conf.clk_flags = 0;
 
 	error = i2c_param_config(i2c_master_port, &conf);
 	error |= i2c_driver_install(i2c_master_port, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
