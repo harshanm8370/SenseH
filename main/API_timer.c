@@ -517,7 +517,7 @@ void API_TIMER_Run_1MS_Timer(void)
 void Delay_ms(uint32_t t_ms)
 {
 	Delay_time_out = t_ms;
-
-	while(Delay_time_out){}
+	usleep(t_ms*1000);
+//	while(Delay_time_out){}
 
 }
