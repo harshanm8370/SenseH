@@ -685,8 +685,9 @@ ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_2Lead(float *buff_lead_1, float *bu
 	ECG_STATUS read_status = 0;
 	uint8_t sample[6] = {0};
 
-		while(!ECG_Drdy_Flag);	//|| (API_TIMER_Get_Timeout_Flag(Set_1sec_timer) == FALSE)
-
+//		while(!ECG_Drdy_Flag);	//|| (API_TIMER_Get_Timeout_Flag(Set_1sec_timer) == FALSE)
+	if(ESP32_MCU_DRDY_PIN)
+	{
 		read_status = api_ecg_reg_read(DATA_CH1_ECG_H_REG,&sample[0U]);				// reading the CH1 data- higher byte
 
 		read_status |= api_ecg_reg_read(DATA_CH1_ECG_M_REG,&sample[1U]);				// reading the CH1 data- middle byte
@@ -703,11 +704,11 @@ ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_2Lead(float *buff_lead_1, float *bu
 
 		*buff_lead_2= (float)((((uint32_t)sample[3U])<<16U) | (((uint32_t)sample[4U])<<8U) | (sample[5U]) );
 
-	if(read_status == ECG_NO_ERROR)
-	{
-		read_status = ESP_OK;
+		if(read_status == ECG_NO_ERROR)
+		{
+			read_status = ESP_OK;
+		}
 	}
-
 	ECG_Drdy_Flag = false;
 
 	return read_status;
