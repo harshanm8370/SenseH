@@ -354,6 +354,16 @@ bool QUICK_Test1(void)
 			{
 				printf("\nDevice Memory Full... Please sync the data");
 				 API_DISP_Memory_Full_Status();
+#if 1 //Enabled for Debug purpose to delete all 100 data
+				 for(int delete_rec = 1; delete_rec <=100; delete_rec++)
+				 {
+					 printf("\n Deleting Record = %d",delete_rec);
+					 erase_one_record(BP1);
+					 erase_one_record(ECG_1_Lead);
+					 erase_one_record(SPO2);
+					 API_Flash_Check_Update_Valid_Record_Status();
+				 }
+#endif
 			}
 	}
 
