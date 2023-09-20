@@ -8,6 +8,7 @@
 #include <stdint.h>
 #define DATA_BUFFER3_LENGTH			20000U
 #define TOTAL_SAMPLES 1200 //1
+#define TOTAL_SAMPLES_VCS 2500 //1
 
 /*-----------------------------------MACROS ------------------------------------------------------------------*/
 #define TRUE				1

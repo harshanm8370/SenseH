@@ -80,10 +80,11 @@ ECG_STATUS API_ECG_Chip_Init(void)
 	uint8_t rev_id =0;
 	uint8_t reg_read = 0;
 										// initialize gpio pins
-	  API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
-
+//	  API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+		gpio_set_level(ECG_CSn_VCS, 0);
 	  api_ads_reg_read(0x40 | 0x80, &rev_id);					// 0x40 = address of RevID. R/W bit = 1 for RegRead,=> "C0". rev_id = 0x01, thevalue to be read
-	  API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	  API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	  gpio_set_level(ECG_CSn_VCS, 1);
 
       printf("Rev_id=%x\n",rev_id);
 
@@ -157,7 +158,8 @@ void API_ADS_Test(void)
 	  API_IO_Exp_Power_Control(EN_VLED,HIGH);
 	  API_IO_Exp_Power_Control(EN_ANALOG,HIGH);
 
-	  API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	  API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	  gpio_set_level(ECG_CSn_VCS, 1);
 	  Delay_ms(500);
 	  API_IO_Exp1_P1_write_pin(ECG_RESETN,LOW);
 	  Delay_ms(3000);
@@ -221,7 +223,8 @@ uint8_t API_Test_ADS()
 	API_IO_Exp_Power_Control(EN_IR,HIGH);
 
 	API_IO_Exp1_P1_write_pin(DISPLAY_CSN,HIGH);
-	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+	gpio_set_level(ECG_CSn_VCS, 0);
 	Delay_ms(1);
 
 	API_IO_Exp1_P1_write_pin(ECG_RESETN,LOW);
@@ -232,15 +235,18 @@ uint8_t API_Test_ADS()
 	api_ads_write(0x21);
 
 	api_ads_write(0x01);
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
 	Delay_ms(500);
 
-	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+	gpio_set_level(ECG_CSn_VCS, 0);
 
 	api_ads_write(0x21 | 0x80);
 	 read_data = api_ads_read_data();
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
 	printf("ADS Read = %X\n",read_data);
 
@@ -257,7 +263,8 @@ static ECG_STATUS api_ads_check_Response(void)
 	uint8_t read_val=0;
 
 	API_IO_Exp1_P1_write_pin(DISPLAY_CSN,HIGH);
-	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+	gpio_set_level(ECG_CSn_VCS, 0);
 	Delay_ms(1);
 
 	API_IO_Exp1_P1_write_pin(ECG_RESETN,LOW);
@@ -268,15 +275,18 @@ static ECG_STATUS api_ads_check_Response(void)
 	api_ads_write(0x21);
 
 	api_ads_write(0x01);
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
 	Delay_ms(50);
 
-	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+	gpio_set_level(ECG_CSn_VCS, 0);
 	Delay_ms(50);
 	api_ads_write(0x21 | 0x80);
 	read_val = api_ads_read_data();
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
 
 	if(read_val == 0x01)
@@ -296,12 +306,14 @@ static ECG_STATUS IRAM_ATTR api_ecg_reg_write(uint8_t addr, uint8_t value)
 {
 	bool write_status = true;
 
-	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+	gpio_set_level(ECG_CSn_VCS, 0);
 
 	api_ads_write(addr);
 	api_ads_write(value);
 
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
 	write_status = ECG_NO_ERROR;
 
@@ -342,13 +354,15 @@ ECG_STATUS IRAM_ATTR api_ecg_reg_read(uint8_t addr, uint8_t *buffer)
 
 	addr |= READ_BIT;
 
-	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+	gpio_set_level(ECG_CSn_VCS, 0);
 
 	api_ads_write(addr);
 
 	*buffer  =  api_ads_read_data();					// read the register value
 
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
 
 	read_status = ECG_NO_ERROR;															// if its 0 read status is true
 
@@ -420,7 +434,8 @@ ECG_STATUS API_ECG_Reginit_2Lead()
 	if (reg_config_status == ECG_NO_ERROR)
 	{
 		reg_init = ECG_NO_ERROR;
-		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+		gpio_set_level(ECG_CSn_VCS, 1);
 	}
 
 	else Catch_RunTime_Error(ADS1293_INIT_FAIL);
@@ -537,7 +552,8 @@ ECG_STATUS API_ECG_Reginit_1Lead()
 	{
 		printf("\n ECG Lead 1 Configuration successful\n");
 		reg_init = ECG_NO_ERROR;
-		API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);							// make CS pin low
+//		API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);							// make CS pin low
+		gpio_set_level(ECG_CSn_VCS, 0);
 	}
 
 	return reg_init;
@@ -646,7 +662,8 @@ ECG_STATUS API_ECG_Reginit_12Lead()
 		if (reg_config_status == ECG_NO_ERROR)
 		{
 			reg_init = ECG_NO_ERROR;
-			API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);							// make CS pin low
+//			API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);							// make CS pin low
+			gpio_set_level(ECG_CSn_VCS, 0);
 		}
 
 		return reg_init;
@@ -685,8 +702,8 @@ ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_2Lead(float *buff_lead_1, float *bu
 	ECG_STATUS read_status = 0;
 	uint8_t sample[6] = {0};
 
-//		while(!ECG_Drdy_Flag);	//|| (API_TIMER_Get_Timeout_Flag(Set_1sec_timer) == FALSE)
-	if(ESP32_MCU_DRDY_PIN)
+		while(!ECG_Drdy_Flag);	//|| (API_TIMER_Get_Timeout_Flag(Set_1sec_timer) == FALSE)
+//	if(ESP32_MCU_DRDY_PIN)
 	{
 		read_status = api_ecg_reg_read(DATA_CH1_ECG_H_REG,&sample[0U]);				// reading the CH1 data- higher byte
 
@@ -772,13 +789,27 @@ static void api_drdy_input_config()
 
 }
 
+int ECG_Drdy_count = 0;
 static void IRAM_ATTR api_drdy_isr(void* arg)
 {
 	uint32_t gpio_num = (uint32_t) arg;
+	static uint32_t Temp_drdy = 0;
 
-	if(gpio_num == ESP32_MCU_DRDY_PIN){
+	esp_err_t status=ESP_FAIL;
 
-		ECG_Drdy_Flag = true;
+	if(gpio_num == ESP32_MCU_DRDY_PIN)
+	{
+		Temp_drdy++;
+		if(Temp_drdy == 1)
+		{
+			ECG_Drdy_Flag = true;
+			ECG_Drdy_count++;
+		}
+		else if(Temp_drdy > 1)
+		{
+			ECG_Drdy_Flag = false;
+			Temp_drdy = 0;
+		}
 	}
 
 }
@@ -1156,8 +1187,10 @@ bool API_ECG_Init(void)
 	{
 		if(api_ads_check_Response() == ECG_NO_ERROR)
 		{
+			printf("\n[%s:%d:%s]", __FILE__, __LINE__, __func__);
 			if(API_ECG_Reginit_2Lead() == ECG_NO_ERROR)
 			{
+				printf("\n[%s:%d:%s]", __FILE__, __LINE__, __func__);
 				config_status = true;
 				break;
 			}
@@ -1170,7 +1203,8 @@ bool API_ECG_Init(void)
 
 void API_ECG_Chip_Reset(void)
 {
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 	API_IO_Exp1_P1_write_pin(ECG_RESETN,LOW);
 	Delay_ms(500);
 	API_IO_Exp1_P1_write_pin(ECG_RESETN,HIGH);

@@ -17,6 +17,7 @@
 #include "API_Flash_org.h"
 #include "ECG_12_Lead.h"
 #include "driver/periph_ctrl.h"
+#include "Hardware.h"
 
 // MACROS REQUIRED FOR WDOG SpO2
 
@@ -243,7 +244,8 @@ bool QUICK_Test1(void)
 
 	Is_time_displayed = TRUE;
 	API_DISP_Toggle_Date_Time();
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
 	 API_IO_Exp_Power_Control(EN_VLED,HIGH);
 	 API_IO_Exp_Power_Control(EN_ANALOG,HIGH);
@@ -525,8 +527,36 @@ void Dummy_Capture(uint16_t total_samples)
 
 	else if(captureType == CAPTURE_ECG_L1_AND_L2)
 		{
+			int total_samples =0;
+			ECG_Drdy_count = 0;
+			API_ECG_Stop_Conversion();
 			API_ECG_Start_Conversion();
+#if 0
+			if(enableDummyCapture)
+			{
+				for(raw_data_index=0; raw_data_index<100; raw_data_index++)// 100 dummy capture
+				{
+					status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+				}
+			}
 
+			raw_data_index = 0;
+			do {
+//				if(ESP32_MCU_DRDY_PIN)
+				{
+					status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+					total_samples++;
+					raw_data_index++;
+				}
+			}while(total_samples < 600);
+			API_ECG_Stop_Conversion();
+			printf("\n total samples = %d\n", total_samples);
+			printf("\n total data ready interrupts = %d\n", ECG_Drdy_count);
+			ECG_Drdy_count = 0;
+			total_samples = 0;
+			raw_data_index = 0;
+#endif
+#if 1
 			if(enableDummyCapture)
 			{
 				for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
@@ -542,7 +572,11 @@ void Dummy_Capture(uint16_t total_samples)
 				{
 					status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
 				}
-
+#endif
+#if 1
+			printf("\n total data ready interrupts = %d\n", ECG_Drdy_count);
+			ECG_Drdy_count = 0;
+			API_ECG_Stop_Conversion();
 			printf("\nECG L1 data:\n");
 			for(int i=0;i<600;i++)
 			{
@@ -554,8 +588,8 @@ void Dummy_Capture(uint16_t total_samples)
 			{
 			  printf("\n%f",ECG_Lead2_buff[i]);
 			}
+#endif
 
-			API_ECG_Stop_Conversion();
 
 		}
 
@@ -565,7 +599,8 @@ void Dummy_Capture(uint16_t total_samples)
 	}
 
 	API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,HIGH);
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
 	return (status==ESP_OK);
 }

@@ -60,5 +60,6 @@ void API_ECG_Registers_Check_For_Corruption(void);
 void API_ECG_Start_Conversion(void);
 void API_ECG_Stop_Conversion(void);
 ECG_STATUS API_ECG_Chip_Init(void);
+extern int ECG_Drdy_count;
 
 #endif /* API_API_ECG_H_ */

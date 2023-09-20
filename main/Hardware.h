@@ -23,6 +23,7 @@
 #define MAX86150_I2C_MASTER_SDA_PIN  7U
 
 #define PUSH_BTN_PIN     36U
+#define ECG_CSn_VCS		14
 
 
 
