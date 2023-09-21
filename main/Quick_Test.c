@@ -68,8 +68,8 @@
 /***************************************************/
 uint32_t SPO2_PPG_IR_BUFF[TOTAL_SAMPLES];
 uint32_t SPO2_PPG_RED_BUFF[TOTAL_SAMPLES];
-float ECG_Lead1_buff[TOTAL_SAMPLES];
-float ECG_Lead2_buff[TOTAL_SAMPLES];
+float ECG_Lead1_buff[TOTAL_SAMPLES_VCS];
+float ECG_Lead2_buff[TOTAL_SAMPLES_VCS];
 float BP_ECG_Lead1_buff[TOTAL_SAMPLES];
 uint32_t BP_PPG_RED_BUFF[TOTAL_SAMPLES];
 uint32_t BP_PPG_IR_BUFF[TOTAL_SAMPLES];
@@ -527,39 +527,12 @@ void Dummy_Capture(uint16_t total_samples)
 
 	else if(captureType == CAPTURE_ECG_L1_AND_L2)
 		{
-			int total_samples =0;
 			ECG_Drdy_count = 0;
 			API_ECG_Stop_Conversion();
 			API_ECG_Start_Conversion();
-#if 0
 			if(enableDummyCapture)
 			{
-				for(raw_data_index=0; raw_data_index<100; raw_data_index++)// 100 dummy capture
-				{
-					status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-				}
-			}
-
-			raw_data_index = 0;
-			do {
-//				if(ESP32_MCU_DRDY_PIN)
-				{
-					status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-					total_samples++;
-					raw_data_index++;
-				}
-			}while(total_samples < 600);
-			API_ECG_Stop_Conversion();
-			printf("\n total samples = %d\n", total_samples);
-			printf("\n total data ready interrupts = %d\n", ECG_Drdy_count);
-			ECG_Drdy_count = 0;
-			total_samples = 0;
-			raw_data_index = 0;
-#endif
-#if 0
-			if(enableDummyCapture)
-			{
-				for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
+				for(raw_data_index=0; raw_data_index<ECG_DUMMY_CAPTURES; raw_data_index++)// ~3sec dummy capture
 				{
 					status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
 				}
@@ -568,13 +541,7 @@ void Dummy_Capture(uint16_t total_samples)
 			MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
 			MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
 
-			for(raw_data_index=0; raw_data_index<600; raw_data_index++)
-				{
-					status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-				}
-#endif
-#if 1
-			for(raw_data_index=0; raw_data_index<700; raw_data_index++)
+			for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
 			{
 				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
 			}
@@ -583,17 +550,16 @@ void Dummy_Capture(uint16_t total_samples)
 			ECG_Drdy_count = 0;
 			API_ECG_Stop_Conversion();
 			printf("\nECG L1 data:\n");
-			for(int i=100;i<700;i++)
+			for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 			{
 			  printf("\n%f",ECG_Lead1_buff[i]);
 			}
 
 			printf("\nECG L2 data:\n");
-			for(int i=100;i<700;i++)
+			for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 			{
 			  printf("\n%f",ECG_Lead2_buff[i]);
 			}
-#endif
 		}
 
 	else

@@ -62,4 +62,36 @@ void API_ECG_Stop_Conversion(void);
 ECG_STATUS API_ECG_Chip_Init(void);
 extern int ECG_Drdy_count;
 
+#define ODR_50 0
+#define ODR_100 0
+#define ODR_200 0
+#define ODR_400 0
+#define ODR_533 0
+#define ODR_800 0
+#define ODR_1067 1
+#define ODR_1600 0 //dram0_0_seg' overflowed Device not supported
+
+#define ECG_IN_SECONDS 6
+#define ECG_DUMMY_CAPTURES 100
+
+#if ODR_50
+#define SET_ODR 50
+#elif ODR_100
+#define SET_ODR 100
+#elif ODR_200
+#define SET_ODR 200
+#elif ODR_400
+#define SET_ODR 400
+#elif ODR_533
+#define SET_ODR 533
+#elif ODR_800
+#define SET_ODR 800
+#elif ODR_1067
+#define SET_ODR 1067
+#elif ODR_1600
+#define SET_ODR 1600 //
+#else
+
+#endif
+
 #endif /* API_API_ECG_H_ */

@@ -423,8 +423,33 @@ ECG_STATUS API_ECG_Reginit_2Lead()
 		reg_config_status |= api_ecg_reg_write(AFE_SHDN_CN_REG, AFE_SHDN_CH1_CH2_CH3_ACTIVE);
 		reg_config_status |= api_ecg_reg_write(R1_RATE_REG, 0x00);
 		reg_config_status |= api_ecg_reg_write(R2_RATE_REG, 0x01);//Configures the R2 decimation rate as 6
+#if ODR_50
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x80);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 50sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x80);//Configures the R3 decimation rate as 64 for channel 2.
+#elif ODR_100
 		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x40);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 100sps
 		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x40);//Configures the R3 decimation rate as 64 for channel 2.
+#elif ODR_200
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x20);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 200sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x20);//Configures the R3 decimation rate as 64 for channel 2.
+#elif ODR_400
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x10);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 400sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x10);//Configures the R3 decimation rate as 64 for channel 2.
+#elif ODR_533
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x08);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 533sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x08);//Configures the R3 decimation rate as 64 for channel 2.
+#elif ODR_800
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x04);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 800sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x04);//Configures the R3 decimation rate as 64 for channel 2.
+#elif ODR_1067
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x02);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 1067sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x02);//Configures the R3 decimation rate as 64 for channel 2.
+#elif ODR_1600
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x01);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 1600sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x01);//Configures the R3 decimation rate as 64 for channel 2.
+#else
+
+#endif
 		reg_config_status |= api_ecg_reg_write(DRDYB_SRC_REG, DRDYB_SRC_CH1);//Configures the DRDYB source to channel 1 ECG (or fastest channel).
 		reg_config_status |= api_ecg_reg_write(CH_CNFG_REG, 0X10);//Enables channel 1 ECG for loop read-back mode.
 		reg_config_status |= api_ecg_reg_write(AFE_RES_REG, 0x3F);
