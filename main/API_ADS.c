@@ -421,12 +421,13 @@ ECG_STATUS API_ECG_Reginit_2Lead()
 		reg_config_status |= api_ecg_reg_write(RLD_CN_REG, RLD_IN5);
 		reg_config_status |= api_ecg_reg_write(OSC_CN_REG, OSC_EXT);
 		reg_config_status |= api_ecg_reg_write(AFE_SHDN_CN_REG, AFE_SHDN_CH1_CH2_CH3_ACTIVE);
-		reg_config_status |= api_ecg_reg_write(R2_RATE_REG, 0x04);//Configures the R2 decimation rate as 6
+		reg_config_status |= api_ecg_reg_write(R1_RATE_REG, 0x00);
+		reg_config_status |= api_ecg_reg_write(R2_RATE_REG, 0x01);//Configures the R2 decimation rate as 6
 		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x40);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 100sps
 		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x40);//Configures the R3 decimation rate as 64 for channel 2.
 		reg_config_status |= api_ecg_reg_write(DRDYB_SRC_REG, DRDYB_SRC_CH1);//Configures the DRDYB source to channel 1 ECG (or fastest channel).
 		reg_config_status |= api_ecg_reg_write(CH_CNFG_REG, 0X10);//Enables channel 1 ECG for loop read-back mode.
-		reg_config_status |= api_ecg_reg_write(AFE_RES_REG, 0x01);
+		reg_config_status |= api_ecg_reg_write(AFE_RES_REG, 0x3F);
 		reg_config_status |= api_ecg_reg_write(FLEX_CH3_CN_REG, 0X40);
 
 	}
@@ -804,11 +805,13 @@ static void IRAM_ATTR api_drdy_isr(void* arg)
 		{
 			ECG_Drdy_Flag = true;
 			ECG_Drdy_count++;
+			gpio_set_level(JTAG_MTDI_DEBUG, 0);
 		}
 		else if(Temp_drdy > 1)
 		{
 			ECG_Drdy_Flag = false;
 			Temp_drdy = 0;
+			gpio_set_level(JTAG_MTDI_DEBUG, 1);
 		}
 	}
 

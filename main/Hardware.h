@@ -24,6 +24,7 @@
 
 #define PUSH_BTN_PIN     36U
 #define ECG_CSn_VCS		14
+#define JTAG_MTDI_DEBUG		12
 
 
 

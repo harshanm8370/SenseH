@@ -61,7 +61,11 @@ void TestFlashStorage(void);
 	}*/
 
     PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[ECG_CSn_VCS], PIN_FUNC_GPIO);
+    PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[JTAG_MTDI_DEBUG], PIN_FUNC_GPIO);
+
     gpio_set_direction(ECG_CSn_VCS, GPIO_MODE_OUTPUT);
+    gpio_set_direction(JTAG_MTDI_DEBUG, GPIO_MODE_OUTPUT);
+    gpio_set_level(JTAG_MTDI_DEBUG, 1);
     gpio_set_level(ECG_CSn_VCS, 1);
 
 	API_TIMER_Run_1MS_Timer();
