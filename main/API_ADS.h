@@ -63,15 +63,15 @@ ECG_STATUS API_ECG_Chip_Init(void);
 extern int ECG_Drdy_count;
 
 #define ODR_50 0
-#define ODR_100 0
+#define ODR_100 1
 #define ODR_200 0
 #define ODR_400 0
 #define ODR_533 0
 #define ODR_800 0
-#define ODR_1067 1
+#define ODR_1067 0
 #define ODR_1600 0 //dram0_0_seg' overflowed Device not supported
 
-#define ECG_IN_SECONDS 6
+#define ECG_IN_SECONDS 6 // Caution do'not change to higher record length, If done make sure ODR is set below 200
 #define ECG_DUMMY_CAPTURES 100
 
 #if ODR_50

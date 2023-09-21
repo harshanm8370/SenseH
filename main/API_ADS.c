@@ -422,7 +422,7 @@ ECG_STATUS API_ECG_Reginit_2Lead()
 		reg_config_status |= api_ecg_reg_write(OSC_CN_REG, OSC_EXT);
 		reg_config_status |= api_ecg_reg_write(AFE_SHDN_CN_REG, AFE_SHDN_CH1_CH2_CH3_ACTIVE);
 		reg_config_status |= api_ecg_reg_write(R1_RATE_REG, 0x00);
-		reg_config_status |= api_ecg_reg_write(R2_RATE_REG, 0x01);//Configures the R2 decimation rate as 6
+		reg_config_status |= api_ecg_reg_write(R2_RATE_REG, 0x01);//Configures the R2 decimation rate as 4
 #if ODR_50
 		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x80);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 50sps
 		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x80);//Configures the R3 decimation rate as 64 for channel 2.
