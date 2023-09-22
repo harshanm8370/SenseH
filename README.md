@@ -9,14 +9,14 @@ Release V1.0 – Date: 22/09/2023
 Release Name: SenseH_FW_Esp32
 
 
-Features:  
+**Features:  
 •	Date/time sync with the mobile application
 •	Time monitoring on the console for each test  
 •	Lead off detection for ECG 
 •	Polling method for ECG and PPG
 •	Storage for quick and multi-vitals
 •	Data syncing with mobile APK
-•	CS pin of ADS now connected to IO14 of ESP32
+•	CS pin of ADS now connected to IO14 of ESP32**
 
 Existing Issues and Workarounds:  
 •	V leads in multi-vitals are not inverted
