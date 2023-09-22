@@ -237,152 +237,73 @@ bool QUICK_Test1(void)
 
 
  bool Run_Quick_Vital(void)
-{
-	uint16_t result[4] = {0};
+ {
+ 	uint16_t result[4] = {0};
 
-	printf("\nQuick Test2 Started");
+ 	printf("\nQuick Test2 Started");
 
-	Is_time_displayed = TRUE;
-	API_DISP_Toggle_Date_Time();
-//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
-	gpio_set_level(ECG_CSn_VCS, 1);
+ 	Is_time_displayed = TRUE;
+ 	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
 
-	 API_IO_Exp_Power_Control(EN_VLED,HIGH);
-	 API_IO_Exp_Power_Control(EN_ANALOG,HIGH);
-	 API_IO_Exp_Power_Control(EN_IR,HIGH);
+ 	if((Selected_PID_type == VALID_PID) || (Selected_PID_type == GUEST_PID))
+ 	{
+ 		if(API_Flash_Org_Check_For_Memory_Free())
+ 		{
+ 			API_Buzzer_Sound(SHORT_BEEP);
+ 			API_Disp_Quick_Test_Icon();
+ 			API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER);
+ 			Enable_Power_Supply();
+ 			API_ECG_Chip_Reset();
 
-	if((Selected_PID_type == VALID_PID) || (Selected_PID_type == GUEST_PID))
-	{
-			if(API_Flash_Org_Check_For_Memory_Free())
-			{
+ 			if(API_MAX86150_Setup())
+ 			{
+ 				if(API_ECG_Init())
+ 				{
+ 					//Capture PPG data
+ 					API_Disp_Quick_test_screen(DISP_QT_PPG_TEST_IN_PROGRESS);
+ 					Capture_PPG_ECG_Data(CAPTURE_PPG,true);
 
-				//API_Buzzer_Sound(SHORT_BEEP);
+ 					//Capture ECG L1 and L2 data
+ 					API_Disp_Quick_test_screen(DISP_QT_ECG_L2_TEST_IN_PROGRESS);
+ 					if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,true)==false)
+ 					{
+ 						Disable_Power_Supply();
+ 						return false;
+ 					}
 
-				API_Disp_Quick_Test_Icon();
+ 					// Capture BP data
+ 					API_Disp_Quick_test_screen(DISP_QT_BP_TEST_IN_PROGRESS);
+ 					Capture_BP_Data(true);
 
-				API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER);
+ 					API_Disp_Quick_Test_Result(result);
 
-				printf("\nEnteriing into ECG init");
+ 					//Store data into flash
+ 					 if(Selected_PID_type != GUEST_PID) Store_QuickTest1_Data_To_Flash();
+ 				}
 
-				Enable_Power_Supply();
-			//	Select_Vlead(LEAD6);// Enable only 6 lead
-				API_IO_Exp_Power_Control(EN_IR,LOW);
-				API_ECG_Chip_Reset();
+ 			}
 
-				/*	if(API_ECG_Init())
-				{
+ 		}
 
-					if(API_ECG_Lead_OFF_Detect(LEAD2))
-					{
-						API_Disp_Display_Lead_Connection_Status((uint8_t)LEAD2);
+ 		else
+ 		{
+ 			printf("\nDevice Memory Full... Please sync the data");
+ 			API_DISP_Memory_Full_Status();
+ 		}
+ 	}
 
-						 API_Disp_Quick_test_screen(DISP_QT_TEST_IN_PROGRESS);
-						 API_Disp_Quick_Test_Icon();
+ 	else
+ 	{
+ 		printf("\nPlease select the PID");
+ 		API_Disp_Quick_test_screen(DISP_QT_PLEASE_REGISTER_PID);
+ 	}
 
-						bool status = QUICK_Test1();
-
-						if(status == false)
-						{
-
-						}
-
-						Disable_Power_Supply();
-
-						return false;
-					}
-					API_ECG_Chip_Reset();
-				}
-*/
-
-				 if(API_MAX86150_Setup())
-				 {
-					if(API_ECG_Init())
-						{
-							API_Disp_Quick_test_screen(DISP_QT_PPG_TEST_IN_PROGRESS);
-
-							//while(1){
-							Print_time("\nSPO2 start");
-							Capture_PPG_ECG_Data(CAPTURE_PPG,true);
-							Print_time("\nSPO2 end");
-						//	Filter_Quicktest1_Data();
-						//	}
-							//Capture_BP_Data(true);
-
-							//Check_PPG_Data_Quality();
-
-							//API_ECG_Registers_Check_For_Corruption();
-
-							//if(API_Temperature_Init())
-
-								API_Disp_Quick_test_screen(DISP_QT_ECG_L1_TEST_IN_PROGRESS);
-								Print_time("/ECG start");
-								   if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,true)==false)
-									   {
-										   Disable_Power_Supply();
-										   return false;
-									   }
-								   Print_time("\nECG end");
-									 printf("\nCapturing BP................");
-
-                                      Print_time("\nBP START");
-									 Capture_BP_Data(true);
-									 Print_time("\nBP END");
-
-											// Filter_Quicktest1_Data();
-											// Peak detection
-											// Result Computation
-
-											// Filter_Quicktest1_Data();
-											// Peak detection
-											// Result Computation
-
-										   Vital_result.SBP1 = 117; // Need to change later
-										   Vital_result.DBP1 = 77; // Need to change later
-
-											result[0] = 98;
-											result[1] = 85;
-											result[2] = 115;
-											result[3] = 85;
-
-										   API_Disp_Quick_Test_Result(result);
-										   if(Selected_PID_type != GUEST_PID) Store_QuickTest1_Data_To_Flash();
-							   }
-
-						 }
-
-				}
-
-			else
-			{
-				printf("\nDevice Memory Full... Please sync the data");
-				 API_DISP_Memory_Full_Status();
-#if 1 //Enabled for Debug purpose to delete all 100 data
-				 for(int delete_rec = 1; delete_rec <=100; delete_rec++)
-				 {
-					 printf("\n Deleting Record = %d",delete_rec);
-					 erase_one_record(BP1);
-					 erase_one_record(ECG_1_Lead);
-					 erase_one_record(SPO2);
-					 API_Flash_Check_Update_Valid_Record_Status();
-				 }
-#endif
-			}
-	}
-
-	else
-	{
-        printf("\nPlease select the PID");
-        API_Disp_Quick_test_screen(DISP_QT_PLEASE_REGISTER_PID);
-	}
-
-	API_Buzzer_Sound(SHORT_BEEP);
-
-	Disable_Power_Supply();
-
-  	printf("\nTest completed.");
-
-	return true;
-}
+ 	//Test is complete
+ 	API_Buzzer_Sound(SHORT_BEEP);
+ 	Disable_Power_Supply();
+ 	printf("\nTest completed.");
+ 	return true;
+ }
 
 
 void Dummy_Capture(uint16_t total_samples)
@@ -424,143 +345,219 @@ void Dummy_Capture(uint16_t total_samples)
 
 	API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
 
-	if(captureType == CAPTURE_ECG_L1)
-	{
-		API_ECG_Start_Conversion();
-
-		if(enableDummyCapture)
+	//Skip test if lead1 is not connected
+		if(captureType == CAPTURE_ECG_L1)
 		{
-			for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
+			bool leadoffstatus = API_ECG_Lead_OFF_Detect(LEAD1);
+			if(leadoffstatus)
 			{
-				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+				printf("\nLeads are not connected");
+				API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER_PROPERLY);
 			}
-		}
-
-		MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
-		MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
-
-		for(raw_data_index=0; raw_data_index<600; raw_data_index++)
+			else
 			{
-				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-			}
+				//printf("\nNO Lead-off detected");
+				API_ECG_Start_Conversion();
 
-		for(int i=0;i<600;i++)
+				if(enableDummyCapture)
+				{
+					for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
 					{
-					  printf("\n%f",ECG_Lead1_buff[i]);
+						status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
 					}
+				}
 
-		MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff)); // Lead1 capture doesn't need Lead2 data.
-
-		API_ECG_Stop_Conversion();
-
-	}
-
-	else if(captureType == CAPTURE_ECG_L2)
-	{
-		API_ECG_Start_Conversion();
-
-
-		if(enableDummyCapture)
-		{
-			for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
-			{
-				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-			}
-		}
-
-	MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
-	MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
-
-	for(raw_data_index=0; raw_data_index<600; raw_data_index++)
-		{
-			status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-		}
-	printf("\nECG L1");
-
-	for(int i=0;i<600;i++)
-			{
-			  printf("%f\n",ECG_Lead1_buff[i]);
-			}
-	printf("\nECG L2");
-	for(int i=0;i<600;i++)
-			{
-			  printf("%f\n",ECG_Lead2_buff[i]);
-			}
-
-	API_ECG_Stop_Conversion();
-
-	}
-
-	else if(captureType == CAPTURE_PPG)
-	{
-		Max86150_Clear_Fifo();
-
-
-		if(enableDummyCapture)
-		{
-			for(raw_data_index=0; raw_data_index<300; raw_data_index++)// ~3sec dummy capture
-			{
-				status = API_MAX86150_Raw_Data_capture(SPO2_PPG_RED_BUFF+raw_data_index, SPO2_PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
-			}
-		}
-
-		MemSet(SPO2_PPG_RED_BUFF,0,sizeof(SPO2_PPG_RED_BUFF));
-		MemSet(SPO2_PPG_IR_BUFF,0,sizeof(SPO2_PPG_IR_BUFF));
-
-
-		for(raw_data_index=0; raw_data_index<600; raw_data_index++)
-			{
-				status = API_MAX86150_Raw_Data_capture(SPO2_PPG_RED_BUFF+raw_data_index, SPO2_PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
-			}
-
-		printf("\nSPO2 PPG-RED DATA:");
-		for(int i=0;i<600;i++)
-			{
-			  printf("\n%ld",SPO2_PPG_RED_BUFF[i]);
-			}
-		printf("\nSPO2 PPG-IR DATA:");
-		for(int i=0;i<600;i++)
-			{
-			  printf("\n%ld",SPO2_PPG_IR_BUFF[i]);
-			}
-	}
-
-	else if(captureType == CAPTURE_ECG_L1_AND_L2)
-		{
-			ECG_Drdy_count = 0;
-			API_ECG_Stop_Conversion();
-			API_ECG_Start_Conversion();
-			if(enableDummyCapture)
-			{
-				for(raw_data_index=0; raw_data_index<ECG_DUMMY_CAPTURES; raw_data_index++)// ~3sec dummy capture
+				MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
+				MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
+				Print_time("\nECG start");
+				for(raw_data_index=0; raw_data_index<600; raw_data_index++)
 				{
 					status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
 				}
-			}
+				Print_time("\nECG end");
 
-			MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
-			MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
+				for(int i=0;i<600;i++)
+				{
+					printf("\n%f",ECG_Lead1_buff[i]);
+				}
 
-			for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
-			{
-				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-			}
+				MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff)); // Lead1 capture doesn't need Lead2 data.
 
-			printf("\n total data ready interrupts = %d\n", ECG_Drdy_count);
-			ECG_Drdy_count = 0;
-			API_ECG_Stop_Conversion();
-			printf("\nECG L1 data:\n");
-			for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
-			{
-			  printf("\n%f",ECG_Lead1_buff[i]);
-			}
-
-			printf("\nECG L2 data:\n");
-			for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
-			{
-			  printf("\n%f",ECG_Lead2_buff[i]);
+				API_ECG_Stop_Conversion();
 			}
 		}
+
+		//Skip test if lead2 is not connected
+		else if(captureType == CAPTURE_ECG_L2)
+		{
+			bool leadoffstatus = API_ECG_Lead_OFF_Detect(LEAD2);
+			if(leadoffstatus)
+			{
+				printf("\nLeads are not connected");
+				API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER_PROPERLY);
+			}
+			else
+			{
+				printf("\nNO Lead-off detected");
+				API_ECG_Start_Conversion();
+
+
+				if(enableDummyCapture)
+				{
+					for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
+					{
+						status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+					}
+				}
+
+				MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
+				MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
+				Print_time("\nECG start");
+				for(raw_data_index=0; raw_data_index<600; raw_data_index++)
+				{
+					status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+				}
+				Print_time("\nECG end");
+				printf("\nECG L1");
+
+				for(int i=0;i<600;i++)
+				{
+					printf("%f\n",ECG_Lead1_buff[i]);
+				}
+				printf("\nECG L2");
+				for(int i=0;i<600;i++)
+				{
+					printf("%f\n",ECG_Lead2_buff[i]);
+				}
+
+				API_ECG_Stop_Conversion();
+				API_ECG_Disable_LeadOff_Detection();
+
+			}
+		}
+
+		else if(captureType == CAPTURE_PPG)
+			{
+				Max86150_Clear_Fifo();
+
+
+				if(enableDummyCapture)
+				{
+					for(raw_data_index=0; raw_data_index<300; raw_data_index++)// ~3sec dummy capture
+					{
+						status = API_MAX86150_Raw_Data_capture(SPO2_PPG_RED_BUFF+raw_data_index, SPO2_PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
+					}
+				}
+
+				MemSet(SPO2_PPG_RED_BUFF,0,sizeof(SPO2_PPG_RED_BUFF));
+				MemSet(SPO2_PPG_IR_BUFF,0,sizeof(SPO2_PPG_IR_BUFF));
+
+				Print_time("\nPPG start");
+				for(raw_data_index=0; raw_data_index<600; raw_data_index++)
+					{
+						status = API_MAX86150_Raw_Data_capture(SPO2_PPG_RED_BUFF+raw_data_index, SPO2_PPG_IR_BUFF+raw_data_index, max_ecg_no_use,1,0,0);
+					}
+				Print_time("\PPG end");
+				printf("\nSPO2 PPG-RED DATA:");
+				for(int i=0;i<600;i++)
+					{
+					  printf("\n%ld",SPO2_PPG_RED_BUFF[i]);
+					}
+				printf("\nSPO2 PPG-IR DATA:");
+				for(int i=0;i<600;i++)
+					{
+					  printf("\n%ld",SPO2_PPG_IR_BUFF[i]);
+					}
+			}
+
+			else if(captureType == CAPTURE_ECG_L1_AND_L2)
+			{
+				bool leadoffstatus_lead1 = 0, leadoffstatus_lead2 = 0;
+		#if LOD
+				leadoffstatus_lead1 = API_ECG_Lead_OFF_Detect(LEAD1);
+				leadoffstatus_lead2 = API_ECG_Lead_OFF_Detect(LEAD2);
+
+		#else
+				 leadoffstatus_lead1 = 0;
+				 leadoffstatus_lead2 = 0;
+		#endif
+				 //Skip test if lead 1 is not connected
+				if(leadoffstatus_lead1)
+				{
+					printf("\nLeads are not connected");
+					API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER_PROPERLY);
+					return false;
+				}
+				//Skip lead 2 test, if lead 2 is not connected
+				else if(leadoffstatus_lead2 ^ leadoffstatus_lead1)
+				{
+					API_Disp_Quick_test_screen(DISP_QT_ECG_L2_NOT_CONNECTED);
+					API_Disp_Quick_test_screen(DISP_QT_ECG_L1_PROCEED);
+					printf("\nLead 2 is not connected, proceeding with lead1");
+					API_ECG_Start_Conversion();
+
+					if(enableDummyCapture)
+					{
+						for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
+						{
+							status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+						}
+					}
+
+					MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
+					MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
+					Print_time("\nECG start");
+					for(raw_data_index=0; raw_data_index<600; raw_data_index++)
+					{
+						status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+					}
+					Print_time("\nECG end");
+					for(int i=0;i<600;i++)
+					{
+						printf("\n%f",ECG_Lead1_buff[i]);
+					}
+
+					MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff)); // Lead1 capture doesn't need Lead2 data.
+
+					API_ECG_Stop_Conversion();
+				}
+				//If both lead1 and lead2 are not connected
+				else
+				{
+					printf("\nAll leads are detected");
+					API_ECG_Start_Conversion();
+
+					if(enableDummyCapture)
+					{
+						for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
+						{
+							status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+						}
+					}
+
+					MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
+					MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
+					Print_time("\nECG start");
+					for(raw_data_index=0; raw_data_index<600; raw_data_index++)
+					{
+						status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+					}
+					Print_time("\nECG end");
+					printf("\n\nECG L1 data");
+					for(int i=0;i<600;i++)
+					{
+						printf("\n%f",ECG_Lead1_buff[i]);
+					}
+
+					printf("\n\nECG L2 data");
+					for(int i=0;i<600;i++)
+					{
+						printf("\n%f",ECG_Lead2_buff[i]);
+					}
+
+					API_ECG_Stop_Conversion();
+				}
+			}
 
 	else
 	{
@@ -576,61 +573,58 @@ void Dummy_Capture(uint16_t total_samples)
 
  bool Capture_BP_Data(bool enableDummyCapture)
  {
-		uint32_t max_ecg_no_use[1U] ={0U}; // Not using ecg data from max86150 as hardware will not support
-		uint16_t raw_data_index =0U;
-		esp_err_t status = ESP_FAIL;
+ 	 uint32_t max_ecg_no_use[1U] ={0U}; // Not using ecg data from max86150 as hardware will not support
+ 	 uint16_t raw_data_index =0U;
+ 	 esp_err_t status = ESP_FAIL;
+ 	 bool leadoffstatus = API_ECG_Lead_OFF_Detect(LEAD1);
 
-		API_ECG_Start_Conversion();
-		Max86150_Clear_Fifo();
+ 	 //Skip BP test if lead1 is not connected
+ 	 if(leadoffstatus)
+ 	 {
+ 		 printf("\nLeads are not connected");
+ 		 API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER_PROPERLY);
+ 	 }
+ 	 else
+ 	 {
+ 		 API_ECG_Start_Conversion();
+ 		 Max86150_Clear_Fifo();
 
-		if(enableDummyCapture)
-		{
-			for(raw_data_index=0; raw_data_index<600; raw_data_index++)// ~3sec dummy capture
-			{
-				status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-				status = API_MAX86150_Raw_Data_capture(BP_PPG_RED_BUFF+raw_data_index, BP_PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
-			}
-		}
+ 		 if(enableDummyCapture)
+ 		 {
+ 			 for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
+ 			 {
+ 				 status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+ 				 status = API_MAX86150_Raw_Data_capture(BP_PPG_RED_BUFF+raw_data_index, BP_PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
+ 			 }
+ 		 }
 
-		MemSet(BP_ECG_Lead1_buff,0,sizeof(BP_ECG_Lead1_buff));
-		MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
-		MemSet(BP_PPG_RED_BUFF,0,sizeof(BP_PPG_RED_BUFF));
-		MemSet(BP_PPG_IR_BUFF,0,sizeof(BP_PPG_IR_BUFF));
+ 		 MemSet(BP_ECG_Lead1_buff,0,sizeof(BP_ECG_Lead1_buff));
+ 		 MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
+ 		 MemSet(BP_PPG_RED_BUFF,0,sizeof(BP_PPG_RED_BUFF));
+ 		 MemSet(BP_PPG_IR_BUFF,0,sizeof(BP_PPG_IR_BUFF));
+ 		 Print_time("\nBP start");
+ 		 for(raw_data_index=0; raw_data_index<600; raw_data_index++)
+ 		 {
+ 			 status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+ 			 status = API_MAX86150_Raw_Data_capture(BP_PPG_RED_BUFF+raw_data_index , BP_PPG_IR_BUFF+raw_data_index ,max_ecg_no_use,1,0,0);
+ 		 }
+ 		 Print_time("\nBP end");
+ 		 printf("\nBP ECG L1 data:\n");
+ 		 for(int i=0;i<600;i++)
+ 		 {
+ 			 printf("%f\n",BP_ECG_Lead1_buff[i]);
+ 		 }
 
-		for(raw_data_index=0; raw_data_index<600; raw_data_index++)
-			{
-				status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-				status = API_MAX86150_Raw_Data_capture(BP_PPG_RED_BUFF+raw_data_index, BP_PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
-			}
+ 		 printf("\nBP PPG Red data:\n");
+ 		 for(int i=0;i<600;i++)
+ 		 {
+ 			 printf("%ld\n",BP_PPG_RED_BUFF[i]);
+ 		 }
 
-		printf("\nBP ECG L1 data:\n");
-		for(int i=0;i<600;i++)
-		{
-		  printf("%f\n",BP_ECG_Lead1_buff[i]);
-		}
-		/*
-		printf("\nECG L2 data:\n");
-		for(int i=0;i<600;i++)
-		{
-		  printf("\n%f",ECG_Lead2_buff[i]);
-		}*/
-
-		printf("\nBP PPG Red data:\n");
-		for(int i=0;i<600;i++)
-		{
-			printf("%ld\n",BP_PPG_RED_BUFF[i]);
-		}
-
-		/*printf("\nPPG IR data:\n");
-		for(int i=0;i<600;i++)
-		{
-			printf("\n%d",PPG_IR_BUFF[i]);
-		}
-*/
-		API_ECG_Stop_Conversion();
-
-		return true;
- }
+ 		 API_ECG_Stop_Conversion();
+ 	 }
+ 	 return true;
+  }
 
 void Filter_Quicktest1_Data(void)
 {

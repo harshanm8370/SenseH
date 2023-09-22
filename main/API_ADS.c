@@ -417,6 +417,9 @@ ECG_STATUS API_ECG_Reginit_2Lead()
 
 		reg_config_status |= api_ecg_reg_write(FLEX_CH1_CN_REG, CH1_INP_INN);
 		reg_config_status |= api_ecg_reg_write(FLEX_CH2_CN_REG, 0x19);
+		reg_config_status |= api_ecg_reg_write(LOD_CN_REG, DC_LEAD_OFF_CTRL);						//DC_LEAD_OFF_CTRL - active
+		reg_config_status |= api_ecg_reg_write(LOD_EN_REG, DC_LEAD_OFF_EN_CH1_CH2_CH3);				//Enable DC lead-off for CH1,CH2,CH3, current to CH1 is anti-phases
+		reg_config_status |= api_ecg_reg_write(LOD_CURRENT_REG, LOD_CURRENT_SEL);					//LOD current selected  8nA, which is the minimum current
 		reg_config_status |= api_ecg_reg_write(CMDET_EN_REG, CMDET_IN1_IN2_IN3);
 		reg_config_status |= api_ecg_reg_write(RLD_CN_REG, RLD_IN5);
 		reg_config_status |= api_ecg_reg_write(OSC_CN_REG, OSC_EXT);

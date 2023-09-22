@@ -686,8 +686,7 @@ api_disp_write_data_1byte(disp_spi,0x00,1);         // start address 0
 void API_DISP_Clear_Full_Screen_3_Wire(uint16_t color)
 {
 	int i;
-//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
-	gpio_set_level(ECG_CSn_VCS, 1);
+	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
 
 	API_IO_Exp1_P1_write_pin(DISPLAY_CSN, LOW);
 	api_disp_write_com(SET_COLUMN_ADDRESS); // Column address setting
@@ -865,8 +864,7 @@ return 1;
  {
 	API_IO_Exp_Select(IO_EXPANDER_1);
 
-//	API_IO_Exp1_P1_write_pin(ECG_CSN, HIGH);
-	gpio_set_level(ECG_CSn_VCS, 1);
+	API_IO_Exp1_P1_write_pin(ECG_CSN, HIGH);
 
 	API_IO_Exp1_P0_write_pin(EFM_DISP_RESN, HIGH);
 	API_IO_Exp1_P1_write_pin(DISPLAY_CSN, LOW);
@@ -2698,8 +2696,7 @@ uint8_t left_offset = 0;
 
   void API_Disp_Quick_test_screen(DISP_QUICK_TEST_SCREENS_t disp_qt_screen)
   {
-//		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
-		gpio_set_level(ECG_CSn_VCS, 1);
+		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
 
   	struct DISPLAY_TEXT mid_text1,mid_text2,mid_text3,mid_text4,mid_text5,mid_text6,mid_text7,btm_text;
   	struct DISPLAY_ICON btm_icon;
@@ -2724,141 +2721,163 @@ uint8_t left_offset = 0;
 
   	switch(disp_qt_screen)
   	{
-  		case DISP_QT_SCREEN:
+  	case DISP_QT_SCREEN:
 
-  			mid_text5.text_starting_addr = " Quick Test ";
-  			mid_text5.color              = BLUE;
-  			mid_text6.text_status        = FALSE;
-  			mid_text4.text_status        = FALSE;
+  		mid_text5.text_starting_addr = " Quick Test ";
+  		mid_text5.color              = BLUE;
+  		mid_text6.text_status        = FALSE;
+  		mid_text4.text_status        = FALSE;
 
-  			break;
+  		break;
 
 
-  		case DISP_QT_PLACE_FINGER :
-  			mid_text4.text_starting_addr = "   Place    ";
-  			mid_text5.text_starting_addr = " fingers on";
-  			mid_text6.text_starting_addr = " electrodes ";
-  			bottom_icon.icon_status		 = FALSE;
+  	case DISP_QT_PLACE_FINGER :
+  		mid_text4.text_starting_addr = "   Place    ";
+  		mid_text5.text_starting_addr = " fingers on";
+  		mid_text6.text_starting_addr = " electrodes ";
+  		bottom_icon.icon_status		 = FALSE;
 
-  			break;
+  		break;
 
-  		case DISP_QT_PLEASE_REGISTER_PID:
-			mid_text1.text_starting_addr = "   Please   ";
-			mid_text2.text_starting_addr = "Register PID";
+  	case DISP_QT_PLEASE_REGISTER_PID:
+  		mid_text1.text_starting_addr = "   Please   ";
+  		mid_text2.text_starting_addr = "Register PID";
 
-			bottom_icon.icon_status		 = FALSE;
-		  	mid_text1.text_status = display;
-		  	mid_text2.text_status = display;
-		  	mid_text3.text_status = FALSE;
-		  	mid_text4.text_status = FALSE;
-		  	mid_text5.text_status = FALSE;
-		  	mid_text6.text_status = FALSE;
-		  	mid_text7.text_status = FALSE;
+  		bottom_icon.icon_status		 = FALSE;
+  		mid_text1.text_status = display;
+  		mid_text2.text_status = display;
+  		mid_text3.text_status = FALSE;
+  		mid_text4.text_status = FALSE;
+  		mid_text5.text_status = FALSE;
+  		mid_text6.text_status = FALSE;
+  		mid_text7.text_status = FALSE;
 
-		  	API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
-			break;
+  		API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+  		break;
 
-  		case DISP_QT_DETECTING_FINGER :
+  	case DISP_QT_DETECTING_FINGER :
 
-  			mid_text4.text_starting_addr = " Detecting  ";
-  			mid_text5.text_starting_addr = "   Finger   ";
-  			mid_text6.text_starting_addr = "            ";
-  			mid_text6.color = WHITE;
-  			mid_text6.text_status=display;
-  			bottom_icon.icon_status		 = FALSE;
-  			break;
+  		mid_text4.text_starting_addr = " Detecting  ";
+  		mid_text5.text_starting_addr = "   Finger   ";
+  		mid_text6.text_starting_addr = "            ";
+  		mid_text6.color = WHITE;
+  		mid_text6.text_status=display;
+  		bottom_icon.icon_status		 = FALSE;
+  		break;
 
-  		case DISP_QT_TEST_IN_PROGRESS :
+  	case DISP_QT_TEST_IN_PROGRESS :
 
-  			mid_text4.text_starting_addr = "  Test in   ";
-  			mid_text5.text_starting_addr = "  Progress  ";
-  			mid_text6.text_starting_addr = "            ";
-  			bottom_icon.icon_status		 = FALSE;
+  		mid_text4.text_starting_addr = "  Test in   ";
+  		mid_text5.text_starting_addr = "  Progress  ";
+  		mid_text6.text_starting_addr = "            ";
+  		bottom_icon.icon_status		 = FALSE;
 
-  			btm_icon.icon_status        = FALSE;
-  			btm_text.text_status        = display;
-  			btm_text.text_starting_addr = "    Exit    ";
-  			btm_text.color              = WHITE;
+  		btm_icon.icon_status        = FALSE;
+  		btm_text.text_status        = display;
+  		btm_text.text_starting_addr = "    Exit    ";
+  		btm_text.color              = WHITE;
 
-  			break;
+  		break;
 
-  		case DISP_QT_ECG_L1_TEST_IN_PROGRESS :
+  	case DISP_QT_ECG_L1_TEST_IN_PROGRESS :
 
-  	  			mid_text4.text_starting_addr = "ECG-L1 Test ";
-  	  			mid_text5.text_starting_addr = "In Progress ";
-  	  			mid_text6.text_starting_addr = "            ";
-  	  			bottom_icon.icon_status		 = FALSE;
+  		mid_text4.text_starting_addr = "ECG-L1 Test ";
+  		mid_text5.text_starting_addr = "In Progress ";
+  		mid_text6.text_starting_addr = "            ";
+  		bottom_icon.icon_status		 = FALSE;
 
-  	  			btm_icon.icon_status        = FALSE;
-  	  			btm_text.text_status        = display;
-  	  			btm_text.text_starting_addr = "    Exit    ";
-  	  			btm_text.color              = WHITE;
+  		btm_icon.icon_status        = FALSE;
+  		btm_text.text_status        = display;
+  		btm_text.text_starting_addr = "    Exit    ";
+  		btm_text.color              = WHITE;
 
-  	  			break;
+  		break;
 
-  		case DISP_QT_ECG_L2_TEST_IN_PROGRESS :
+  	case DISP_QT_ECG_L2_TEST_IN_PROGRESS :
 
-  		  	  			mid_text4.text_starting_addr = "ECG-L2 Test ";
-  		  	  			mid_text5.text_starting_addr = "In Progress ";
-  		  	  			mid_text6.text_starting_addr = "            ";
-  		  	  			bottom_icon.icon_status		 = FALSE;
+  		mid_text4.text_starting_addr = "ECG-L2 Test ";
+  		mid_text5.text_starting_addr = "In Progress ";
+  		mid_text6.text_starting_addr = "            ";
+  		bottom_icon.icon_status		 = FALSE;
 
-  		  	  			btm_icon.icon_status        = FALSE;
-  		  	  			btm_text.text_status        = display;
-  		  	  			btm_text.text_starting_addr = "    Exit    ";
-  		  	  			btm_text.color              = WHITE;
+  		btm_icon.icon_status        = FALSE;
+  		btm_text.text_status        = display;
+  		btm_text.text_starting_addr = "    Exit    ";
+  		btm_text.color              = WHITE;
 
-  		  	  			break;
+  		break;
 
-  		case DISP_QT_PPG_TEST_IN_PROGRESS :
+  	case DISP_QT_PPG_TEST_IN_PROGRESS :
 
-				mid_text4.text_starting_addr = "PPG Test In ";
-				mid_text5.text_starting_addr = " Progress   ";
-				mid_text6.text_starting_addr = "            ";
-				bottom_icon.icon_status		 = FALSE;
+  		mid_text4.text_starting_addr = "PPG Test In ";
+  		mid_text5.text_starting_addr = " Progress   ";
+  		mid_text6.text_starting_addr = "            ";
+  		bottom_icon.icon_status		 = FALSE;
 
-				btm_icon.icon_status        = FALSE;
-				btm_text.text_status        = display;
-				btm_text.text_starting_addr = "    Exit    ";
-				btm_text.color              = WHITE;
+  		btm_icon.icon_status        = FALSE;
+  		btm_text.text_status        = display;
+  		btm_text.text_starting_addr = "    Exit    ";
+  		btm_text.color              = WHITE;
 
-				break;
+  		break;
 
-  		case DISP_QT_PLACE_FINGER_PROPERLY :
+  	case DISP_QT_PLACE_FINGER_PROPERLY :
 
-  			mid_text4.text_starting_addr = "   Place    ";
-  			mid_text5.text_starting_addr = "   Finger   ";
-  			mid_text6.text_starting_addr = "  Properly  ";
-  			bottom_icon.icon_status		 = FALSE;
+  		mid_text4.text_starting_addr = "   Place    ";
+  		mid_text5.text_starting_addr = "   Finger   ";
+  		mid_text6.text_starting_addr = "  Properly  ";
+  		bottom_icon.icon_status		 = FALSE;
 
-  			break;
+  		break;
 
-  		case DISP_12LEAD_CABLE_NOT_CONNECTED_PROPERLY :
+  	case DISP_12LEAD_CABLE_NOT_CONNECTED_PROPERLY :
 
-			mid_text3.text_starting_addr = "  Lead 12   ";
-			mid_text4.text_starting_addr = " Cables Not ";
-			mid_text5.text_starting_addr = " Connected  ";
-			mid_text6.text_starting_addr = "  Properly  ";
+  		mid_text3.text_starting_addr = "  Lead 12   ";
+  		mid_text4.text_starting_addr = " Cables Not ";
+  		mid_text5.text_starting_addr = " Connected  ";
+  		mid_text6.text_starting_addr = "  Properly  ";
 
-			mid_text3.text_status = display;
+  		mid_text3.text_status = display;
 
-			bottom_icon.icon_status		 = FALSE;
-			break;
+  		bottom_icon.icon_status		 = FALSE;
+  		break;
 
-  		case DISP_QT_RETAKE_TEST:
-  			  mid_text4.text_starting_addr = " Retake the ";
-  			  mid_text5.text_starting_addr = "    Test    ";
-  			  mid_text6.text_status = erase;
-  			  bottom_icon.icon_status		 = FALSE;
-  			  break;
+  	case DISP_QT_RETAKE_TEST:
+  		mid_text4.text_starting_addr = " Retake the ";
+  		mid_text5.text_starting_addr = "    Test    ";
+  		mid_text6.text_status = erase;
+  		bottom_icon.icon_status		 = FALSE;
+  		break;
 
-  		case DISP_QT_PLEASE_CARRYON_OTHER_VITALS:
+  	case DISP_QT_PLEASE_CARRYON_OTHER_VITALS:
 
-  				mid_text4.text_starting_addr = "Please carry";
-  				mid_text5.text_starting_addr = "  On with   ";
-  				mid_text6.text_starting_addr = "Other vital ";
-  				bottom_icon.icon_status		 = FALSE;
-                  break;
+  		mid_text4.text_starting_addr = "Please carry";
+  		mid_text5.text_starting_addr = "  On with   ";
+  		mid_text6.text_starting_addr = "Other vital ";
+  		bottom_icon.icon_status		 = FALSE;
+  		break;
+  	case DISP_QT_ECG_L2_NOT_CONNECTED:
+
+  		mid_text4.text_starting_addr = "  Lead II   ";
+  		mid_text5.text_starting_addr = "  is not   ";
+  		mid_text6.text_starting_addr = " connected ";
+  		bottom_icon.icon_status		 = FALSE;
+  		break;
+  	case DISP_QT_ECG_L1_PROCEED:
+
+  		mid_text4.text_starting_addr = " Lead I Test";
+  		mid_text5.text_starting_addr = "  starting  ";
+  		mid_text6.text_starting_addr = "            ";
+  		bottom_icon.icon_status		 = FALSE;
+  		break;
+
+  	case DISP_QT_BP_TEST_IN_PROGRESS:
+
+  	  		mid_text4.text_starting_addr = "  BP Test   ";
+  	  		mid_text5.text_starting_addr = "    in      ";
+  	  		mid_text6.text_starting_addr = "  Progress  ";
+  	  		bottom_icon.icon_status		 = FALSE;
+  	  		break;
   	}
 
   	if(disp_qt_screen == DISP_QT_SCREEN)
@@ -3072,8 +3091,7 @@ uint8_t left_offset = 0;
 
   void API_Disp_Quick_Test_Icon(void)
   {
-//	  API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
-	  gpio_set_level(ECG_CSn_VCS, 1);
+	  API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
 
   	uint8_t left_offset = 10;
   	uint8_t top_offset  = 30;
@@ -3161,8 +3179,7 @@ uint8_t left_offset = 0;
 
   void API_DISP_Firmware_Version(void)
   {
-//		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
-		gpio_set_level(ECG_CSn_VCS, 1);
+		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
 
  		api_disp_display_char( " FW Version ", font19x10, BLUE, BLACK, 5, 80);
  		api_disp_display_char(FIRMWARE_VERSION, font19x10, BLUE, BLACK, 5, 100);
@@ -3356,8 +3373,7 @@ void API_Disp_Lead_Count(uint8_t lead)
 
 void API_DISP_SenseSemi_Logo(SENSESEMI_LOGO_t moving_or_static)
 {
-//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
-	gpio_set_level(ECG_CSn_VCS, 1);
+	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
 
 
 	struct DISPLAY_TEXT mid_text1,mid_text2,mid_text3;
