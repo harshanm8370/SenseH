@@ -1288,7 +1288,7 @@ bool API_ECG_Lead_OFF_Detect(ECG_LEADS_t lead)
 {
     bool leadOffStatus = false;
 
-#ifdef LEAD_OFF_DETECTION
+#if 1
     leadOffStatus = true;
 
 	TIMER_t timeout = TIMER_10SEC;

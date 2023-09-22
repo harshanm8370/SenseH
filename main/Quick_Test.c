@@ -94,22 +94,22 @@ typedef struct __attribute__((__packed__))
 }BP_MULTIPLIER_TO_FLASH;
 
 typedef enum {
-			TEST_SUCCESS = 0,
-			SpO2_REG_INIT_FAILED ,
-			BP_ECG_REG_INIT_FAILED,
-			BP_PPG_REG_INIT_FAILED,
-			SpO2_CAPTURE_FAILED,
-			BP_CAPTURE_FAILED,
-			SpO2_PEAKS_NOT_DETECTED,
-			SpO2_VALLEY_NOT_DETECTED,
-			SpO2_AC_DC_NOT_IN_RANGE,
-			SpO2_NOT_IN_RANGE,
-			SpO2_FLASH_WRITE_FAILED,
-			BP_ECG_PEAKS_NOT_DETECTED,
-			BP_PPG_PEAK_NOT_DETECTED,
-			BP_SBP_DBP_NOT_IN_RANGE,
-			BP_FLASH_WRITE_FAILED,
-			ECG_FLASH_WRITE_FAILED
+	TEST_SUCCESS = 0,
+	SpO2_REG_INIT_FAILED ,
+	BP_ECG_REG_INIT_FAILED,
+	BP_PPG_REG_INIT_FAILED,
+	SpO2_CAPTURE_FAILED,
+	BP_CAPTURE_FAILED,
+	SpO2_PEAKS_NOT_DETECTED,
+	SpO2_VALLEY_NOT_DETECTED,
+	SpO2_AC_DC_NOT_IN_RANGE,
+	SpO2_NOT_IN_RANGE,
+	SpO2_FLASH_WRITE_FAILED,
+	BP_ECG_PEAKS_NOT_DETECTED,
+	BP_PPG_PEAK_NOT_DETECTED,
+	BP_SBP_DBP_NOT_IN_RANGE,
+	BP_FLASH_WRITE_FAILED,
+	ECG_FLASH_WRITE_FAILED
 
 }QUICK_TEST_STATUS;
 
@@ -134,7 +134,7 @@ static bool spo2_capture_raw_data(void);
 static bool spo2_4point_average(float input_buff[],float *output_buff, int32_t n_samples);
 static bool spo2_peak_detection(float filter_data[], uint16_t peak_location[],uint8_t *total_peak_count, uint16_t nbfSamples);
 static bool spo2_find_exact_valley_loc(uint8_t *valley_locs_count,uint16_t exact_valley_locs[],
-		 	 	 	 	 	 	 	 	 uint8_t total_peak_count,uint16_t peak_location[]);
+		uint8_t total_peak_count,uint16_t peak_location[]);
 static void spo2_maxim_sort_ascend( uint8_t *buffer_x,uint8_t n_size );
 static uint8_t spo2_ac_dc_component_ratio(uint8_t valley_locs_count,uint16_t exact_valley_locs[],uint8_t ratio_buffer[]);
 static QUICK_TEST_STATUS spo2_store_data_to_flash(const uint32_t spo2_val);
@@ -199,32 +199,32 @@ bool QUICK_Test1(void)
 		printf("\nECG Init Successful");
 		printf("Entering into Max86150 setup");
 
-		   if(API_MAX86150_Setup() == true)
-		   {
-			   printf("\nCapturing data.................");
-			   API_Disp_Quick_test_screen(DISP_QT_TEST_IN_PROGRESS);
-			   // TODO; retry when raw data is not good
-			   if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1,true) == false)
-				   {
-						Disable_Power_Supply();
+		if(API_MAX86150_Setup() == true)
+		{
+			printf("\nCapturing data.................");
+			API_Disp_Quick_test_screen(DISP_QT_TEST_IN_PROGRESS);
+			// TODO; retry when raw data is not good
+			if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1,true) == false)
+			{
+				Disable_Power_Supply();
 
-				   	   return false;
-				   }
-			   //Filter_Quicktest1_Data();
-			   // Peak detection
-			   // Result Computation
-			   Vital_result.SBP1 = 0; // Should remove this when BP estimation Algorithm implemented
-			   Vital_result.DBP1 = 0; // Should remove this when BP estimation Algorithm implemented
+				return false;
+			}
+			//Filter_Quicktest1_Data();
+			// Peak detection
+			// Result Computation
+			Vital_result.SBP1 = 0; // Should remove this when BP estimation Algorithm implemented
+			Vital_result.DBP1 = 0; // Should remove this when BP estimation Algorithm implemented
 
 
-			   API_Disp_Quick_Test_Result(result);
-			   if(Selected_PID_type != GUEST_PID) Store_QuickTest1_Data_To_Flash();
-		   }
+			API_Disp_Quick_Test_Result(result);
+			if(Selected_PID_type != GUEST_PID) Store_QuickTest1_Data_To_Flash();
+		}
 
-		   else
-		   {
-			   printf("\nMAX86150 Init Fail");
-		   }
+		else
+		{
+			printf("\nMAX86150 Init Fail");
+		}
 
 	}
 
@@ -236,87 +236,87 @@ bool QUICK_Test1(void)
 }
 
 
- bool Run_Quick_Vital(void)
- {
- 	uint16_t result[4] = {0};
+bool Run_Quick_Vital(void)
+{
+	uint16_t result[4] = {0};
 
- 	printf("\nQuick Test2 Started");
+	printf("\nQuick Test2 Started");
 
- 	Is_time_displayed = TRUE;
- 	//API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
- 	gpio_set_level(ECG_CSn_VCS, 1);
+	Is_time_displayed = TRUE;
+	//API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
- 	if((Selected_PID_type == VALID_PID) || (Selected_PID_type == GUEST_PID))
- 	{
- 		if(API_Flash_Org_Check_For_Memory_Free())
- 		{
- 			API_Buzzer_Sound(SHORT_BEEP);
- 			API_Disp_Quick_Test_Icon();
- 			API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER);
- 			Enable_Power_Supply();
- 			API_ECG_Chip_Reset();
+	if((Selected_PID_type == VALID_PID) || (Selected_PID_type == GUEST_PID))
+	{
+		if(API_Flash_Org_Check_For_Memory_Free())
+		{
+			API_Buzzer_Sound(SHORT_BEEP);
+			API_Disp_Quick_Test_Icon();
+			API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER);
+			Enable_Power_Supply();
+			API_ECG_Chip_Reset();
 
- 			if(API_MAX86150_Setup())
- 			{
- 				if(API_ECG_Init())
- 				{
- 					//Capture PPG data
- 					API_Disp_Quick_test_screen(DISP_QT_PPG_TEST_IN_PROGRESS);
- 					Capture_PPG_ECG_Data(CAPTURE_PPG,true);
+			if(API_MAX86150_Setup())
+			{
+				if(API_ECG_Init())
+				{
+					//Capture PPG data
+					API_Disp_Quick_test_screen(DISP_QT_PPG_TEST_IN_PROGRESS);
+					Capture_PPG_ECG_Data(CAPTURE_PPG,true);
 
- 					//Capture ECG L1 and L2 data
- 					API_Disp_Quick_test_screen(DISP_QT_ECG_L2_TEST_IN_PROGRESS);
- 					if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,true)==false)
- 					{
- 						Disable_Power_Supply();
- 						return false;
- 					}
+					//Capture ECG L1 and L2 data
+					API_Disp_Quick_test_screen(DISP_QT_ECG_L2_TEST_IN_PROGRESS);
+					if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,true)==false)
+					{
+						Disable_Power_Supply();
+						return false;
+					}
 
- 					// Capture BP data
- 					API_Disp_Quick_test_screen(DISP_QT_BP_TEST_IN_PROGRESS);
- 					Capture_BP_Data(true);
+					// Capture BP data
+					API_Disp_Quick_test_screen(DISP_QT_BP_TEST_IN_PROGRESS);
+					Capture_BP_Data(true);
 
- 					API_Disp_Quick_Test_Result(result);
+					API_Disp_Quick_Test_Result(result);
 
- 					//Store data into flash
- 					 if(Selected_PID_type != GUEST_PID) Store_QuickTest1_Data_To_Flash();
- 				}
+					//Store data into flash
+					if(Selected_PID_type != GUEST_PID) Store_QuickTest1_Data_To_Flash();
+				}
 
- 			}
+			}
 
- 		}
+		}
 
- 		else
- 		{
- 			printf("\nDevice Memory Full... Please sync the data");
- 			API_DISP_Memory_Full_Status();
- 		}
- 	}
+		else
+		{
+			printf("\nDevice Memory Full... Please sync the data");
+			API_DISP_Memory_Full_Status();
+		}
+	}
 
- 	else
- 	{
- 		printf("\nPlease select the PID");
- 		API_Disp_Quick_test_screen(DISP_QT_PLEASE_REGISTER_PID);
- 	}
+	else
+	{
+		printf("\nPlease select the PID");
+		API_Disp_Quick_test_screen(DISP_QT_PLEASE_REGISTER_PID);
+	}
 
- 	//Test is complete
- 	API_Buzzer_Sound(SHORT_BEEP);
- 	Disable_Power_Supply();
- 	printf("\nTest completed.");
- 	return true;
- }
+	//Test is complete
+	API_Buzzer_Sound(SHORT_BEEP);
+	Disable_Power_Supply();
+	printf("\nTest completed.");
+	return true;
+}
 
 
 void Dummy_Capture(uint16_t total_samples)
 {
 
-    uint16_t raw_data_index;
-    esp_err_t status;
-    uint32_t max_ecg_no_use; // Not using ecg data from max86150 as hardware will not support
-    float value1;
-    float value2;
-    uint32_t value3;
-    uint32_t value4;
+	uint16_t raw_data_index;
+	esp_err_t status;
+	uint32_t max_ecg_no_use; // Not using ecg data from max86150 as hardware will not support
+	float value1;
+	float value2;
+	uint32_t value3;
+	uint32_t value4;
 
 	for(raw_data_index=0; raw_data_index<total_samples; raw_data_index++)
 	{
@@ -331,14 +331,14 @@ void Dummy_Capture(uint16_t total_samples)
 
 }
 
- bool Capture_PPG_ECG_Data(DATA_CAPTURE_TYPE_t captureType, bool enableDummyCapture)
+bool Capture_PPG_ECG_Data(DATA_CAPTURE_TYPE_t captureType, bool enableDummyCapture)
 {
-    uint16_t raw_data_index;
-    esp_err_t status=ESP_FAIL;
+	uint16_t raw_data_index;
+	esp_err_t status=ESP_FAIL;
 
-    uint32_t max_ecg_no_use[1]; // Not using ecg data from max86150 as hardware will not support
+	uint32_t max_ecg_no_use[1]; // Not using ecg data from max86150 as hardware will not support
 
-    bool dataQuality = false;
+	bool dataQuality = false;
 	//API_IO_Exp2_P1_write_pin(DC_LEAD_OFF,LOW);
 	//API_IO_Exp1_P1_write_pin(DC_LEAD_OFF_V,LOW);
 
@@ -347,218 +347,216 @@ void Dummy_Capture(uint16_t total_samples)
 	API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
 
 	//Skip test if lead1 is not connected
-		if(captureType == CAPTURE_ECG_L1)
+	if(captureType == CAPTURE_ECG_L1)
+	{
+		bool leadoffstatus = API_ECG_Lead_OFF_Detect(LEAD1);
+		if(leadoffstatus)
 		{
-			bool leadoffstatus = API_ECG_Lead_OFF_Detect(LEAD1);
-			if(leadoffstatus)
-			{
-				printf("\nLeads are not connected");
-				API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER_PROPERLY);
-			}
-			else
-			{
-				//printf("\nNO Lead-off detected");
-				API_ECG_Start_Conversion();
+			printf("\nLeads are not connected");
+			API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER_PROPERLY);
+		}
+		else
+		{
+			//printf("\nNO Lead-off detected");
+			API_ECG_Start_Conversion();
 
-				if(enableDummyCapture)
-				{
-					for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
-					{
-						status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-					}
-				}
-
-				MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
-				MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
-				Print_time("\nECG start");
-				for(raw_data_index=0; raw_data_index<600; raw_data_index++)
+			if(enableDummyCapture)
+			{
+				for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
 				{
 					status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
 				}
-				Print_time("\nECG end");
-
-				for(int i=0;i<600;i++)
-				{
-					printf("\n%f",ECG_Lead1_buff[i]);
-				}
-
-				MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff)); // Lead1 capture doesn't need Lead2 data.
-
-				API_ECG_Stop_Conversion();
 			}
+
+			MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
+			MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
+			Print_time("\nECG start");
+			for(raw_data_index=0; raw_data_index<600; raw_data_index++)
+			{
+				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+			}
+			Print_time("\nECG end");
+
+			for(int i=0;i<600;i++)
+			{
+				printf("\n%f",ECG_Lead1_buff[i]);
+			}
+
+			MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff)); // Lead1 capture doesn't need Lead2 data.
+
+			API_ECG_Stop_Conversion();
 		}
+	}
 
-		//Skip test if lead2 is not connected
-		else if(captureType == CAPTURE_ECG_L2)
+	//Skip test if lead2 is not connected
+	else if(captureType == CAPTURE_ECG_L2)
+	{
+		bool leadoffstatus = API_ECG_Lead_OFF_Detect(LEAD2);
+		if(leadoffstatus)
 		{
-			bool leadoffstatus = API_ECG_Lead_OFF_Detect(LEAD2);
-			if(leadoffstatus)
+			printf("\nLeads are not connected");
+			API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER_PROPERLY);
+		}
+		else
+		{
+			printf("\nNO Lead-off detected");
+			API_ECG_Start_Conversion();
+
+
+			if(enableDummyCapture)
 			{
-				printf("\nLeads are not connected");
-				API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER_PROPERLY);
-			}
-			else
-			{
-				printf("\nNO Lead-off detected");
-				API_ECG_Start_Conversion();
-
-
-				if(enableDummyCapture)
-				{
-					for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
-					{
-						status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-					}
-				}
-
-				MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
-				MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
-				Print_time("\nECG start");
-				for(raw_data_index=0; raw_data_index<600; raw_data_index++)
+				for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
 				{
 					status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
 				}
-				Print_time("\nECG end");
-				printf("\nECG L1");
+			}
 
-				for(int i=0;i<600;i++)
-				{
-					printf("%f\n",ECG_Lead1_buff[i]);
-				}
-				printf("\nECG L2");
-				for(int i=0;i<600;i++)
-				{
-					printf("%f\n",ECG_Lead2_buff[i]);
-				}
+			MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
+			MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
+			Print_time("\nECG start");
+			for(raw_data_index=0; raw_data_index<600; raw_data_index++)
+			{
+				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+			}
+			Print_time("\nECG end");
+			printf("\nECG L1");
 
-				API_ECG_Stop_Conversion();
-				API_ECG_Disable_LeadOff_Detection();
+			for(int i=0;i<600;i++)
+			{
+				printf("%f\n",ECG_Lead1_buff[i]);
+			}
+			printf("\nECG L2");
+			for(int i=0;i<600;i++)
+			{
+				printf("%f\n",ECG_Lead2_buff[i]);
+			}
 
+			API_ECG_Stop_Conversion();
+			API_ECG_Disable_LeadOff_Detection();
+
+		}
+	}
+
+	else if(captureType == CAPTURE_PPG)
+	{
+		Max86150_Clear_Fifo();
+
+
+		if(enableDummyCapture)
+		{
+			for(raw_data_index=0; raw_data_index<300; raw_data_index++)// ~3sec dummy capture
+			{
+				status = API_MAX86150_Raw_Data_capture(SPO2_PPG_RED_BUFF+raw_data_index, SPO2_PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
 			}
 		}
 
-		else if(captureType == CAPTURE_PPG)
+		MemSet(SPO2_PPG_RED_BUFF,0,sizeof(SPO2_PPG_RED_BUFF));
+		MemSet(SPO2_PPG_IR_BUFF,0,sizeof(SPO2_PPG_IR_BUFF));
+
+		Print_time("\nPPG start");
+		for(raw_data_index=0; raw_data_index<600; raw_data_index++)
+		{
+			status = API_MAX86150_Raw_Data_capture(SPO2_PPG_RED_BUFF+raw_data_index, SPO2_PPG_IR_BUFF+raw_data_index, max_ecg_no_use,1,0,0);
+		}
+		Print_time("\PPG end");
+		printf("\nSPO2 PPG-RED DATA:");
+		for(int i=0;i<600;i++)
+		{
+			printf("\n%ld",SPO2_PPG_RED_BUFF[i]);
+		}
+		printf("\nSPO2 PPG-IR DATA:");
+		for(int i=0;i<600;i++)
+		{
+			printf("\n%ld",SPO2_PPG_IR_BUFF[i]);
+		}
+	}
+
+	else if(captureType == CAPTURE_ECG_L1_AND_L2)
+	{
+		bool leadoffstatus_lead1 = 0, leadoffstatus_lead2 = 0;
+#if LOD
+		leadoffstatus_lead1 = API_ECG_Lead_OFF_Detect(LEAD1);
+		leadoffstatus_lead2 = API_ECG_Lead_OFF_Detect(LEAD2);
+
+#else
+		leadoffstatus_lead1 = 0;
+		leadoffstatus_lead2 = 0;
+#endif
+		//Skip test if lead 1 is not connected
+		if(leadoffstatus_lead1)
+		{
+			printf("\nLeads are not connected");
+			API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER_PROPERLY);
+			return false;
+		}
+		//Skip lead 2 test, if lead 2 is not connected
+		else if(leadoffstatus_lead2 ^ leadoffstatus_lead1)
+		{
+			API_Disp_Quick_test_screen(DISP_QT_ECG_L2_NOT_CONNECTED);
+			API_Disp_Quick_test_screen(DISP_QT_ECG_L1_PROCEED);
+			printf("\nLead 2 is not connected, proceeding with lead1");
+			API_ECG_Start_Conversion();
+
+			if(enableDummyCapture)
 			{
-				Max86150_Clear_Fifo();
-
-
-				if(enableDummyCapture)
+				for(raw_data_index=0; raw_data_index<ECG_DUMMY_CAPTURES; raw_data_index++)// ~3sec dummy capture
 				{
-					for(raw_data_index=0; raw_data_index<300; raw_data_index++)// ~3sec dummy capture
-					{
-						status = API_MAX86150_Raw_Data_capture(SPO2_PPG_RED_BUFF+raw_data_index, SPO2_PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
-					}
+					status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
 				}
-
-				MemSet(SPO2_PPG_RED_BUFF,0,sizeof(SPO2_PPG_RED_BUFF));
-				MemSet(SPO2_PPG_IR_BUFF,0,sizeof(SPO2_PPG_IR_BUFF));
-
-				Print_time("\nPPG start");
-				for(raw_data_index=0; raw_data_index<600; raw_data_index++)
-					{
-						status = API_MAX86150_Raw_Data_capture(SPO2_PPG_RED_BUFF+raw_data_index, SPO2_PPG_IR_BUFF+raw_data_index, max_ecg_no_use,1,0,0);
-					}
-				Print_time("\PPG end");
-				printf("\nSPO2 PPG-RED DATA:");
-				for(int i=0;i<600;i++)
-					{
-					  printf("\n%ld",SPO2_PPG_RED_BUFF[i]);
-					}
-				printf("\nSPO2 PPG-IR DATA:");
-				for(int i=0;i<600;i++)
-					{
-					  printf("\n%ld",SPO2_PPG_IR_BUFF[i]);
-					}
 			}
 
-			else if(captureType == CAPTURE_ECG_L1_AND_L2)
+			MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
+			MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
+
+			for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
 			{
-				bool leadoffstatus_lead1 = 0, leadoffstatus_lead2 = 0;
-		#if LOD
-				leadoffstatus_lead1 = API_ECG_Lead_OFF_Detect(LEAD1);
-				leadoffstatus_lead2 = API_ECG_Lead_OFF_Detect(LEAD2);
+				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+			}
 
-		#else
-				 leadoffstatus_lead1 = 0;
-				 leadoffstatus_lead2 = 0;
-		#endif
-				 //Skip test if lead 1 is not connected
-				if(leadoffstatus_lead1)
+			printf("\n total data ready interrupts = %d\n", ECG_Drdy_count);
+			ECG_Drdy_count = 0;
+			API_ECG_Stop_Conversion();
+		}
+		//If both lead1 and lead2 are connected
+		else
+		{
+			printf("\nAll leads are detected");
+			API_ECG_Start_Conversion();
+
+			if(enableDummyCapture)
+			{
+				for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
 				{
-					printf("\nLeads are not connected");
-					API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER_PROPERLY);
-					return false;
-				}
-				//Skip lead 2 test, if lead 2 is not connected
-				else if(leadoffstatus_lead2 ^ leadoffstatus_lead1)
-				{
-					API_Disp_Quick_test_screen(DISP_QT_ECG_L2_NOT_CONNECTED);
-					API_Disp_Quick_test_screen(DISP_QT_ECG_L1_PROCEED);
-					printf("\nLead 2 is not connected, proceeding with lead1");
-					API_ECG_Start_Conversion();
-
-					if(enableDummyCapture)
-					{
-						for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
-						{
-							status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-						}
-					}
-
-					MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
-					MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
-					Print_time("\nECG start");
-					for(raw_data_index=0; raw_data_index<600; raw_data_index++)
-					{
-						status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-					}
-					Print_time("\nECG end");
-					for(int i=0;i<600;i++)
-					{
-						printf("\n%f",ECG_Lead1_buff[i]);
-					}
-
-					MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff)); // Lead1 capture doesn't need Lead2 data.
-
-					API_ECG_Stop_Conversion();
-				}
-				//If both lead1 and lead2 are connected
-				else
-				{
-					printf("\nAll leads are detected");
-					API_ECG_Start_Conversion();
-
-					if(enableDummyCapture)
-					{
-						for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
-						{
-							status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-						}
-					}
-
-					MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
-					MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
-					Print_time("\nECG start");
-					for(raw_data_index=0; raw_data_index<600; raw_data_index++)
-					{
-						status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-					}
-					Print_time("\nECG end");
-					printf("\n\nECG L1 data");
-					for(int i=0;i<600;i++)
-					{
-						printf("\n%f",ECG_Lead1_buff[i]);
-					}
-
-					printf("\n\nECG L2 data");
-					for(int i=0;i<600;i++)
-					{
-						printf("\n%f",ECG_Lead2_buff[i]);
-					}
-
-					API_ECG_Stop_Conversion();
+					status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
 				}
 			}
+
+			MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
+			MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
+
+			for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
+			{
+				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+			}
+
+			printf("\n total data ready interrupts = %d\n", ECG_Drdy_count);
+			ECG_Drdy_count = 0;
+			API_ECG_Stop_Conversion();
+			printf("\n\nECG L1 data");
+			for(int i=0;i<600;i++)
+			{
+				printf("\n%f",ECG_Lead1_buff[i]);
+			}
+
+			printf("\n\nECG L2 data");
+			for(int i=0;i<600;i++)
+			{
+				printf("\n%f",ECG_Lead2_buff[i]);
+			}
+
+			API_ECG_Stop_Conversion();
+		}
+	}
 
 	else
 	{
@@ -566,66 +564,66 @@ void Dummy_Capture(uint16_t total_samples)
 	}
 
 	API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,HIGH);
-//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
 	gpio_set_level(ECG_CSn_VCS, 1);
 
 	return (status==ESP_OK);
 }
 
- bool Capture_BP_Data(bool enableDummyCapture)
- {
- 	 uint32_t max_ecg_no_use[1U] ={0U}; // Not using ecg data from max86150 as hardware will not support
- 	 uint16_t raw_data_index =0U;
- 	 esp_err_t status = ESP_FAIL;
- 	 bool leadoffstatus = API_ECG_Lead_OFF_Detect(LEAD1);
+bool Capture_BP_Data(bool enableDummyCapture)
+{
+	uint32_t max_ecg_no_use[1U] ={0U}; // Not using ecg data from max86150 as hardware will not support
+	uint16_t raw_data_index =0U;
+	esp_err_t status = ESP_FAIL;
+	bool leadoffstatus = API_ECG_Lead_OFF_Detect(LEAD1);
 
- 	 //Skip BP test if lead1 is not connected
- 	 if(leadoffstatus)
- 	 {
- 		 printf("\nLeads are not connected");
- 		 API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER_PROPERLY);
- 	 }
- 	 else
- 	 {
- 		 API_ECG_Start_Conversion();
- 		 Max86150_Clear_Fifo();
+	//Skip BP test if lead1 is not connected
+	if(leadoffstatus)
+	{
+		printf("\nLeads are not connected");
+		API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER_PROPERLY);
+	}
+	else
+	{
+		API_ECG_Start_Conversion();
+		Max86150_Clear_Fifo();
 
- 		 if(enableDummyCapture)
- 		 {
- 			 for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
- 			 {
- 				 status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
- 				 status = API_MAX86150_Raw_Data_capture(BP_PPG_RED_BUFF+raw_data_index, BP_PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
- 			 }
- 		 }
+		if(enableDummyCapture)
+		{
+			for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
+			{
+				status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+				status = API_MAX86150_Raw_Data_capture(BP_PPG_RED_BUFF+raw_data_index, BP_PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
+			}
+		}
 
- 		 MemSet(BP_ECG_Lead1_buff,0,sizeof(BP_ECG_Lead1_buff));
- 		 MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
- 		 MemSet(BP_PPG_RED_BUFF,0,sizeof(BP_PPG_RED_BUFF));
- 		 MemSet(BP_PPG_IR_BUFF,0,sizeof(BP_PPG_IR_BUFF));
- 		 Print_time("\nBP start");
- 		 for(raw_data_index=0; raw_data_index<600; raw_data_index++)
- 		 {
- 			 status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
- 			 status = API_MAX86150_Raw_Data_capture(BP_PPG_RED_BUFF+raw_data_index , BP_PPG_IR_BUFF+raw_data_index ,max_ecg_no_use,1,0,0);
- 		 }
- 		 Print_time("\nBP end");
- 		 printf("\nBP ECG L1 data:\n");
- 		 for(int i=0;i<600;i++)
- 		 {
- 			 printf("%f\n",BP_ECG_Lead1_buff[i]);
- 		 }
+		MemSet(BP_ECG_Lead1_buff,0,sizeof(BP_ECG_Lead1_buff));
+		MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
+		MemSet(BP_PPG_RED_BUFF,0,sizeof(BP_PPG_RED_BUFF));
+		MemSet(BP_PPG_IR_BUFF,0,sizeof(BP_PPG_IR_BUFF));
+		Print_time("\nBP start");
+		for(raw_data_index=0; raw_data_index<600; raw_data_index++)
+		{
+			status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+			status = API_MAX86150_Raw_Data_capture(BP_PPG_RED_BUFF+raw_data_index , BP_PPG_IR_BUFF+raw_data_index ,max_ecg_no_use,1,0,0);
+		}
+		Print_time("\nBP end");
+		printf("\nBP ECG L1 data:\n");
+		for(int i=0;i<600;i++)
+		{
+			printf("%f\n",BP_ECG_Lead1_buff[i]);
+		}
 
- 		 printf("\nBP PPG Red data:\n");
- 		 for(int i=0;i<600;i++)
- 		 {
- 			 printf("%ld\n",BP_PPG_RED_BUFF[i]);
- 		 }
+		printf("\nBP PPG Red data:\n");
+		for(int i=0;i<600;i++)
+		{
+			printf("%ld\n",BP_PPG_RED_BUFF[i]);
+		}
 
- 		 API_ECG_Stop_Conversion();
- 	 }
- 	 return true;
-  }
+		API_ECG_Stop_Conversion();
+	}
+	return true;
+}
 
 void Filter_Quicktest1_Data(void)
 {
@@ -639,36 +637,36 @@ void Filter_Quicktest1_Data(void)
 		//printf("\n%f",FilterOutputBuffer3[i]);
 	}
 
-//	if(ENABLE_DEBUG_MESSAGES)
-//	{
-//		printf("\n\nECG Lead 1 Filter data");
-//
-//		for(int i=0;i<TOTAL_SAMPLES;i++)
-//		{
-//			printf("\n%f",FilterOutputBuffer1[i]);
-//		}
-//
-//		printf("\n\nECG Lead 2 Filter data");
-//
-//		for(int i=0;i<TOTAL_SAMPLES;i++)
-//		{
-//			printf("\n%f",FilterOutputBuffer2[i]);
-//		}
-//
-//		printf("\n\nPPG RED Filter data");
-//
-//		for(int i=0;i<TOTAL_SAMPLES;i++)
-//		{
-//			printf("\n%f",FilterOutputBuffer3[i]);
-//		}
-//
-//		printf("\n\nPPG IR Filter data");
-//
-//		for(int i=0;i<TOTAL_SAMPLES;i++)
-//		{
-//			printf("\n%f",FilterOutputBuffer4[i]);
-//		}
-//	}
+	//	if(ENABLE_DEBUG_MESSAGES)
+	//	{
+	//		printf("\n\nECG Lead 1 Filter data");
+	//
+	//		for(int i=0;i<TOTAL_SAMPLES;i++)
+	//		{
+	//			printf("\n%f",FilterOutputBuffer1[i]);
+	//		}
+	//
+	//		printf("\n\nECG Lead 2 Filter data");
+	//
+	//		for(int i=0;i<TOTAL_SAMPLES;i++)
+	//		{
+	//			printf("\n%f",FilterOutputBuffer2[i]);
+	//		}
+	//
+	//		printf("\n\nPPG RED Filter data");
+	//
+	//		for(int i=0;i<TOTAL_SAMPLES;i++)
+	//		{
+	//			printf("\n%f",FilterOutputBuffer3[i]);
+	//		}
+	//
+	//		printf("\n\nPPG IR Filter data");
+	//
+	//		for(int i=0;i<TOTAL_SAMPLES;i++)
+	//		{
+	//			printf("\n%f",FilterOutputBuffer4[i]);
+	//		}
+	//	}
 
 }
 
@@ -733,42 +731,42 @@ void Store_QuickTest1_Data_To_Flash(void)
 	if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(BP_DATA_STORE_TO_FLASH_FAIL);
 
 
-		API_Update_Record_Header(ECG_1_Lead,&record_header);
+	API_Update_Record_Header(ECG_1_Lead,&record_header);
 
-		MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
+	MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
 
-		MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
-		offfset = REC_HEADER_LEN;
+	MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
+	offfset = REC_HEADER_LEN;
 
-		MemCpy(BT_flash_buffer+offfset,ECG_Lead1_buff,(BP_ECG_L1_SAMPLES*4));
-		offfset += BP_ECG_L1_SAMPLES*4;
+	MemCpy(BT_flash_buffer+offfset,ECG_Lead1_buff,(BP_ECG_L1_SAMPLES*4));
+	offfset += BP_ECG_L1_SAMPLES*4;
 
-		status = API_Flash_Write_Record(ECG_1_Lead,(void*)BT_flash_buffer);
+	status = API_Flash_Write_Record(ECG_1_Lead,(void*)BT_flash_buffer);
 
-		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(ECG_DATA_STORE_TO_FLASH_FAIL);
+	if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(ECG_DATA_STORE_TO_FLASH_FAIL);
 
 
-		MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
+	MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
 
-		API_Update_Record_Header(SPO2,&record_header);
+	API_Update_Record_Header(SPO2,&record_header);
 
-		MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
-		offfset = REC_HEADER_LEN;
+	MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
+	offfset = REC_HEADER_LEN;
 
-		MemCpy(BT_flash_buffer+offfset,SPO2_PPG_RED_BUFF,(SPO2_RED_SAMPLES*4));
+	MemCpy(BT_flash_buffer+offfset,SPO2_PPG_RED_BUFF,(SPO2_RED_SAMPLES*4));
 
-		offfset += SPO2_RED_SAMPLES*4;
-		MemCpy(BT_flash_buffer+offfset,SPO2_PPG_IR_BUFF,(SPO2_IR_SAMPLES*4));
+	offfset += SPO2_RED_SAMPLES*4;
+	MemCpy(BT_flash_buffer+offfset,SPO2_PPG_IR_BUFF,(SPO2_IR_SAMPLES*4));
 
-		status = API_Flash_Write_Record(SPO2,(void*)BT_flash_buffer);
+	status = API_Flash_Write_Record(SPO2,(void*)BT_flash_buffer);
 
-		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(SPO2_DATA_STORE_TO_FLASH_FAIL);
+	if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(SPO2_DATA_STORE_TO_FLASH_FAIL);
 
-		IsValidRecordsInFlash = true;
+	IsValidRecordsInFlash = true;
 
-		printf("\nTotal SPO2 Records = %ld", get_records_count(SPO2));
-		printf("\nTotal BP1 Records = %ld", get_records_count(BP1));
-		printf("\nTotal ECG L1 Records = %ld", get_records_count(ECG_1_Lead));
+	printf("\nTotal SPO2 Records = %ld", get_records_count(SPO2));
+	printf("\nTotal BP1 Records = %ld", get_records_count(BP1));
+	printf("\nTotal ECG L1 Records = %ld", get_records_count(ECG_1_Lead));
 
 }
 
@@ -800,51 +798,51 @@ void Test_Store_QuickTest1_Data_To_Flash(void)
 
 	if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(BP_DATA_STORE_TO_FLASH_FAIL);
 
-		API_Update_Record_Header(ECG_1_Lead,&record_header);
+	API_Update_Record_Header(ECG_1_Lead,&record_header);
 
-		MemSet(&record_header,5,sizeof(record_header));
+	MemSet(&record_header,5,sizeof(record_header));
 
-		MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
+	MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
 
-		MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
-		offfset = REC_HEADER_LEN;
+	MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
+	offfset = REC_HEADER_LEN;
 
-		MemSet(ECG_Lead1_buff,6,sizeof(ECG_Lead1_buff));
+	MemSet(ECG_Lead1_buff,6,sizeof(ECG_Lead1_buff));
 
-		MemCpy(BT_flash_buffer+offfset,ECG_Lead1_buff,(BP_ECG_L1_SAMPLES*4));
-		offfset += BP_ECG_L1_SAMPLES*4;
+	MemCpy(BT_flash_buffer+offfset,ECG_Lead1_buff,(BP_ECG_L1_SAMPLES*4));
+	offfset += BP_ECG_L1_SAMPLES*4;
 
-		status = API_Flash_Write_Record(ECG_1_Lead,(void*)BT_flash_buffer);
+	status = API_Flash_Write_Record(ECG_1_Lead,(void*)BT_flash_buffer);
 
-		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(ECG_DATA_STORE_TO_FLASH_FAIL);
+	if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(ECG_DATA_STORE_TO_FLASH_FAIL);
 
 
-		MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
+	MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
 
-		API_Update_Record_Header(SPO2,&record_header);
+	API_Update_Record_Header(SPO2,&record_header);
 
-		MemSet(&record_header,7,sizeof(record_header));
+	MemSet(&record_header,7,sizeof(record_header));
 
-		MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
-		offfset = REC_HEADER_LEN;
+	MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
+	offfset = REC_HEADER_LEN;
 
-		MemSet(SPO2_PPG_RED_BUFF,8,sizeof(SPO2_PPG_RED_BUFF));
+	MemSet(SPO2_PPG_RED_BUFF,8,sizeof(SPO2_PPG_RED_BUFF));
 
-		MemCpy(BT_flash_buffer+offfset,SPO2_PPG_RED_BUFF,(SPO2_RED_SAMPLES*4));
+	MemCpy(BT_flash_buffer+offfset,SPO2_PPG_RED_BUFF,(SPO2_RED_SAMPLES*4));
 
-		offfset += SPO2_RED_SAMPLES*4;
+	offfset += SPO2_RED_SAMPLES*4;
 
-		MemSet(SPO2_PPG_IR_BUFF,9,sizeof(SPO2_PPG_IR_BUFF));
+	MemSet(SPO2_PPG_IR_BUFF,9,sizeof(SPO2_PPG_IR_BUFF));
 
-		MemCpy(BT_flash_buffer+offfset,SPO2_PPG_IR_BUFF,(SPO2_IR_SAMPLES*4));
+	MemCpy(BT_flash_buffer+offfset,SPO2_PPG_IR_BUFF,(SPO2_IR_SAMPLES*4));
 
-		status = API_Flash_Write_Record(SPO2,(void*)BT_flash_buffer);
+	status = API_Flash_Write_Record(SPO2,(void*)BT_flash_buffer);
 
-		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(SPO2_DATA_STORE_TO_FLASH_FAIL);
+	if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(SPO2_DATA_STORE_TO_FLASH_FAIL);
 
-		printf("\nTotal SPO2 Records = %ld", get_records_count(SPO2));
-		printf("\nTotal BP Records = %ld", get_records_count(BP1));
-		printf("\nTotal ECG L1 Records = %ld", get_records_count(ECG_1_Lead));
+	printf("\nTotal SPO2 Records = %ld", get_records_count(SPO2));
+	printf("\nTotal BP Records = %ld", get_records_count(BP1));
+	printf("\nTotal ECG L1 Records = %ld", get_records_count(ECG_1_Lead));
 
 }
 
@@ -869,62 +867,62 @@ void Store_QuickTest2_Data_To_Flash(void)
 	if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(BP_DATA_STORE_TO_FLASH_FAIL);
 
 
-		API_Update_Record_Header(ECG_6_Lead,&record_header);
+	API_Update_Record_Header(ECG_6_Lead,&record_header);
 
-		MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
+	MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
 
-		MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
-		offfset = REC_HEADER_LEN;
+	MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
+	offfset = REC_HEADER_LEN;
 
-		MemCpy(BT_flash_buffer+offfset,ECG_Lead1_buff,(ECG_L1_SAMPLES*4));
-		offfset += ECG_L1_SAMPLES*4;
+	MemCpy(BT_flash_buffer+offfset,ECG_Lead1_buff,(ECG_L1_SAMPLES*4));
+	offfset += ECG_L1_SAMPLES*4;
 
-		MemCpy(BT_flash_buffer+offfset,ECG_Lead2_buff,(ECG_L2_SAMPLES*4));
+	MemCpy(BT_flash_buffer+offfset,ECG_Lead2_buff,(ECG_L2_SAMPLES*4));
 
-		status = API_Flash_Write_Record(ECG_6_Lead,(void*)BT_flash_buffer);
+	status = API_Flash_Write_Record(ECG_6_Lead,(void*)BT_flash_buffer);
 
-		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(ECG_DATA_STORE_TO_FLASH_FAIL);
+	if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(ECG_DATA_STORE_TO_FLASH_FAIL);
 
 
-		MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
+	MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
 
-		API_Update_Record_Header(SPO2,&record_header);
+	API_Update_Record_Header(SPO2,&record_header);
 
-		MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
-		offfset = REC_HEADER_LEN;
+	MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
+	offfset = REC_HEADER_LEN;
 
-		MemCpy(BT_flash_buffer+offfset,SPO2_PPG_RED_BUFF,(SPO2_RED_SAMPLES*4));
+	MemCpy(BT_flash_buffer+offfset,SPO2_PPG_RED_BUFF,(SPO2_RED_SAMPLES*4));
 
-		offfset += SPO2_RED_SAMPLES*4;
-		MemCpy(BT_flash_buffer+offfset,SPO2_PPG_IR_BUFF,(SPO2_IR_SAMPLES*4));
+	offfset += SPO2_RED_SAMPLES*4;
+	MemCpy(BT_flash_buffer+offfset,SPO2_PPG_IR_BUFF,(SPO2_IR_SAMPLES*4));
 
-		status = API_Flash_Write_Record(SPO2,(void*)BT_flash_buffer);
+	status = API_Flash_Write_Record(SPO2,(void*)BT_flash_buffer);
 
-		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(SPO2_DATA_STORE_TO_FLASH_FAIL);
+	if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(SPO2_DATA_STORE_TO_FLASH_FAIL);
 
-		IsValidRecordsInFlash = true;
-		printf("\nTotal SPO2 Records = %ld", get_records_count(SPO2));
-		printf("\nTotal BP Records = %ld", get_records_count(BP1));
-		printf("\nTotal ECG L1 Records = %ld", get_records_count(ECG_6_Lead));
+	IsValidRecordsInFlash = true;
+	printf("\nTotal SPO2 Records = %ld", get_records_count(SPO2));
+	printf("\nTotal BP Records = %ld", get_records_count(BP1));
+	printf("\nTotal ECG L1 Records = %ld", get_records_count(ECG_6_Lead));
 
 }
 
 
 /*bool spo2_find_exact_valley_loc(uint32_t *valley_locs_count,uint32_t *exact_valley_locs,
-*							 		uint32_t total_peak_count,uint16_t peak_location[])
-* \brief        To find_signal_ratio
-* \param[in]    valley_locs_count[output]-it tells number of valley location
-*               exact_valley_locs[output]-locations of valley
-*               ratio_buffer[output]-it store the ratio of SPO2 calculated
-*               peaks[input] - number of peaks
-*               filp_data_peak_locs[][input]-the raw signal is filpped and its peak locs
-* \param[out]   bool. true vally locations>2 false <2 locations
-* \retval       TRUE - capture signal has good signal ratio
-*        		FALSE -signal ratio is not good
-*/
+ *							 		uint32_t total_peak_count,uint16_t peak_location[])
+ * \brief        To find_signal_ratio
+ * \param[in]    valley_locs_count[output]-it tells number of valley location
+ *               exact_valley_locs[output]-locations of valley
+ *               ratio_buffer[output]-it store the ratio of SPO2 calculated
+ *               peaks[input] - number of peaks
+ *               filp_data_peak_locs[][input]-the raw signal is filpped and its peak locs
+ * \param[out]   bool. true vally locations>2 false <2 locations
+ * \retval       TRUE - capture signal has good signal ratio
+ *        		FALSE -signal ratio is not good
+ */
 
 bool spo2_find_exact_valley_loc(uint8_t *valley_locs_count,uint16_t *exact_valley_locs,
-							 uint8_t total_peak_count,uint16_t peak_location[])
+		uint8_t total_peak_count,uint16_t peak_location[])
 {
 	uint32_t ir_valley_locs[15] = {0};
 	uint32_t is_only_once = 0 ;
@@ -935,11 +933,11 @@ bool spo2_find_exact_valley_loc(uint8_t *valley_locs_count,uint16_t *exact_valle
 	bool signal_ratio_status = TRUE ;
 	bool vally_location_range_status = TRUE;
 
-	 for ( samples_count=0 ;samples_count < total_peak_count;samples_count++)
-	 {
-		  ir_valley_locs[samples_count] = peak_location[samples_count] + 2; //here 3 is (filter coefficient size/2)
-	 }
-	 // we need to assess DC and AC value of ir and red PPG
+	for ( samples_count=0 ;samples_count < total_peak_count;samples_count++)
+	{
+		ir_valley_locs[samples_count] = peak_location[samples_count] + 2; //here 3 is (filter coefficient size/2)
+	}
+	// we need to assess DC and AC value of ir and red PPG
 
 	// 4 pt avg of Red and IR signal
 	spo2_4point_average(raw_data_2,ir_avg_buff,NUM_SPO2_SAMPLES);
@@ -948,7 +946,7 @@ bool spo2_find_exact_valley_loc(uint8_t *valley_locs_count,uint16_t *exact_valle
 	exact_valley_loc_count = 0;														//find precise MIN near ir_valley_loc
 
 	for(samples_count = 0 ; samples_count < total_peak_count ;samples_count++)
-    {
+	{
 		is_only_once = 1;
 		minimum_value = 16777216; 											//2^24 byte read(8*3=24).
 
@@ -969,28 +967,28 @@ bool spo2_find_exact_valley_loc(uint8_t *valley_locs_count,uint16_t *exact_valle
 		{
 			exact_valley_loc_count ++;
 		}
-   }
-   if (exact_valley_loc_count < 2 )
-   {
-	   signal_ratio_status= FALSE ;
-   }
+	}
+	if (exact_valley_loc_count < 2 )
+	{
+		signal_ratio_status= FALSE ;
+	}
 
-   *valley_locs_count = exact_valley_loc_count;
+	*valley_locs_count = exact_valley_loc_count;
 
-   return (vally_location_range_status & signal_ratio_status);
+	return (vally_location_range_status & signal_ratio_status);
 }
 
 /*
-* uint8_t spo2_ac_dc_component_ratio(uint32_t valley_locs_count,
+ * uint8_t spo2_ac_dc_component_ratio(uint32_t valley_locs_count,
 		                           uint16_t exact_valley_locs[],uint32_t ratio_buffer[])
-* \brief        ac/dc component ratio
-* \par          valley_locs_count[input]-number of vally_location
-* 		        exact_valley_locs[][input]-vally_location,
-* 				ratio_buffer[][input] -ratio of SPO2_calculated
-*
-* return value  int32_t value
-*               which return the ratio_count value
-*/
+ * \brief        ac/dc component ratio
+ * \par          valley_locs_count[input]-number of vally_location
+ * 		        exact_valley_locs[][input]-vally_location,
+ * 				ratio_buffer[][input] -ratio of SPO2_calculated
+ *
+ * return value  int32_t value
+ *               which return the ratio_count value
+ */
 uint8_t spo2_ac_dc_component_ratio(uint8_t valley_locs_count,uint16_t exact_valley_locs[],uint8_t ratio_buffer[])
 {
 	int32_t red_AC_component = 0;   		//AC component of red_led_data
@@ -1008,55 +1006,55 @@ uint8_t spo2_ac_dc_component_ratio(uint8_t valley_locs_count,uint16_t exact_vall
 	uint16_t ir_loc_index = 0;
 	uint8_t ratio_count = 0;
 
-    for (loc_count = 0; loc_count < (valley_locs_count - 1); loc_count++)
-    {
-    	ir_DC_max = -16777216;
-    	red_DC_max = -16777216;
+	for (loc_count = 0; loc_count < (valley_locs_count - 1); loc_count++)
+	{
+		ir_DC_max = -16777216;
+		red_DC_max = -16777216;
 
-        if (exact_valley_locs[loc_count+1]-exact_valley_locs[loc_count] > 10)
-        {
-            for (ir_loc_index = exact_valley_locs[loc_count];
-            	 ir_loc_index <  exact_valley_locs[loc_count+1]; ir_loc_index++)
-            {
-                if (ir_avg_buff[ir_loc_index] > ir_DC_max)
-                {
-                	ir_DC_max = ir_avg_buff[ir_loc_index];
-                	ir_DC_max_index =ir_loc_index;
-                }
-                if (red_avg_buff[ir_loc_index] > red_DC_max)
-                {
-                	red_DC_max = red_avg_buff[ir_loc_index];
-                	red_DC_max_index = ir_loc_index;
-                }
-            }
+		if (exact_valley_locs[loc_count+1]-exact_valley_locs[loc_count] > 10)
+		{
+			for (ir_loc_index = exact_valley_locs[loc_count];
+					ir_loc_index <  exact_valley_locs[loc_count+1]; ir_loc_index++)
+			{
+				if (ir_avg_buff[ir_loc_index] > ir_DC_max)
+				{
+					ir_DC_max = ir_avg_buff[ir_loc_index];
+					ir_DC_max_index =ir_loc_index;
+				}
+				if (red_avg_buff[ir_loc_index] > red_DC_max)
+				{
+					red_DC_max = red_avg_buff[ir_loc_index];
+					red_DC_max_index = ir_loc_index;
+				}
+			}
 
-            //----------------------------------------------------------------------------------//
-            red_AC_component = (red_avg_buff[exact_valley_locs[loc_count+1]]- red_avg_buff[exact_valley_locs[loc_count]])
-										*(red_DC_max_index - exact_valley_locs[loc_count]); //red
+			//----------------------------------------------------------------------------------//
+			red_AC_component = (red_avg_buff[exact_valley_locs[loc_count+1]]- red_avg_buff[exact_valley_locs[loc_count]])
+												*(red_DC_max_index - exact_valley_locs[loc_count]); //red
 
-            red_AC_component= red_avg_buff[exact_valley_locs[loc_count]]
-							+ red_AC_component / (exact_valley_locs[loc_count+1]- exact_valley_locs[loc_count])  ;
+			red_AC_component= red_avg_buff[exact_valley_locs[loc_count]]
+										   + red_AC_component / (exact_valley_locs[loc_count+1]- exact_valley_locs[loc_count])  ;
 
 
-            // Subract linear DC components from Red raw
-            red_AC_component =  red_avg_buff[red_DC_max_index] - red_AC_component;
+			// Subract linear DC components from Red raw
+			red_AC_component =  red_avg_buff[red_DC_max_index] - red_AC_component;
 
-            //---------------------------------------------------------------------------------//
-            ir_AC_component = (ir_avg_buff[exact_valley_locs[loc_count+1]] - ir_avg_buff[exact_valley_locs[loc_count]] )
-										*(ir_DC_max_index -exact_valley_locs[loc_count]); // ir
+			//---------------------------------------------------------------------------------//
+			ir_AC_component = (ir_avg_buff[exact_valley_locs[loc_count+1]] - ir_avg_buff[exact_valley_locs[loc_count]] )
+												*(ir_DC_max_index -exact_valley_locs[loc_count]); // ir
 
-            ir_AC_component =  ir_avg_buff[exact_valley_locs[loc_count]]
-							+ ir_AC_component/ (exact_valley_locs[loc_count+1] - exact_valley_locs[loc_count]);
+			ir_AC_component =  ir_avg_buff[exact_valley_locs[loc_count]]
+										   + ir_AC_component/ (exact_valley_locs[loc_count+1] - exact_valley_locs[loc_count]);
 
-            // Subract linear DC components from IR raw
-            ir_AC_component =  ir_avg_buff[ir_DC_max_index] - ir_AC_component;
+			// Subract linear DC components from IR raw
+			ir_AC_component =  ir_avg_buff[ir_DC_max_index] - ir_AC_component;
 
-            //---------------------------------------------------------------------------------//
+			//---------------------------------------------------------------------------------//
 
-            //calculation of SPO2 Using the formula
+			//calculation of SPO2 Using the formula
 
-            red_ac_component = ( red_AC_component * ir_DC_max) >> 7 ; //prepare X100 to preserve floating value
-            ir_ac_component = ( ir_AC_component * red_DC_max) >> 7;
+			red_ac_component = ( red_AC_component * ir_DC_max) >> 7 ; //prepare X100 to preserve floating value
+			ir_ac_component = ( ir_AC_component * red_DC_max) >> 7;
 
 
 			if (ir_ac_component > 0  && ratio_count < 5 &&  red_ac_component != 0)
@@ -1069,37 +1067,37 @@ uint8_t spo2_ac_dc_component_ratio(uint8_t valley_locs_count,uint16_t exact_vall
 					ratio_count ++;
 				}
 			}
-        }
-    }
+		}
+	}
 
-    spo2_maxim_sort_ascend(ratio_buffer, ratio_count);
+	spo2_maxim_sort_ascend(ratio_buffer, ratio_count);
 
-   middle_index = ratio_count/2;
-   if (middle_index > 1)
-   {
-	   ratio_average = ( ratio_buffer[middle_index-1] +ratio_buffer[middle_index])/2; // use median
-   }
-   else
-   {
-	   ratio_average = ratio_buffer[middle_index ];
-   }
+	middle_index = ratio_count/2;
+	if (middle_index > 1)
+	{
+		ratio_average = ( ratio_buffer[middle_index-1] +ratio_buffer[middle_index])/2; // use median
+	}
+	else
+	{
+		ratio_average = ratio_buffer[middle_index ];
+	}
 
-   return ratio_average;
+	return ratio_average;
 
 }
 
 
 /**************************************************************************************************
-* bool average_4(uint32_t input_buff[],uint32_t *output_buff, uint32_t n_samples)
-* \brief        function to average the sample data (4 & 8 averaging)
-* \param[in]    input_buff[]  	- raw data buffer to be averaged
-* \param[in]    sample no		- number of samples to be averaged
-*
-*
-* \param[out]    output_buff   - averaged data buffer of the input buff
-*
-* \retval      bool, FALSE on successful averaging
-***************************************************************************************************/
+ * bool average_4(uint32_t input_buff[],uint32_t *output_buff, uint32_t n_samples)
+ * \brief        function to average the sample data (4 & 8 averaging)
+ * \param[in]    input_buff[]  	- raw data buffer to be averaged
+ * \param[in]    sample no		- number of samples to be averaged
+ *
+ *
+ * \param[out]    output_buff   - averaged data buffer of the input buff
+ *
+ * \retval      bool, FALSE on successful averaging
+ ***************************************************************************************************/
 bool spo2_4point_average(float input_buff[],float *output_buff, int32_t n_samples)
 {
 	bool averaging_status = FALSE;
@@ -1109,31 +1107,31 @@ bool spo2_4point_average(float input_buff[],float *output_buff, int32_t n_sample
 	{
 		output_buff[sample_count] = (input_buff[sample_count] + input_buff[sample_count+1] + input_buff[sample_count+2] + input_buff[sample_count+3])/4;
 	}
-    averaging_status = TRUE;
+	averaging_status = TRUE;
 
-    return averaging_status;
+	return averaging_status;
 }
 
 /*
-* void spo2_maxim_sort_ascend(int32_t *buffer_x,int32_t n_size)
-* \brief        Sort array in ascending order (insertion sort algorithm)
-* \param[in]    peak location buffer,
-* \param[in]	size of buffer
-*               Sort array in ascending order (insertion sort algorithm)
-* \retval       None
-*/
+ * void spo2_maxim_sort_ascend(int32_t *buffer_x,int32_t n_size)
+ * \brief        Sort array in ascending order (insertion sort algorithm)
+ * \param[in]    peak location buffer,
+ * \param[in]	size of buffer
+ *               Sort array in ascending order (insertion sort algorithm)
+ * \retval       None
+ */
 static void spo2_maxim_sort_ascend(uint8_t *buffer_x,uint8_t n_size)
 {
-    uint16_t sample_count, j, n_temp;
-    for (sample_count = 1; sample_count < n_size; sample_count++)
-    {
-        n_temp = buffer_x[sample_count];
-        for (j = sample_count; j > 0 && n_temp < buffer_x[j-1]; j--)
-        {
-            buffer_x[j] = buffer_x[j-1];
-        }
-        buffer_x[j] = n_temp;
-    }
+	uint16_t sample_count, j, n_temp;
+	for (sample_count = 1; sample_count < n_size; sample_count++)
+	{
+		n_temp = buffer_x[sample_count];
+		for (j = sample_count; j > 0 && n_temp < buffer_x[j-1]; j--)
+		{
+			buffer_x[j] = buffer_x[j-1];
+		}
+		buffer_x[j] = n_temp;
+	}
 }
 
 /*static void spo2_peak_detection(float filter_data[], uint16_t peak_location[],uint16_t *total_peak_count)
@@ -1193,38 +1191,33 @@ static bool spo2_peak_detection(float filter_data[], uint16_t peak_location[],ui
 	}
 
 	if(peak_detection_status == TRUE)
+	{
+		/* Falling PPG peak validation */
+		for(num_of_peaks_count = 0; num_of_peaks_count < peaks_count-1 ; num_of_peaks_count++)
 		{
-			/* Falling PPG peak validation */
-			for(num_of_peaks_count = 0; num_of_peaks_count < peaks_count-1 ; num_of_peaks_count++)
+			for(ppg_peak_index = peak_location[num_of_peaks_count] ; ppg_peak_index  < (peak_location[num_of_peaks_count] + 7) ; ppg_peak_index++)
 			{
-				for(ppg_peak_index = peak_location[num_of_peaks_count] ; ppg_peak_index  < (peak_location[num_of_peaks_count] + 7) ; ppg_peak_index++)
+				if((filter_data[ppg_peak_index +1]) > (filter_data[ppg_peak_index]))
 				{
-					if((filter_data[ppg_peak_index +1]) > (filter_data[ppg_peak_index]))
-					{
-						temp_ppg_falling_edge_valley_value = filtered_data[ppg_peak_index];
+					temp_ppg_falling_edge_valley_value = filtered_data[ppg_peak_index];
 
-						for( ;ppg_peak_index  < (peak_location[num_of_peaks_count] + 7) ; ppg_peak_index++)
+					for( ;ppg_peak_index  < (peak_location[num_of_peaks_count] + 7) ; ppg_peak_index++)
+					{
+						if((filter_data[ppg_peak_index +2]) < (filter_data[ppg_peak_index+1]))
 						{
-							if((filter_data[ppg_peak_index +2]) < (filter_data[ppg_peak_index+1]))
-							{
-								temp_ppg_falling_edge_peak_value = filter_data[ppg_peak_index +1];
+							temp_ppg_falling_edge_peak_value = filter_data[ppg_peak_index +1];
 
-								if((fabsf(temp_ppg_falling_edge_peak_value - temp_ppg_falling_edge_valley_value)) > 0.05)
-								{
-									peak_detection_status = FALSE;
-								}
-								ppg_peak_index += 2;
-								break;
-							}
-							if(peak_detection_status == FALSE)
+							if((fabsf(temp_ppg_falling_edge_peak_value - temp_ppg_falling_edge_valley_value)) > 0.05)
 							{
-								break;
+								peak_detection_status = FALSE;
 							}
+							ppg_peak_index += 2;
+							break;
 						}
-					}
-					if(peak_detection_status == FALSE)
-					{
-						break;
+						if(peak_detection_status == FALSE)
+						{
+							break;
+						}
 					}
 				}
 				if(peak_detection_status == FALSE)
@@ -1232,12 +1225,17 @@ static bool spo2_peak_detection(float filter_data[], uint16_t peak_location[],ui
 					break;
 				}
 			}
+			if(peak_detection_status == FALSE)
+			{
+				break;
+			}
 		}
+	}
 
-		if(peak_detection_status == TRUE)
-		{
-			*total_peak_count = peaks_count;
-		}
+	if(peak_detection_status == TRUE)
+	{
+		*total_peak_count = peaks_count;
+	}
 
 	return peak_detection_status;
 }
@@ -1251,11 +1249,11 @@ static void quick_test_clear_buffers(void)
 }
 
 /*
-* static bool bp_ecg_peak_detection(uint16_t ecg_peak_pos[], uint8_t *num_peaks)
-* \brief		Function to detect ecg peaks
-*
-* \retval      TRUE on successful peak detection
-*/
+ * static bool bp_ecg_peak_detection(uint16_t ecg_peak_pos[], uint8_t *num_peaks)
+ * \brief		Function to detect ecg peaks
+ *
+ * \retval      TRUE on successful peak detection
+ */
 static bool bp_ecg_peak_detection(uint16_t ecg_peak_pos[], uint8_t *num_peaks)
 {
 	float ecg_peak_value[BP_MAX_NUM_ECG_PEAKS] = {0};
@@ -1277,10 +1275,10 @@ static bool bp_ecg_peak_detection(uint16_t ecg_peak_pos[], uint8_t *num_peaks)
 			bp_ecg_index++)
 	{
 		if ((filtered_data[bp_ecg_index] >= BP_ECG_PPG_PK_DETECT_TH_0pt4) &&
-			(filtered_data[bp_ecg_index] > filtered_data[bp_ecg_index - BP_ECG_TH_RANGE_RISE_SIDE]) &&
-			(filtered_data[bp_ecg_index] > filtered_data[bp_ecg_index + BP_ECG_TH_RANGE_FALL_SIDE]) &&
-			((filtered_data[bp_ecg_index] - filtered_data[bp_ecg_index - BP_ECG_TH_RANGE_RISE_SIDE]) >= BP_ECG_PPG_PK_DETECT_TH_0pt4) &&
-			((filtered_data[bp_ecg_index] - filtered_data[bp_ecg_index + BP_ECG_TH_RANGE_FALL_SIDE]) >= BP_ECG_PPG_PK_DETECT_TH_0pt4))
+				(filtered_data[bp_ecg_index] > filtered_data[bp_ecg_index - BP_ECG_TH_RANGE_RISE_SIDE]) &&
+				(filtered_data[bp_ecg_index] > filtered_data[bp_ecg_index + BP_ECG_TH_RANGE_FALL_SIDE]) &&
+				((filtered_data[bp_ecg_index] - filtered_data[bp_ecg_index - BP_ECG_TH_RANGE_RISE_SIDE]) >= BP_ECG_PPG_PK_DETECT_TH_0pt4) &&
+				((filtered_data[bp_ecg_index] - filtered_data[bp_ecg_index + BP_ECG_TH_RANGE_FALL_SIDE]) >= BP_ECG_PPG_PK_DETECT_TH_0pt4))
 		{
 			isMaxValue = TRUE;
 
@@ -1339,12 +1337,12 @@ static bool bp_ecg_peak_detection(uint16_t ecg_peak_pos[], uint8_t *num_peaks)
 }
 
 /*
-* static bool bp_ppg_peak_detection(uint16_t ecg_peak_pos[5], uint16_t *ecg_loc_1 ,uint16_t *ecg_loc_2,
-* 									uint16_t *ppg_peak_pos)
-* \brief		Function to detect ppg peaks
-*
-* \retval      TRUE on successful peak detection
-*/
+ * static bool bp_ppg_peak_detection(uint16_t ecg_peak_pos[5], uint16_t *ecg_loc_1 ,uint16_t *ecg_loc_2,
+ * 									uint16_t *ppg_peak_pos)
+ * \brief		Function to detect ppg peaks
+ *
+ * \retval      TRUE on successful peak detection
+ */
 static bool bp_ppg_peak_detection(uint16_t ecg_peak_pos[5], uint16_t *ecg_loc_1 ,uint16_t *ecg_loc_2,uint16_t *ppg_peak_pos)
 {
 	float avg_output_ecg_ppg[BP_NUM_ECG_PPG_SAMPLES] = {0};
@@ -1398,13 +1396,13 @@ static bool bp_ppg_peak_detection(uint16_t ecg_peak_pos[5], uint16_t *ecg_loc_1 
 	/*--------------peak detection with max threshold 0.2---------------------------------------------*/
 	for (bp_ppg_index = bp_ppg_start_pos,bp_ppg_peak_index = 0;
 			((bp_ppg_index < (BP_NUM_ECG_PPG_SAMPLES - BP_PPG_TH_RANGE_FALL_SIDE)) && (bp_ppg_index < ecg_peak_pos[bp_ecg_peak_index+1]) &&
-			(bp_ecg_peak_index < BP_MAX_NUM_ECG_PEAKS) && (ppg_pk_pos[bp_ppg_peak_index] == 0)  ); bp_ppg_index++)
+					(bp_ecg_peak_index < BP_MAX_NUM_ECG_PEAKS) && (ppg_pk_pos[bp_ppg_peak_index] == 0)  ); bp_ppg_index++)
 	{
 		if ((filtered_data[bp_ppg_index] >= BP_PPG_PEAK_DETECT_TH) &&
-			(filtered_data[bp_ppg_index] > filtered_data[bp_ppg_index - BP_PPG_TH_RANGE_RISE_SIDE]) &&
-			(filtered_data[bp_ppg_index] > filtered_data[bp_ppg_index + BP_PPG_TH_RANGE_FALL_SIDE]) &&
-			((filtered_data[bp_ppg_index] - filtered_data[bp_ppg_index - BP_PPG_TH_RANGE_RISE_SIDE]) >= BP_PPG_PEAK_DETECT_TH) &&
-			((filtered_data[bp_ppg_index] - filtered_data[bp_ppg_index + BP_PPG_TH_RANGE_FALL_SIDE]) >= BP_PPG_PEAK_DETECT_TH))
+				(filtered_data[bp_ppg_index] > filtered_data[bp_ppg_index - BP_PPG_TH_RANGE_RISE_SIDE]) &&
+				(filtered_data[bp_ppg_index] > filtered_data[bp_ppg_index + BP_PPG_TH_RANGE_FALL_SIDE]) &&
+				((filtered_data[bp_ppg_index] - filtered_data[bp_ppg_index - BP_PPG_TH_RANGE_RISE_SIDE]) >= BP_PPG_PEAK_DETECT_TH) &&
+				((filtered_data[bp_ppg_index] - filtered_data[bp_ppg_index + BP_PPG_TH_RANGE_FALL_SIDE]) >= BP_PPG_PEAK_DETECT_TH))
 		{
 			isMaxValue = TRUE;
 
@@ -1465,10 +1463,10 @@ static bool bp_ppg_peak_detection(uint16_t ecg_peak_pos[5], uint16_t *ecg_loc_1 
 	/*-------------- Check if Falling peak to valley is > 0.05 ---------------------------------------------*/
 	if(status_peak_detection == TRUE)
 	{
-	  /* Falling PPG peak validation */
-	   for(bp_ppg_index=0; ((bp_ppg_index < (BP_MAX_NUM_ECG_PEAKS - 1)) && (ppg_pk_pos[bp_ppg_index] != 0)); bp_ppg_index++)
-	   {
-	   		for(bp_ppg_peak_index = ppg_pk_pos[bp_ppg_index]; bp_ppg_peak_index < (ppg_pk_pos[bp_ppg_index] + NBR_PPG_SAMPLES_TO_DETECT); bp_ppg_peak_index++)
+		/* Falling PPG peak validation */
+		for(bp_ppg_index=0; ((bp_ppg_index < (BP_MAX_NUM_ECG_PEAKS - 1)) && (ppg_pk_pos[bp_ppg_index] != 0)); bp_ppg_index++)
+		{
+			for(bp_ppg_peak_index = ppg_pk_pos[bp_ppg_index]; bp_ppg_peak_index < (ppg_pk_pos[bp_ppg_index] + NBR_PPG_SAMPLES_TO_DETECT); bp_ppg_peak_index++)
 			{
 				if (filtered_data[bp_ppg_peak_index + 1] > filtered_data[bp_ppg_peak_index])
 				{
@@ -1483,7 +1481,7 @@ static bool bp_ppg_peak_detection(uint16_t ecg_peak_pos[5], uint16_t *ecg_loc_1 
 							if ((fabsf(temp_ppg_falling_edge_peak_value - temp_ppg_falling_edge_valley_value)) > PPG_FALLING_EDGE_VALLY_TO_PEAK_DIFF)
 							{
 								status_peak_detection = FALSE;
-						    }
+							}
 							bp_ppg_peak_index +=2;
 							break;
 						}
@@ -1496,14 +1494,14 @@ static bool bp_ppg_peak_detection(uint16_t ecg_peak_pos[5], uint16_t *ecg_loc_1 
 				}
 				if (status_peak_detection == FALSE)
 				{
-				    break;
+					break;
 				}
 			}
 			if (status_peak_detection == FALSE)
 			{
 				break;
 			}
-	   }
+		}
 	}
 	//if Falling peak detection fails then 10 point averaging on PPG Signal and and detecting peaks again
 	if(status_peak_detection == FALSE)
@@ -1580,16 +1578,16 @@ static bool bp_ppg_peak_detection(uint16_t ecg_peak_pos[5], uint16_t *ecg_loc_1 
 }
 
 /*
-* void bp_calculation(uint16_t ppgloc,uint16_t ecgloc1,uint16_t ecgloc2,uint16_t *sbp, uint16_t *dbp)
-* \brief        Calculate SBP and BP value based on Heart Rate
-* \param[in]    ppgloc    	- ppg peak
-* \param[in]    ecgloc1    	- ecg location 1
-* \param[in]    ecgloc2    	- ecg location 2
-*
-* \param[out]   sbp    		- systolic bp
-* \param[out]   dbp    		- diastolic bp
-* \retval       none
-*/
+ * void bp_calculation(uint16_t ppgloc,uint16_t ecgloc1,uint16_t ecgloc2,uint16_t *sbp, uint16_t *dbp)
+ * \brief        Calculate SBP and BP value based on Heart Rate
+ * \param[in]    ppgloc    	- ppg peak
+ * \param[in]    ecgloc1    	- ecg location 1
+ * \param[in]    ecgloc2    	- ecg location 2
+ *
+ * \param[out]   sbp    		- systolic bp
+ * \param[out]   dbp    		- diastolic bp
+ * \retval       none
+ */
 static void bp_calculation(uint16_t ppgloc, uint16_t ecgloc1, uint16_t ecgloc2, uint16_t *sbp, uint16_t *dbp)
 {
 	float Max_SBP_Multi = 0.0;
@@ -1599,8 +1597,8 @@ static void bp_calculation(uint16_t ppgloc, uint16_t ecgloc1, uint16_t ecgloc2, 
 	float heart_rate_time = 0.0;
 	float sbp_multiply_factor = 0.0;
 	float dbp_multiply_factor = 0.0;
-    float heart_rate = 0.0;
-    uint16_t sbp_dbp_index = 0;
+	float heart_rate = 0.0;
+	uint16_t sbp_dbp_index = 0;
 
 	*sbp = 0;
 	*dbp = 0;
@@ -1619,7 +1617,7 @@ static void bp_calculation(uint16_t ppgloc, uint16_t ecgloc1, uint16_t ecgloc2, 
 		Max_DBP_Multi = dbp_multiply_factor + ((heart_rate - MIN_HEART_RATE_FOR_MULTIPLIER) * 0.002);
 
 		if((Max_SBP_Multi <= BP_MAX_SBP_MULTIPIER) && (Max_DBP_Multi <= BP_MAX_DBP_MULTIPIER)
-						&& (Max_SBP_Multi >= BP_MIN_SBP_MULTIPIER) && (Max_DBP_Multi >= BP_MIN_DBP_MULTIPIER))
+				&& (Max_SBP_Multi >= BP_MIN_SBP_MULTIPIER) && (Max_DBP_Multi >= BP_MIN_DBP_MULTIPIER))
 		{
 			*sbp = bp_calibration.sbp_std_val;
 			*dbp = bp_calibration.dbp_std_val;
@@ -1670,11 +1668,11 @@ static void bp_calculation(uint16_t ppgloc, uint16_t ecgloc1, uint16_t ecgloc2, 
 
 static uint16_t heart_rate_computation(uint16_t peak_loc[])
 {
-    uint16_t pos_dif = 0.0;
-    float t_pos_dif = 0.0;
-    float HR_sum = 0.0;
-    float HR_avg = 0.0;
-    float HR[10] = {0.0};
+	uint16_t pos_dif = 0.0;
+	float t_pos_dif = 0.0;
+	float HR_sum = 0.0;
+	float HR_avg = 0.0;
+	float HR[10] = {0.0};
 
 	for(uint16_t i = 0;i < BP_MAX_NUM_ECG_PEAKS-1;i++)
 	{
@@ -1786,7 +1784,7 @@ static bool bp_ppg_peak_detection_2nd_validation(float output_ECG_PPG[], uint16_
 	for (i = bp_ppg_start_pos, j = 0; ((i < 1159) && (i < ecg_peak_pos[k + 1]) && (ppg_peak_pos[j] == 0) && (k < BP_MAX_NUM_ECG_PEAKS)); i++)
 	{
 		if ((output_ECG_PPG[i] > output_ECG_PPG[i - ppg_th_range_rise_side]) &&
-			(output_ECG_PPG[i] > output_ECG_PPG[i + ppg_th_range_fall_side]) )//&&
+				(output_ECG_PPG[i] > output_ECG_PPG[i + ppg_th_range_fall_side]) )//&&
 			//((output_ECG_PPG[i] - output_ECG_PPG[i - ppg_th_range_rise_side]) >= BP_PPG_RISING_TH_0pt2) &&
 			//((output_ECG_PPG[i] - output_ECG_PPG[i + ppg_th_range_fall_side]) >= BP_PPG_FALLING_TH_0pt2)) //(output_ECG_PPG[i] >= BP_PPG_PEAK_DETECT_TH_0pt4) &&
 		{
@@ -1824,12 +1822,12 @@ bool Run_Multi_Vital(void)
 	Enable_Power_Supply();
 
 	if(1)
-	//if(Lead12_LeadOff_Detect() == FALSE)
+		//if(Lead12_LeadOff_Detect() == FALSE)
 	{
 		if(Run_Quick_Vital()==TRUE)
 		{
 			//if(Selected_PID_type != GUEST_PID)
-				Store_QuickTest2_Data_To_Flash();
+			Store_QuickTest2_Data_To_Flash();
 
 			Lead12_Test();
 		}
@@ -1896,14 +1894,14 @@ bool Check_PPG_Data_Quality(void)
 	uint16_t peakLocations[15]={0};
 	uint8_t total_peak_count;
 
-   bool status = false;
+	bool status = false;
 
-   status = spo2_peak_detection(( float *)SPO2_PPG_IR_BUFF, peakLocations,&total_peak_count,600);
+	status = spo2_peak_detection(( float *)SPO2_PPG_IR_BUFF, peakLocations,&total_peak_count,600);
 
-   if(status)
-   {
-	   printf("\n PPG Peak detection success\n");
-   }
-   return status;
+	if(status)
+	{
+		printf("\n PPG Peak detection success\n");
+	}
+	return status;
 
 }
