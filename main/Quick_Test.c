@@ -243,7 +243,8 @@ bool QUICK_Test1(void)
  	printf("\nQuick Test2 Started");
 
  	Is_time_displayed = TRUE;
- 	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+ 	//API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+ 	gpio_set_level(ECG_CSn_VCS, 1);
 
  	if((Selected_PID_type == VALID_PID) || (Selected_PID_type == GUEST_PID))
  	{
@@ -521,7 +522,7 @@ void Dummy_Capture(uint16_t total_samples)
 
 					API_ECG_Stop_Conversion();
 				}
-				//If both lead1 and lead2 are not connected
+				//If both lead1 and lead2 are connected
 				else
 				{
 					printf("\nAll leads are detected");

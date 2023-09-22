@@ -6,6 +6,7 @@
 #include <esp_attr.h>
 #include "rtc.h"
 
+#define LOD 1
 typedef enum{
 	CAPTURE_ECG_L1=0,
 	CAPTURE_ECG_L2,

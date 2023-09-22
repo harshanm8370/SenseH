@@ -686,8 +686,8 @@ api_disp_write_data_1byte(disp_spi,0x00,1);         // start address 0
 void API_DISP_Clear_Full_Screen_3_Wire(uint16_t color)
 {
 	int i;
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
-
+	//API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 	API_IO_Exp1_P1_write_pin(DISPLAY_CSN, LOW);
 	api_disp_write_com(SET_COLUMN_ADDRESS); // Column address setting
 api_disp_write_data(0x00);         // start address 0
@@ -864,7 +864,7 @@ return 1;
  {
 	API_IO_Exp_Select(IO_EXPANDER_1);
 
-	API_IO_Exp1_P1_write_pin(ECG_CSN, HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
 	API_IO_Exp1_P0_write_pin(EFM_DISP_RESN, HIGH);
 	API_IO_Exp1_P1_write_pin(DISPLAY_CSN, LOW);
@@ -2696,8 +2696,8 @@ uint8_t left_offset = 0;
 
   void API_Disp_Quick_test_screen(DISP_QUICK_TEST_SCREENS_t disp_qt_screen)
   {
-		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
-
+		//API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	  gpio_set_level(ECG_CSn_VCS, 1);
   	struct DISPLAY_TEXT mid_text1,mid_text2,mid_text3,mid_text4,mid_text5,mid_text6,mid_text7,btm_text;
   	struct DISPLAY_ICON btm_icon;
 
@@ -3091,8 +3091,8 @@ uint8_t left_offset = 0;
 
   void API_Disp_Quick_Test_Icon(void)
   {
-	  API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
-
+	  //API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	  gpio_set_level(ECG_CSn_VCS, 1);
   	uint8_t left_offset = 10;
   	uint8_t top_offset  = 30;
 
@@ -3179,8 +3179,8 @@ uint8_t left_offset = 0;
 
   void API_DISP_Firmware_Version(void)
   {
-		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
-
+		//API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	  gpio_set_level(ECG_CSn_VCS, 1);
  		api_disp_display_char( " FW Version ", font19x10, BLUE, BLACK, 5, 80);
  		api_disp_display_char(FIRMWARE_VERSION, font19x10, BLUE, BLACK, 5, 100);
   }
@@ -3373,8 +3373,8 @@ void API_Disp_Lead_Count(uint8_t lead)
 
 void API_DISP_SenseSemi_Logo(SENSESEMI_LOGO_t moving_or_static)
 {
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
-
+	//API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
 	struct DISPLAY_TEXT mid_text1,mid_text2,mid_text3;
 	struct DISPLAY_ICON mid_icon;

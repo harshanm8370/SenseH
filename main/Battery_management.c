@@ -123,7 +123,7 @@ static void Enter_Deep_Sleep(void)
 	API_IO_Exp_Write_Reg(IO_EXP2_SLAVE_ADDR, REG_PULLUP_PULLDOWN_SEL_1,&alllow,1);
 	API_IO_Exp_Write_Reg(IO_EXP2_SLAVE_ADDR, REG_ADDR_OUTPUT_PORT_1,&alllow,1);
 
-
+//Power down all the modules to bring down power consumption from the battery
 	periph_module_disable(PERIPH_I2C0_MODULE);
 	periph_module_disable(PERIPH_I2C1_MODULE);
 	periph_module_disable(PERIPH_HSPI_MODULE);

@@ -241,7 +241,7 @@ static void Interfaces_init(void)
 	API_IR_ADC_Init();
 
 	/**************** BLE init ***********************************************/
-//	API_BLE_Init();
+	API_BLE_Init();
 }
 
 
