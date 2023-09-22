@@ -516,6 +516,11 @@ bool Capture_PPG_ECG_Data(DATA_CAPTURE_TYPE_t captureType, bool enableDummyCaptu
 			printf("\n total data ready interrupts = %d\n", ECG_Drdy_count);
 			ECG_Drdy_count = 0;
 			API_ECG_Stop_Conversion();
+			printf("\n\nECG L1 data");
+			for(int i=0;i<600;i++)
+			{
+				printf("\n%f",ECG_Lead1_buff[i]);
+			}
 		}
 		//If both lead1 and lead2 are connected
 		else
