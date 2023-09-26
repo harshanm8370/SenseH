@@ -70,6 +70,7 @@ uint32_t SPO2_PPG_IR_BUFF[TOTAL_SAMPLES];
 uint32_t SPO2_PPG_RED_BUFF[TOTAL_SAMPLES];
 float ECG_Lead1_buff[TOTAL_SAMPLES_VCS];
 float ECG_Lead2_buff[TOTAL_SAMPLES_VCS];
+float ECG_Lead3_buff[TOTAL_SAMPLES_VCS];
 float BP_ECG_Lead1_buff[TOTAL_SAMPLES];
 uint32_t BP_PPG_RED_BUFF[TOTAL_SAMPLES];
 uint32_t BP_PPG_IR_BUFF[TOTAL_SAMPLES];
@@ -493,6 +494,7 @@ void Dummy_Capture(uint16_t total_samples)
 
 	else if(captureType == CAPTURE_PPG)
 	{
+		printf("\nSPO2 PPG-RED DATA: Capture START");
 		Max86150_Clear_Fifo();
 
 
@@ -523,6 +525,7 @@ void Dummy_Capture(uint16_t total_samples)
 			{
 			  printf("\n%ld",SPO2_PPG_IR_BUFF[i]);
 			}
+		printf("\nSPO2 PPG-RED DATA: Capture END");
 	}
 
 	else if(captureType == CAPTURE_ECG_L1_AND_L2)
@@ -597,38 +600,39 @@ void Dummy_Capture(uint16_t total_samples)
 		MemSet(BP_PPG_RED_BUFF,0,sizeof(BP_PPG_RED_BUFF));
 		MemSet(BP_PPG_IR_BUFF,0,sizeof(BP_PPG_IR_BUFF));
 
-		for(raw_data_index=0; raw_data_index<600; raw_data_index++)
+		for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
 			{
 				status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
 				status = API_MAX86150_Raw_Data_capture(BP_PPG_RED_BUFF+raw_data_index, BP_PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
 			}
 
+		API_ECG_Stop_Conversion();
+		printf("\n####### DEBUG START!!! ########\n");
 		printf("\nBP ECG L1 data:\n");
-		for(int i=0;i<600;i++)
+		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 		{
 		  printf("%f\n",BP_ECG_Lead1_buff[i]);
 		}
-		/*
+
 		printf("\nECG L2 data:\n");
-		for(int i=0;i<600;i++)
+		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 		{
 		  printf("\n%f",ECG_Lead2_buff[i]);
-		}*/
+		}
 
 		printf("\nBP PPG Red data:\n");
-		for(int i=0;i<600;i++)
+		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 		{
 			printf("%ld\n",BP_PPG_RED_BUFF[i]);
 		}
 
+		printf("\n####### DEBUG END!!! ########\n");
 		/*printf("\nPPG IR data:\n");
 		for(int i=0;i<600;i++)
 		{
 			printf("\n%d",PPG_IR_BUFF[i]);
 		}
 */
-		API_ECG_Stop_Conversion();
-
 		return true;
  }
 
@@ -1836,7 +1840,9 @@ bool Run_Multi_Vital(void)
 			//if(Selected_PID_type != GUEST_PID)
 				Store_QuickTest2_Data_To_Flash();
 
-			Lead12_Test();
+			Lead12_Test(); // This is the core function to capture 12Lead ECG
+
+
 		}
 	}
 

@@ -59,6 +59,7 @@ extern uint32_t SPO2_PPG_IR_BUFF[TOTAL_SAMPLES];
 extern uint32_t SPO2_PPG_RED_BUFF[TOTAL_SAMPLES];
 extern float ECG_Lead1_buff[TOTAL_SAMPLES_VCS];
 extern float ECG_Lead2_buff[TOTAL_SAMPLES_VCS];
+extern float ECG_Lead3_buff[TOTAL_SAMPLES_VCS];
 extern float BP_ECG_Lead1_buff[TOTAL_SAMPLES];
 extern uint32_t BP_PPG_RED_BUFF[TOTAL_SAMPLES];
 extern uint32_t BP_PPG_IR_BUFF[TOTAL_SAMPLES];

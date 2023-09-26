@@ -37,9 +37,11 @@ ECG_STATUS API_ECG_Deinit(void);																		// De initialize the spi
 ECG_STATUS API_ECG_Reginit_1Lead(void);																	// register settings for single lead
 ECG_STATUS API_ECG_Reginit_2Lead(void);																	// register settings for 3 lead
 ECG_STATUS API_ECG_Reginit_12Lead();
+ECG_STATUS API_ECG_Reginit_12Lead_new();
 ECG_STATUS API_ECG_Reginit_Testsetup();																	// setup for test signal
 ECG_STATUS API_ECG_Check_Error_Status(void);															// checking for error status
-ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_2Lead(float *buff_lead_1, float *buff_lead_2);								// capture samples for 3 lead
+ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_2Lead(float *buff_lead_1, float *buff_lead_2);								// capture samples for 2 lead
+ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_3Lead(float *buff_lead_1, float *buff_lead_2, float *buff_lead_3);			// capture samples for 3 lead
 bool API_ECG_Capture_Samples_1Lead(float *buff_lead_1);													// capture sample for single lead
 bool API_ECG_Capture_Samples_VLead(float *vlead,uint16_t nbf_samples);
 bool API_ECG_Diagnostic_Test(void);

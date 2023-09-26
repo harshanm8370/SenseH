@@ -28,6 +28,8 @@
 
 bool Lead12_Data_Capture(void);
 
+bool Lead12_Data_Capture_new(void);
+
 
 bool Lead12_Test(void)
 {
@@ -55,13 +57,14 @@ bool Lead12_Test(void)
 				printf("\nEnteriing into 12 Lead ECG Init");
 
 
-				if(API_ECG_Init())
+				if(API_ECG_Init())// We need to check secquence after Quickvital
 				{
 					printf("\nECG L2 Init Done!");
 
 					API_DISP_Display_Screen(DISP_TEST_IN_PROGRESS);
 
-					Lead12_Data_Capture();
+//					Lead12_Data_Capture();
+					Lead12_Data_Capture_new();
 
 					API_Disp_Quick_Test_Result(result);
 					Delay_ms(2000);
@@ -99,6 +102,53 @@ bool Lead12_Test(void)
 	return true;
 }
 
+bool Lead12_Data_Capture_new(void)
+{
+	RECORD_OPS_STATUS flash_write_status;
+	uint32_t offfset = 0;
+	uint16_t raw_data_index;
+
+	printf("\n[%s:%d:%s]", __FILE__, __LINE__, __func__);
+
+	API_Update_Record_Header(ECG_12_LEAD,&record_header);
+	offfset = REC_HEADER_LEN;
+
+	Select_Vlead(LEAD6);
+	API_Disp_Lead_Count(6);
+
+	if( API_ECG_Reginit_12Lead_new() != ECG_NO_ERROR)
+	{
+		API_ECG_Start_Conversion();
+		printf("\n12 Lead ECG Register Init done");
+		printf("\n12 Lead ECG Data capturing");
+		for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
+		{
+			API_ECG_Capture_Samples_3Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index, ECG_Lead3_buff+raw_data_index);
+
+		}
+		API_ECG_Stop_Conversion();
+	}
+
+	printf("\n Lead- I ECG Data capturing");
+	for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
+	{
+	   printf("\n%f",ECG_Lead1_buff[i]);
+	}
+
+	printf("\n Lead- II ECG Data capturing");
+	for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
+	{
+	   printf("\n%f",ECG_Lead2_buff[i]);
+	}
+
+	printf("\n Lead- V ECG Data capturing");
+	for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
+	{
+	   printf("\n%f",ECG_Lead3_buff[i]);
+	}
+
+	return true;
+}
 
 bool Lead12_Data_Capture(void)
 {
@@ -116,7 +166,7 @@ bool Lead12_Data_Capture(void)
 
 	API_Disp_Lead_Count(6);
 
-	Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,true);
+	Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,true); // This is capturing L1& L2, i.e CH1(24bit) CH2(24bit)
 
 	if( API_ECG_Reginit_12Lead() != ECG_NO_ERROR)
 		{

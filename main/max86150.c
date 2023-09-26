@@ -271,7 +271,7 @@ void Max86150_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledM
 	//writeRegister8(MAX86150_ADDR,MAX86150_FIFOCONTROL2, (char)(FIFOCode >>8) );
 	/********* END CRITICAL FOR LED GLOW ************/
 
-	writeRegister8(MAX86150_ADDR,MAX86150_PPGCONFIG1,0b11011111);	//0b11011111
+	writeRegister8(MAX86150_ADDR,MAX86150_PPGCONFIG1,0b11011111);	//0b11 0111 11
 
 	writeRegister8(MAX86150_ADDR,MAX86150_PPGCONFIG2, 0x02);
 	writeRegister8(MAX86150_ADDR,MAX86150_LED_RANGE, 0x00 ); // PPG_ADC_RGE: 32768nA
