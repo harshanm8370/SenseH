@@ -47,7 +47,7 @@ bool Lead12_Test(void)
 			{
                 // Disp quick test 1 screen
 				API_IO_Exp_Power_Control(EN_VLED,LOW);
-				API_IO_Exp_Power_Control(EN_ANALOG,LOW);
+				API_IO_Exp_Power_Control(EN_ANALOG,HIGH);
 				API_IO_Exp_Power_Control(EN_IR,LOW);
 				API_Buzzer_Sound(SHORT_BEEP);
 
@@ -114,9 +114,14 @@ bool Lead12_Data_Capture_new(void)
 	offfset = REC_HEADER_LEN;
 
 	Select_Vlead(LEAD6);
+	API_IO_Exp1_P1_write_pin(DC_LEAD_OFF_V,HIGH);
 	API_Disp_Lead_Count(6);
 
-	if( API_ECG_Reginit_12Lead_new() != ECG_NO_ERROR)
+	MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff)); // In this block making use of ECG_Lead1_buff to capture I lead data.
+	MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff)); // In this block making use of ECG_Lead2_buff to capture II lead data.
+	MemSet(ECG_Lead3_buff,0,sizeof(ECG_Lead3_buff)); // In this block making use of ECG_Lead3_buff to capture V lead data.
+
+	if( API_ECG_Reginit_12Lead_new() == ECG_NO_ERROR)
 	{
 		API_ECG_Start_Conversion();
 		printf("\n12 Lead ECG Register Init done");
@@ -127,6 +132,10 @@ bool Lead12_Data_Capture_new(void)
 
 		}
 		API_ECG_Stop_Conversion();
+	}
+	else
+	{
+		printf("\n12 Lead ECG Register Init Failed");
 	}
 
 	printf("\n Lead- I ECG Data capturing");

@@ -646,6 +646,7 @@ ECG_STATUS API_ECG_Reginit_12Lead_new()
 		reg_config_status |= api_ecg_reg_write(DRDYB_SRC_REG, DRDYB_SRC_CH1);
 		//reg_write_ads(CN_CNFG, CH_CNFG_CH1_LPRD);//Enables channel 1 ECG for loop read-back mode.
 		reg_config_status |= api_ecg_reg_write(AFE_RES_REG, 0x3F);		//Resolution: 100khz
+		reg_config_status |= api_ecg_reg_write(CH_CNFG_REG, 0X70);
 	}
 
 	if (reg_config_status == ECG_NO_ERROR)

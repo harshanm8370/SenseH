@@ -1832,6 +1832,8 @@ bool Run_Multi_Vital(void)
 
 	Enable_Power_Supply();
 
+#if 0
+
 	if(1)
 	//if(Lead12_LeadOff_Detect() == FALSE)
 	{
@@ -1851,7 +1853,11 @@ bool Run_Multi_Vital(void)
 		API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
 		API_Disp_Quick_test_screen(DISP_12LEAD_CABLE_NOT_CONNECTED_PROPERLY);
 	}
+#endif
 
+#if 1 //only 12 Lead capture not sure why previously done quik Vital
+	Lead12_Test(); // This is the core function to capture 12Lead ECG
+#endif
 	Disable_Power_Supply();
 	return true;
 }
