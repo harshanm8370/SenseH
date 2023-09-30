@@ -6,12 +6,12 @@
 static const uint8_t MAX86150_INTSTAT1 =		0x00;
 static const uint8_t MAX86150_INTSTAT2 =		0x01;
 static const uint8_t MAX86150_INTENABLE1 =		0x02;
-//static const uint8_t MAX86150_INTENABLE2 =		0x03;
+static const uint8_t MAX86150_INTENABLE2 =		0x03;
 
 static const uint8_t MAX86150_FIFOWRITEPTR = 	0x04;
 static const uint8_t MAX86150_FIFOOVERFLOW = 	0x05;
 static const uint8_t MAX86150_FIFOREADPTR = 	0x06;
-//static const uint8_t MAX86150_FIFODATA 		=		0x07;
+static const uint8_t MAX86150_FIFODATA 		=		0x07;
 
 static const uint8_t MAX86150_FIFOCONFIG = 		0x08;
 static const uint8_t MAX86150_FIFOCONTROL1= 	0x09;
@@ -28,7 +28,7 @@ static const uint8_t MAX86150_LED_RANGE 		= 	0x14;
 //static const uint8_t MAX86150_LED_PILOT_PA 	= 	0x15;
 
 static const uint8_t MAX86150_ECG_CONFIG1 	= 	0x3C;
-//static const uint8_t MAX86150_ECG_CONFIG3 	= 	0x3E;
+static const uint8_t MAX86150_ECG_CONFIG3 	= 	0x3E;
 static const uint8_t MAX86150_PROXINTTHRESH = 	0x10;
 
 static const uint8_t MAX86150_PARTID = 			0xFF;

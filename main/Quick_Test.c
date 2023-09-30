@@ -294,7 +294,6 @@ bool QUICK_Test1(void)
 					API_ECG_Chip_Reset();
 				}
 */
-
 				 if(API_MAX86150_Setup())
 				 {
 					if(API_ECG_Init())
@@ -314,7 +313,7 @@ bool QUICK_Test1(void)
 							//API_ECG_Registers_Check_For_Corruption();
 
 							//if(API_Temperature_Init())
-
+#if 1
 								API_Disp_Quick_test_screen(DISP_QT_ECG_L1_TEST_IN_PROGRESS);
 								Print_time("/ECG start");
 								   if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,true)==false)
@@ -336,7 +335,7 @@ bool QUICK_Test1(void)
 											// Filter_Quicktest1_Data();
 											// Peak detection
 											// Result Computation
-
+#endif
 										   Vital_result.SBP1 = 117; // Need to change later
 										   Vital_result.DBP1 = 77; // Need to change later
 
@@ -497,12 +496,12 @@ void Dummy_Capture(uint16_t total_samples)
 		printf("\nSPO2 PPG-RED DATA: Capture START");
 		Max86150_Clear_Fifo();
 
-
+#if 0
 		if(enableDummyCapture)
 		{
-			for(raw_data_index=0; raw_data_index<300; raw_data_index++)// ~3sec dummy capture
+			for(raw_data_index=0; raw_data_index<100; raw_data_index++)// 100 dummy capture
 			{
-				status = API_MAX86150_Raw_Data_capture(SPO2_PPG_RED_BUFF+raw_data_index, SPO2_PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
+				status = API_MAX86150_Raw_Data_capture(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,max_ecg_no_use,1,1,0);
 			}
 		}
 
@@ -512,16 +511,29 @@ void Dummy_Capture(uint16_t total_samples)
 
 		for(raw_data_index=0; raw_data_index<600; raw_data_index++)
 			{
-				status = API_MAX86150_Raw_Data_capture(SPO2_PPG_RED_BUFF+raw_data_index, SPO2_PPG_IR_BUFF+raw_data_index,max_ecg_no_use,1,0,0);
+				status = API_MAX86150_Raw_Data_capture(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,max_ecg_no_use,1,0,0);
 			}
+#endif
+#if 1
+		if(enableDummyCapture)
+		{
+			status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,max_ecg_no_use,1,1,0);
+		}
+
+		MemSet(SPO2_PPG_RED_BUFF,0,sizeof(SPO2_PPG_RED_BUFF));
+		MemSet(SPO2_PPG_IR_BUFF,0,sizeof(SPO2_PPG_IR_BUFF));
+
+
+		status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,max_ecg_no_use,1,0,0);
+#endif
 
 		printf("\nSPO2 PPG-RED DATA:");
-		for(int i=0;i<600;i++)
+		for(int i=1;i<601;i++)
 			{
 			  printf("\n%ld",SPO2_PPG_RED_BUFF[i]);
 			}
 		printf("\nSPO2 PPG-IR DATA:");
-		for(int i=0;i<600;i++)
+		for(int i=1;i<601;i++)
 			{
 			  printf("\n%ld",SPO2_PPG_IR_BUFF[i]);
 			}

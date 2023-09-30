@@ -65,6 +65,8 @@ void TestFlashStorage(void);
 
     gpio_set_direction(ECG_CSn_VCS, GPIO_MODE_OUTPUT);
     gpio_set_direction(JTAG_MTDI_DEBUG, GPIO_MODE_OUTPUT);
+    gpio_set_direction(MAX86150_DRDY_INTR_PIN,GPIO_MODE_INPUT);
+    gpio_set_pull_mode(MAX86150_DRDY_INTR_PIN,GPIO_PULLUP_ONLY);
     gpio_set_level(JTAG_MTDI_DEBUG, 1);
     gpio_set_level(ECG_CSn_VCS, 1);
 
@@ -75,11 +77,12 @@ void TestFlashStorage(void);
 #if 0
     while(1)
     {
-
-	gpio_set_level(ECG_CSn_VCS, 1);
+#if 0
+	gpio_set_level(MAX86150_DRDY_INTR_PIN, 1);
 	Delay_ms(100);
-	gpio_set_level(ECG_CSn_VCS, 0);
+	gpio_set_level(MAX86150_DRDY_INTR_PIN, 0);
 	Delay_ms(100);
+#endif
     }
 #endif
     Interfaces_init();

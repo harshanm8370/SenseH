@@ -99,6 +99,7 @@ typedef uint8_t byte;
 
   bool API_MAX86150_Setup(void);
   bool API_MAX86150_Raw_Data_capture(uint32_t Red_data[],uint32_t IR_data[],uint32_t ECG_Data[],uint32_t nbf_samples,bool is_dummy_capture,uint8_t red_or_ir_or_ecg);
+  bool API_MAX86150_Raw_Data_capture_new(uint32_t Red_data[],uint32_t IR_data[],uint32_t ECG_Data[],uint32_t nbf_samples,bool is_dummy_capture,uint8_t red_or_ir_or_ecg);
 
   void API_DRDY_Pulse_Count(void); // DRDY Count
 
