@@ -304,6 +304,8 @@ bool QUICK_Test1(void)
 							Print_time("\nSPO2 start");
 							Capture_PPG_ECG_Data(CAPTURE_PPG,true);
 							Print_time("\nSPO2 end");
+							API_IO_Exp_Power_Control(EN_VLED,LOW);
+							API_IO_Exp_Power_Control(EN_IR,LOW);
 						//	Filter_Quicktest1_Data();
 						//	}
 							//Capture_BP_Data(true);

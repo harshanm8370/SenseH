@@ -595,6 +595,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 //  		for(i=0; i<2; i++)
   		if(!is_dummy_capture)
   		{
+  			i = 0;
   			printf("\n Real Capture");
 			do{
 				memset(sample_buff,0x00,sizeof(sample_buff));
@@ -619,6 +620,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
   		else
   		{
 			printf("\n Dummy Capture");
+			i = 0 ;
 			do{
 				memset(sample_buff,0x00,sizeof(sample_buff));
 
