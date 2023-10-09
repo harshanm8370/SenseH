@@ -298,61 +298,44 @@ bool QUICK_Test1(void)
 				 {
 					if(API_ECG_Init())
 						{
+#if 1
 							API_Disp_Quick_test_screen(DISP_QT_PPG_TEST_IN_PROGRESS);
-
-							//while(1){
-							Print_time("\nSPO2 start");
 							Capture_PPG_ECG_Data(CAPTURE_PPG,true);
-							Print_time("\nSPO2 end");
 							API_IO_Exp_Power_Control(EN_VLED,LOW);
 							API_IO_Exp_Power_Control(EN_IR,LOW);
-						//	Filter_Quicktest1_Data();
-						//	}
-							//Capture_BP_Data(true);
-
-							//Check_PPG_Data_Quality();
-
-							//API_ECG_Registers_Check_For_Corruption();
-
-							//if(API_Temperature_Init())
-#if 1
-								API_Disp_Quick_test_screen(DISP_QT_ECG_L1_TEST_IN_PROGRESS);
-								Print_time("/ECG start");
-								   if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,true)==false)
-									   {
-										   Disable_Power_Supply();
-										   return false;
-									   }
-								   Print_time("\nECG end");
-									 printf("\nCapturing BP................");
-
-                                      Print_time("\nBP START");
-									 Capture_BP_Data(true);
-									 Print_time("\nBP END");
-
-											// Filter_Quicktest1_Data();
-											// Peak detection
-											// Result Computation
-
-											// Filter_Quicktest1_Data();
-											// Peak detection
-											// Result Computation
 #endif
-										   Vital_result.SBP1 = 117; // Need to change later
-										   Vital_result.DBP1 = 77; // Need to change later
+#if 1
+							API_Disp_Quick_test_screen(DISP_QT_ECG_L1_TEST_IN_PROGRESS);
+							Print_time("/ECG start");
+							if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,true)==false)
+							{
+							   Disable_Power_Supply();
+							   return false;
+							}
+							Print_time("\nECG end");
+#endif
+#if 1
+							printf("\nCapturing BP................");
+							API_IO_Exp_Power_Control(EN_VLED,HIGH);
+							API_IO_Exp_Power_Control(EN_IR,HIGH);
+							Print_time("\nBP START");
+							Capture_BP_Data(true);
+							Print_time("\nBP END");
+#endif
 
-											result[0] = 98;
-											result[1] = 85;
-											result[2] = 115;
-											result[3] = 85;
+							Vital_result.SBP1 = 117; // Need to change later
+							Vital_result.DBP1 = 77; // Need to change later
 
-										   API_Disp_Quick_Test_Result(result);
-										   if(Selected_PID_type != GUEST_PID) Store_QuickTest1_Data_To_Flash();
-							   }
+							result[0] = 98;
+							result[1] = 85;
+							result[2] = 115;
+							result[3] = 85;
 
-						 }
-
-				}
+							API_Disp_Quick_Test_Result(result);
+							if(Selected_PID_type != GUEST_PID) Store_QuickTest1_Data_To_Flash();
+					   }
+				 }
+			}
 
 			else
 			{
@@ -415,6 +398,7 @@ void Dummy_Capture(uint16_t total_samples)
 {
     uint16_t raw_data_index;
     esp_err_t status=ESP_FAIL;
+    uint16_t capture_number;
 
     uint32_t max_ecg_no_use[1]; // Not using ecg data from max86150 as hardware will not support
 
@@ -519,14 +503,23 @@ void Dummy_Capture(uint16_t total_samples)
 #if 1
 		if(enableDummyCapture)
 		{
-			status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,max_ecg_no_use,1,1,0);
+			ppg_count = 0;
+			do{
+				status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,0,1);
+			}while(ppg_count < 10);
 		}
 
 		MemSet(SPO2_PPG_RED_BUFF,0,sizeof(SPO2_PPG_RED_BUFF));
 		MemSet(SPO2_PPG_IR_BUFF,0,sizeof(SPO2_PPG_IR_BUFF));
 
+		ppg_count = 0;
+		Print_time("\nSPO2 start");
+		do{
+			status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,0,0);
+		}while(ppg_count < (ECG_IN_SECONDS*SET_ODR)/10);
 
-		status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,max_ecg_no_use,1,0,0);
+		Print_time("\nSPO2 END");
+		ppg_count = 0;
 #endif
 
 		printf("\nSPO2 PPG-RED DATA:");
@@ -596,7 +589,7 @@ void Dummy_Capture(uint16_t total_samples)
 		uint32_t max_ecg_no_use[1U] ={0U}; // Not using ecg data from max86150 as hardware will not support
 		uint16_t raw_data_index =0U;
 		esp_err_t status = ESP_FAIL;
-
+#if 0
 		API_ECG_Start_Conversion();
 		Max86150_Clear_Fifo();
 
@@ -621,11 +614,58 @@ void Dummy_Capture(uint16_t total_samples)
 			}
 
 		API_ECG_Stop_Conversion();
-		printf("\n####### DEBUG START!!! ########\n");
-		printf("\nBP ECG L1 data:\n");
+#endif
+
+#if 1
+		ECG_Drdy_count = 0;
+		uint8_t ppg_index_cnt =0;
+		API_ECG_Stop_Conversion();
+		API_ECG_Start_Conversion();
+		if(enableDummyCapture)
+		{
+			ppg_count = 0;
+			for(raw_data_index=0; raw_data_index<ECG_DUMMY_CAPTURES; raw_data_index++)// ~3sec dummy capture
+			{
+				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+				ppg_index_cnt++;
+				if(ppg_index_cnt >=10)
+				{
+					status = API_MAX86150_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,0,0);
+					ppg_index_cnt = 0;
+				}
+			}
+		}
+
+		printf("\nReal BP Capture START:\n");
+		MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
+		MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
+		MemSet(BP_PPG_RED_BUFF,0,sizeof(BP_PPG_RED_BUFF));
+		MemSet(BP_PPG_IR_BUFF,0,sizeof(BP_PPG_IR_BUFF));
+		ppg_count = 0;
+		ppg_index_cnt = 0;
+
+		Print_time("\nBP start");
+		for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
+		{
+			status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+			ppg_index_cnt++;
+			if(ppg_index_cnt >=10)
+			{
+				status = API_MAX86150_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,0,0);
+				ppg_index_cnt = 0;
+			}
+		}
+		ppg_index_cnt = 0;
+		Print_time("\nBP END");
+
+		printf("\n total data ready interrupts = %d\n", ECG_Drdy_count);
+		ppg_count = 0;
+		ECG_Drdy_count = 0;
+		API_ECG_Stop_Conversion();
+		printf("\nECG L1 data:\n");
 		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 		{
-		  printf("%f\n",BP_ECG_Lead1_buff[i]);
+		  printf("\n%f",ECG_Lead1_buff[i]);
 		}
 
 		printf("\nECG L2 data:\n");
@@ -634,19 +674,18 @@ void Dummy_Capture(uint16_t total_samples)
 		  printf("\n%f",ECG_Lead2_buff[i]);
 		}
 
-		printf("\nBP PPG Red data:\n");
-		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
-		{
-			printf("%ld\n",BP_PPG_RED_BUFF[i]);
-		}
-
-		printf("\n####### DEBUG END!!! ########\n");
-		/*printf("\nPPG IR data:\n");
-		for(int i=0;i<600;i++)
-		{
-			printf("\n%d",PPG_IR_BUFF[i]);
-		}
-*/
+		printf("\nSPO2 PPG-RED DATA:");
+		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR)/10;i++)
+			{
+			  printf("\n%ld",BP_PPG_RED_BUFF[i]);
+			}
+		printf("\nSPO2 PPG-IR DATA:");
+		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR)/10;i++)
+			{
+			  printf("\n%ld",BP_PPG_IR_BUFF[i]);
+			}
+		printf("\nSPO2 PPG-RED DATA: Capture END");
+#endif
 		return true;
  }
 

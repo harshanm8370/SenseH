@@ -586,51 +586,51 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 
   }
 
- bool API_MAX86150_Raw_Data_capture_new(uint32_t Red_data[],uint32_t IR_data[],uint32_t ECG_Data[],uint32_t nbf_samples,bool is_dummy_capture,uint8_t red_or_ir_or_ecg)
+ uint32_t ppg_count = 0;
+ bool API_MAX86150_Raw_Data_capture_new(uint32_t Red_data[],uint32_t IR_data[],uint16_t capture_number,bool is_dummy_capture)
    {
   		uint8_t sample_buff[20U];
-  		uint16_t i =0;
+  		bool done = false;
 
   		uint32_t one_sample, PPG_Data_count = 0U;
-//  		for(i=0; i<2; i++)
+
   		if(!is_dummy_capture)
   		{
-  			i = 0;
-  			printf("\n Real Capture");
 			do{
 				memset(sample_buff,0x00,sizeof(sample_buff));
 
 				PPG_Data_count = Max86150_CheckDataAvailibity();
 				if(PPG_Data_count>=9U)
 				{
-					i++; // We are going to read data only when PPG_Data_count > 9 bytes
 					API_max86150_Read_brust(MAX86150_ADDR, 0x07U,sample_buff,6U);//9
 
 					if(!is_dummy_capture)
 					{
 						one_sample  = sample_buff[2U] | (sample_buff[1U] << 8U) | (sample_buff[0U] << 16U);
-						Red_data[i] = one_sample>>2U;
+						Red_data[ppg_count] = one_sample>>2U;
 
 						one_sample = sample_buff[5U] | (sample_buff[4U] << 8U) | (sample_buff[3U] << 16U);
-						IR_data[i] = one_sample;
+						IR_data[ppg_count] = one_sample;
 					}
+					ppg_count++;
+					done = true;
 				}
-			}while(i<601);//it is 6seconds of data t 10Khz speed. if we want at 400Khz speed then change this to 100.
+
+			}while(!done);
   		}
   		else
   		{
-			printf("\n Dummy Capture");
-			i = 0 ;
 			do{
 				memset(sample_buff,0x00,sizeof(sample_buff));
 
 				PPG_Data_count = Max86150_CheckDataAvailibity();
 				if(PPG_Data_count>=9U)
 				{
-					i++;
 					API_max86150_Read_brust(MAX86150_ADDR, 0x07U,sample_buff,6U);//9
+					ppg_count++;
+					done = true;
 				}
-			}while(i<10);
+			}while(!done);
   		}
 
   	 	  return ESP_OK;
