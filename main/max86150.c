@@ -294,7 +294,7 @@ void Max86150_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledM
 
 	writeRegister8(MAX86150_ADDR,MAX86150_SYSCONTROL,0x04);//start FIFO
 
-	writeRegister8(MAX86150_ADDR,MAX86150_ECG_CONFIG1,0x00);
+	writeRegister8(MAX86150_ADDR,MAX86150_ECG_CONFIG1,0b00000011); // SR: 200 = MAX86150_ECG_CONFIG1,0b00000011
 
 //	writeRegister8(MAX86150_ADDR,MAX86150_ECG_CONFIG3,0b00001101); // IA Gain: 9.5 / PGA Gain: 8
 
@@ -314,6 +314,9 @@ void Max86150_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledM
 	//Multi-LED Mode Configuration, Enable the reading of the three LEDs
 	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	enableSlot(1, SLOT_RED_LED);
+	printf("\n################################\n");
+	printf("\nledMode = %d\n", ledMode);
+	printf("\n################################\n");
 	if (ledMode > 1) enableSlot(2, SLOT_IR_LED);
 	if (ledMode > 2) enableSlot(3, SLOT_ECG);
 	//enableSlot(1, SLOT_RED_PILOT);
@@ -587,7 +590,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
   }
 
  uint32_t ppg_count = 0;
- bool API_MAX86150_Raw_Data_capture_new(uint32_t Red_data[],uint32_t IR_data[],uint16_t capture_number,bool is_dummy_capture)
+ bool API_MAX86150_Raw_Data_capture_new(uint32_t Red_data[],uint32_t IR_data[],uint32_t ecg_data[],uint16_t capture_number,bool is_dummy_capture)
    {
   		uint8_t sample_buff[20U];
   		bool done = false;
@@ -602,15 +605,18 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 				PPG_Data_count = Max86150_CheckDataAvailibity();
 				if(PPG_Data_count>=9U)
 				{
-					API_max86150_Read_brust(MAX86150_ADDR, 0x07U,sample_buff,6U);//9
+					API_max86150_Read_brust(MAX86150_ADDR, 0x07U,sample_buff,12U);//9
 
 					if(!is_dummy_capture)
 					{
-						one_sample  = sample_buff[2U] | (sample_buff[1U] << 8U) | (sample_buff[0U] << 16U);
-						Red_data[ppg_count] = one_sample>>2U;
+						one_sample  = sample_buff[2U] | (sample_buff[1U] << 8U) | ((sample_buff[0U] & 0x07) << 16U);
+						Red_data[ppg_count] = one_sample >> 2U;
 
-						one_sample = sample_buff[5U] | (sample_buff[4U] << 8U) | (sample_buff[3U] << 16U);
-						IR_data[ppg_count] = one_sample;
+						one_sample = sample_buff[5U] | (sample_buff[4U] << 8U) | ((sample_buff[3U]  & 0x07) << 16U);
+						IR_data[ppg_count] = one_sample >> 2U;
+
+						one_sample = sample_buff[8U] | (sample_buff[4U] << 7U) | ((sample_buff[6U]  & 0x03) << 16U);
+						ecg_data[ppg_count] = one_sample >> 2U;
 					}
 					ppg_count++;
 					done = true;

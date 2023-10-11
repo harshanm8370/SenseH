@@ -68,6 +68,7 @@
 /***************************************************/
 uint32_t SPO2_PPG_IR_BUFF[TOTAL_SAMPLES];
 uint32_t SPO2_PPG_RED_BUFF[TOTAL_SAMPLES];
+uint32_t SPO2_PPG_ECG_BUFF[TOTAL_SAMPLES];
 float ECG_Lead1_buff[TOTAL_SAMPLES_VCS];
 float ECG_Lead2_buff[TOTAL_SAMPLES_VCS];
 float ECG_Lead3_buff[TOTAL_SAMPLES_VCS];
@@ -298,13 +299,13 @@ bool QUICK_Test1(void)
 				 {
 					if(API_ECG_Init())
 						{
-#if 1
+#if 0
 							API_Disp_Quick_test_screen(DISP_QT_PPG_TEST_IN_PROGRESS);
 							Capture_PPG_ECG_Data(CAPTURE_PPG,true);
 							API_IO_Exp_Power_Control(EN_VLED,LOW);
 							API_IO_Exp_Power_Control(EN_IR,LOW);
 #endif
-#if 1
+#if 0
 							API_Disp_Quick_test_screen(DISP_QT_ECG_L1_TEST_IN_PROGRESS);
 							Print_time("/ECG start");
 							if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,true)==false)
@@ -505,7 +506,7 @@ void Dummy_Capture(uint16_t total_samples)
 		{
 			ppg_count = 0;
 			do{
-				status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,0,1);
+				status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,1);
 			}while(ppg_count < 10);
 		}
 
@@ -515,23 +516,28 @@ void Dummy_Capture(uint16_t total_samples)
 		ppg_count = 0;
 		Print_time("\nSPO2 start");
 		do{
-			status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,0,0);
-		}while(ppg_count < (ECG_IN_SECONDS*SET_ODR)/10);
+			status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
+		}while(ppg_count < ((ECG_IN_SECONDS*SET_ODR)));
 
 		Print_time("\nSPO2 END");
 		ppg_count = 0;
 #endif
 
 		printf("\nSPO2 PPG-RED DATA:");
-		for(int i=1;i<601;i++)
+		for(int i=0;i<((ECG_IN_SECONDS*SET_ODR)) ;i++)
 			{
 			  printf("\n%ld",SPO2_PPG_RED_BUFF[i]);
 			}
 		printf("\nSPO2 PPG-IR DATA:");
-		for(int i=1;i<601;i++)
-			{
-			  printf("\n%ld",SPO2_PPG_IR_BUFF[i]);
-			}
+		for(int i=0;i<((ECG_IN_SECONDS*SET_ODR));i++)
+		{
+		  printf("\n%ld",SPO2_PPG_IR_BUFF[i]);
+		}
+		printf("\nSPO2 PPG_ECG_BUFF DATA:");
+		for(int i=0;i<((ECG_IN_SECONDS*SET_ODR));i++)
+		{
+		  printf("\n%ld",SPO2_PPG_ECG_BUFF[i]);
+		}
 		printf("\nSPO2 PPG-RED DATA: Capture END");
 	}
 
@@ -627,11 +633,11 @@ void Dummy_Capture(uint16_t total_samples)
 			for(raw_data_index=0; raw_data_index<ECG_DUMMY_CAPTURES; raw_data_index++)// ~3sec dummy capture
 			{
 				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-				ppg_index_cnt++;
-				if(ppg_index_cnt >=10)
+//				ppg_index_cnt++;
+//				if(ppg_index_cnt >=10)
 				{
-					status = API_MAX86150_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,0,0);
-					ppg_index_cnt = 0;
+					status = API_MAX86150_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
+//					ppg_index_cnt = 0;
 				}
 			}
 		}
@@ -648,11 +654,11 @@ void Dummy_Capture(uint16_t total_samples)
 		for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
 		{
 			status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-			ppg_index_cnt++;
-			if(ppg_index_cnt >=10)
+//			ppg_index_cnt++;
+//			if(ppg_index_cnt >=10)
 			{
-				status = API_MAX86150_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,0,0);
-				ppg_index_cnt = 0;
+				status = API_MAX86150_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
+//				ppg_index_cnt = 0;
 			}
 		}
 		ppg_index_cnt = 0;
@@ -675,15 +681,20 @@ void Dummy_Capture(uint16_t total_samples)
 		}
 
 		printf("\nSPO2 PPG-RED DATA:");
-		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR)/10;i++)
-			{
-			  printf("\n%ld",BP_PPG_RED_BUFF[i]);
-			}
+		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
+		{
+		  printf("\n%ld",BP_PPG_RED_BUFF[i]);
+		}
 		printf("\nSPO2 PPG-IR DATA:");
-		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR)/10;i++)
-			{
-			  printf("\n%ld",BP_PPG_IR_BUFF[i]);
-			}
+		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
+		{
+		  printf("\n%ld",BP_PPG_IR_BUFF[i]);
+		}
+		printf("\nSPO2 PPG_ECG_BUFF DATA:");
+		for(int i=0;i<((ECG_IN_SECONDS*SET_ODR));i++)
+		{
+		  printf("\n%ld",SPO2_PPG_ECG_BUFF[i]);
+		}
 		printf("\nSPO2 PPG-RED DATA: Capture END");
 #endif
 		return true;
