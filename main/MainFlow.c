@@ -125,8 +125,8 @@ void TestFlashStorage(void);
 		{
 			    if(Detect_low_battery_display_notification()==false)
 				{
-			    	  state = API_Disp_Select_PID_Screen();
-			    	//state = VIEW_SCREEN;
+			    	  //state = API_Disp_Select_PID_Screen();
+			    	  state = VIEW_SCREEN;
 
 			    	    if(state == VIEW_SCREEN)
 			    	    {

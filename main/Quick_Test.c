@@ -299,13 +299,13 @@ bool QUICK_Test1(void)
 				 {
 					if(API_ECG_Init())
 						{
-#if 0
+#if 1
 							API_Disp_Quick_test_screen(DISP_QT_PPG_TEST_IN_PROGRESS);
 							Capture_PPG_ECG_Data(CAPTURE_PPG,true);
 							API_IO_Exp_Power_Control(EN_VLED,LOW);
 							API_IO_Exp_Power_Control(EN_IR,LOW);
 #endif
-#if 0
+#if 1
 							API_Disp_Quick_test_screen(DISP_QT_ECG_L1_TEST_IN_PROGRESS);
 							Print_time("/ECG start");
 							if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,true)==false)
@@ -507,7 +507,7 @@ void Dummy_Capture(uint16_t total_samples)
 			ppg_count = 0;
 			do{
 				status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,1);
-			}while(ppg_count < 10);
+			}while(ppg_count < 200);
 		}
 
 		MemSet(SPO2_PPG_RED_BUFF,0,sizeof(SPO2_PPG_RED_BUFF));
@@ -533,11 +533,13 @@ void Dummy_Capture(uint16_t total_samples)
 		{
 		  printf("\n%ld",SPO2_PPG_IR_BUFF[i]);
 		}
+#if 0
 		printf("\nSPO2 PPG_ECG_BUFF DATA:");
 		for(int i=0;i<((ECG_IN_SECONDS*SET_ODR));i++)
 		{
 		  printf("\n%ld",SPO2_PPG_ECG_BUFF[i]);
 		}
+#endif
 		printf("\nSPO2 PPG-RED DATA: Capture END");
 	}
 
@@ -673,12 +675,13 @@ void Dummy_Capture(uint16_t total_samples)
 		{
 		  printf("\n%f",ECG_Lead1_buff[i]);
 		}
-
+#if 0
 		printf("\nECG L2 data:\n");
 		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 		{
 		  printf("\n%f",ECG_Lead2_buff[i]);
 		}
+#endif
 
 		printf("\nSPO2 PPG-RED DATA:");
 		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
@@ -690,11 +693,13 @@ void Dummy_Capture(uint16_t total_samples)
 		{
 		  printf("\n%ld",BP_PPG_IR_BUFF[i]);
 		}
+#if 0
 		printf("\nSPO2 PPG_ECG_BUFF DATA:");
 		for(int i=0;i<((ECG_IN_SECONDS*SET_ODR));i++)
 		{
 		  printf("\n%ld",SPO2_PPG_ECG_BUFF[i]);
 		}
+#endif
 		printf("\nSPO2 PPG-RED DATA: Capture END");
 #endif
 		return true;
