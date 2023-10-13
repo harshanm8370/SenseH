@@ -55,7 +55,7 @@ static void print_pin_satus(VoltageLevel_t pin_status , char tag[])
 
 void API_IO_Exp_Select(IOExpanderNumber_t ioExpNumber)
 {
-	uint8_t port_data[2] = {0x00,0x00};
+	uint8_t port_data[2] = {0x00,0x40};
 
 	port_data[0] = 0;
 
@@ -630,7 +630,8 @@ void Power_Down_All_Modules(void)
  API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,LOW);
  API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
  API_IO_Exp1_P1_write_pin(ECG_RESETN,LOW);
- API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+// API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+ gpio_set_level(ECG_CSn_VCS, 0);
  API_IO_Exp1_P1_write_pin(DISPLAY_CSN,LOW);
 
 

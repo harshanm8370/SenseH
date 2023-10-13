@@ -231,6 +231,21 @@ uint8_t readPartID() {
   return readRegister8(MAX86150_ADDR, MAX86150_PARTID);
 }
 
+void Max86150_Configure_Registers_new(void)
+{
+	writeRegister8(MAX86150_ADDR,0x02,0x80);//0x80 for A_FULL_EN
+	writeRegister8(MAX86150_ADDR,MAX86150_SYSCONTROL,0x01); // Reset part
+	Delay_ms(200);
+	writeRegister8(MAX86150_ADDR,0x0D,0x04);// Enable FIFO
+	writeRegister8(MAX86150_ADDR,0x08,0x1F);//0x1F for FIFO_ROLLS_ON_FULL to 1 and lost old samples when FIFO is full, Read FIFO data when there are 17 samples
+	writeRegister8(MAX86150_ADDR,0x09,0x21); // LED1 in slot 1 and LED2 in slot 2
+	writeRegister8(MAX86150_ADDR,0x0A,0x9);// ECG in slot 3
+	writeRegister8(MAX86150_ADDR,0x11, 0x55);// LED1 current setting, optimal setting can vary depending on human physiology
+	writeRegister8(MAX86150_ADDR,0x12, 0x55); // LED2 current setting, optimal setting can vary depending on human physiology
+	writeRegister8(MAX86150_ADDR,0x0E, 0xD3); // 0xD3 for PPG_ADC_RGE= 32µA, PPG_SR = 100Hz, PPG_LED_PW = 400µs, actual sample rate can vary depending on the use case
+	writeRegister8(MAX86150_ADDR,0x0F, 0x02);// 0x18 for 20µs delay from the rising edge of the LED to the start of integration
+}
+
 //Setup the sensor
 //The MAX86150 has many settings. By default we select:
 // Sample Average = 4
@@ -243,6 +258,7 @@ void Max86150_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledM
 	activeDevices=3;
 	writeRegister8(MAX86150_ADDR,MAX86150_SYSCONTROL,0x01);
 	Delay_ms(200);
+
 	writeRegister8(MAX86150_ADDR,MAX86150_FIFOCONFIG,0x7F);
 
 	//sampleAverage=32;
@@ -271,14 +287,16 @@ void Max86150_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledM
 	//writeRegister8(MAX86150_ADDR,MAX86150_FIFOCONTROL2, (char)(FIFOCode >>8) );
 	/********* END CRITICAL FOR LED GLOW ************/
 
-	writeRegister8(MAX86150_ADDR,MAX86150_PPGCONFIG1,0b11011111);	//0b11011111
+	writeRegister8(MAX86150_ADDR,MAX86150_PPGCONFIG1,0b11011111);	//0b11 0111 11 //0b11 0100 11
 
-	writeRegister8(MAX86150_ADDR,MAX86150_PPGCONFIG2, 0x02);
+	writeRegister8(MAX86150_ADDR,MAX86150_PPGCONFIG2, 0x02);//Some catch is here 0x02 works
 	writeRegister8(MAX86150_ADDR,MAX86150_LED_RANGE, 0x00 ); // PPG_ADC_RGE: 32768nA
 
 	writeRegister8(MAX86150_ADDR,MAX86150_SYSCONTROL,0x04);//start FIFO
 
-	writeRegister8(MAX86150_ADDR,MAX86150_ECG_CONFIG1,0x00);
+	writeRegister8(MAX86150_ADDR,MAX86150_ECG_CONFIG1,0b00000011); // SR: 200 = MAX86150_ECG_CONFIG1,0b00000011
+
+//	writeRegister8(MAX86150_ADDR,MAX86150_ECG_CONFIG3,0b00001101); // IA Gain: 9.5 / PGA Gain: 8
 
 	//writeRegister8(MAX86150_ADDR,0xFF,0x00); //exit test mode
 	//debug.Write("Registers written");
@@ -296,6 +314,9 @@ void Max86150_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledM
 	//Multi-LED Mode Configuration, Enable the reading of the three LEDs
 	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	enableSlot(1, SLOT_RED_LED);
+	printf("\n################################\n");
+	printf("\nledMode = %d\n", ledMode);
+	printf("\n################################\n");
 	if (ledMode > 1) enableSlot(2, SLOT_IR_LED);
 	if (ledMode > 2) enableSlot(3, SLOT_ECG);
 	//enableSlot(1, SLOT_RED_PILOT);
@@ -329,6 +350,7 @@ uint16_t Max86150_CheckDataAvailibity(void)
      bytesLeftToRead = numberOfSamples * activeDevices * 3;
   }
 
+//  printf("\nbytesLeftToRead = %d\n", bytesLeftToRead);
     return bytesLeftToRead;
 }
 
@@ -511,11 +533,13 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 
 	 if(readPartID() == 0x1EU)
 	 {
+		 printf("\nDevice ID = 0x%2X.\n",readPartID());
 		 Max86150_SoftReset();
+//		 Max86150_Configure_Registers_new();
 		 Max86150_Configure_Registers(0x10,4,0x07, 50, 50, 16384);
 		 //API_max86150_drdy_handle();
-
 		 enableDATARDY();
+		 enableAFULL();
 
 		 status = true;
 
@@ -535,35 +559,88 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 
  }
 
-
  bool API_MAX86150_Raw_Data_capture(uint32_t Red_data[],uint32_t IR_data[],uint32_t ECG_Data[],uint32_t nbf_samples,bool is_dummy_capture,uint8_t red_or_ir_or_ecg)
- {
-		uint8_t sample_buff[20U];
+  {
+ 		uint8_t sample_buff[20U];
 
-		uint32_t one_sample = 0U;
+ 		uint32_t one_sample, test = 0U;
 
-	 	  for(uint8_t i=0U;i<nbf_samples;i++)
-	 	   {
-	 		   memset(sample_buff,0x00,sizeof(sample_buff));
+ 	 	  for(uint8_t i=0U;i<nbf_samples;i++)
+ 	 	   {
+ 	 		   memset(sample_buff,0x00,sizeof(sample_buff));
 
-	 		   if(Max86150_CheckDataAvailibity()>=9U)
-	 		   {
-	 				API_max86150_Read_brust(MAX86150_ADDR, 0x07U,sample_buff,6U);//9
+ 	 		 test = Max86150_CheckDataAvailibity();
+ 	 		   if(test>=9U)
+ 	 		   {
+ 	 				API_max86150_Read_brust(MAX86150_ADDR, 0x07U,sample_buff,6U);//9
 
-	 				if(!is_dummy_capture)
-	 				{
-	 					one_sample  = sample_buff[2U] | (sample_buff[1U] << 8U) | (sample_buff[0U] << 16U);
-	 					Red_data[i] = one_sample>>2U;
+ 	 				if(!is_dummy_capture)
+ 	 				{
+ 	 					one_sample  = sample_buff[2U] | (sample_buff[1U] << 8U) | (sample_buff[0U] << 16U);
+ 	 					Red_data[i] = one_sample>>2U;
 
-	 					one_sample = sample_buff[5U] | (sample_buff[4U] << 8U) | (sample_buff[3U] << 16U);
-	 					IR_data[i] = one_sample;
-	 				}
-	 		   }
-	 	   }
+ 	 					one_sample = sample_buff[5U] | (sample_buff[4U] << 8U) | (sample_buff[3U] << 16U);
+ 	 					IR_data[i] = one_sample;
+ 	 				}
+ 	 		   }
+ 	 	   }
 
-	 	  return ESP_OK;
+ 	 	  return ESP_OK;
 
- }
+  }
+
+ uint32_t ppg_count = 0;
+ bool API_MAX86150_Raw_Data_capture_new(uint32_t Red_data[],uint32_t IR_data[],uint32_t ecg_data[],uint16_t capture_number,bool is_dummy_capture)
+   {
+  		uint8_t sample_buff[20U];
+  		bool done = false;
+
+  		uint32_t one_sample, PPG_Data_count = 0U;
+
+  		if(!is_dummy_capture)
+  		{
+			do{
+				memset(sample_buff,0x00,sizeof(sample_buff));
+
+				PPG_Data_count = Max86150_CheckDataAvailibity();
+				if(PPG_Data_count>=9U)
+				{
+					API_max86150_Read_brust(MAX86150_ADDR, 0x07U,sample_buff,12U);//9
+
+					if(!is_dummy_capture)
+					{
+						one_sample  = sample_buff[2U] | (sample_buff[1U] << 8U) | ((sample_buff[0U] & 0x07) << 16U);
+						Red_data[ppg_count] = one_sample >> 2U;
+
+						one_sample = sample_buff[5U] | (sample_buff[4U] << 8U) | ((sample_buff[3U]  & 0x07) << 16U);
+						IR_data[ppg_count] = one_sample >> 2U;
+
+						one_sample = sample_buff[8U] | (sample_buff[4U] << 7U) | ((sample_buff[6U]  & 0x03) << 16U);
+						ecg_data[ppg_count] = one_sample >> 2U;
+					}
+					ppg_count++;
+					done = true;
+				}
+
+			}while(!done);
+  		}
+  		else
+  		{
+			do{
+				memset(sample_buff,0x00,sizeof(sample_buff));
+
+				PPG_Data_count = Max86150_CheckDataAvailibity();
+				if(PPG_Data_count>=9U)
+				{
+					API_max86150_Read_brust(MAX86150_ADDR, 0x07U,sample_buff,6U);//9
+					ppg_count++;
+					done = true;
+				}
+			}while(!done);
+  		}
+
+  	 	  return ESP_OK;
+   }
 
  void API_DRDY_Pulse_Count(void) // DRDY Count
  {

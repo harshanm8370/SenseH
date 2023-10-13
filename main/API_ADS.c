@@ -80,10 +80,11 @@ ECG_STATUS API_ECG_Chip_Init(void)
 	uint8_t rev_id =0;
 	uint8_t reg_read = 0;
 										// initialize gpio pins
-	  API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
-
+//	  API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+		gpio_set_level(ECG_CSn_VCS, 0);
 	  api_ads_reg_read(0x40 | 0x80, &rev_id);					// 0x40 = address of RevID. R/W bit = 1 for RegRead,=> "C0". rev_id = 0x01, thevalue to be read
-	  API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	  API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	  gpio_set_level(ECG_CSn_VCS, 1);
 
       printf("Rev_id=%x\n",rev_id);
 
@@ -157,7 +158,8 @@ void API_ADS_Test(void)
 	  API_IO_Exp_Power_Control(EN_VLED,HIGH);
 	  API_IO_Exp_Power_Control(EN_ANALOG,HIGH);
 
-	  API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	  API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	  gpio_set_level(ECG_CSn_VCS, 1);
 	  Delay_ms(500);
 	  API_IO_Exp1_P1_write_pin(ECG_RESETN,LOW);
 	  Delay_ms(3000);
@@ -221,7 +223,8 @@ uint8_t API_Test_ADS()
 	API_IO_Exp_Power_Control(EN_IR,HIGH);
 
 	API_IO_Exp1_P1_write_pin(DISPLAY_CSN,HIGH);
-	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+	gpio_set_level(ECG_CSn_VCS, 0);
 	Delay_ms(1);
 
 	API_IO_Exp1_P1_write_pin(ECG_RESETN,LOW);
@@ -232,15 +235,18 @@ uint8_t API_Test_ADS()
 	api_ads_write(0x21);
 
 	api_ads_write(0x01);
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
 	Delay_ms(500);
 
-	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+	gpio_set_level(ECG_CSn_VCS, 0);
 
 	api_ads_write(0x21 | 0x80);
 	 read_data = api_ads_read_data();
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
 	printf("ADS Read = %X\n",read_data);
 
@@ -257,7 +263,8 @@ static ECG_STATUS api_ads_check_Response(void)
 	uint8_t read_val=0;
 
 	API_IO_Exp1_P1_write_pin(DISPLAY_CSN,HIGH);
-	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+	gpio_set_level(ECG_CSn_VCS, 0);
 	Delay_ms(1);
 
 	API_IO_Exp1_P1_write_pin(ECG_RESETN,LOW);
@@ -268,15 +275,18 @@ static ECG_STATUS api_ads_check_Response(void)
 	api_ads_write(0x21);
 
 	api_ads_write(0x01);
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
 	Delay_ms(50);
 
-	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+	gpio_set_level(ECG_CSn_VCS, 0);
 	Delay_ms(50);
 	api_ads_write(0x21 | 0x80);
 	read_val = api_ads_read_data();
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
 
 	if(read_val == 0x01)
@@ -296,12 +306,14 @@ static ECG_STATUS IRAM_ATTR api_ecg_reg_write(uint8_t addr, uint8_t value)
 {
 	bool write_status = true;
 
-	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+	gpio_set_level(ECG_CSn_VCS, 0);
 
 	api_ads_write(addr);
 	api_ads_write(value);
 
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
 	write_status = ECG_NO_ERROR;
 
@@ -342,13 +354,15 @@ ECG_STATUS IRAM_ATTR api_ecg_reg_read(uint8_t addr, uint8_t *buffer)
 
 	addr |= READ_BIT;
 
-	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);
+	gpio_set_level(ECG_CSn_VCS, 0);
 
 	api_ads_write(addr);
 
 	*buffer  =  api_ads_read_data();					// read the register value
 
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
 
 	read_status = ECG_NO_ERROR;															// if its 0 read status is true
 
@@ -407,12 +421,38 @@ ECG_STATUS API_ECG_Reginit_2Lead()
 		reg_config_status |= api_ecg_reg_write(RLD_CN_REG, RLD_IN5);
 		reg_config_status |= api_ecg_reg_write(OSC_CN_REG, OSC_EXT);
 		reg_config_status |= api_ecg_reg_write(AFE_SHDN_CN_REG, AFE_SHDN_CH1_CH2_CH3_ACTIVE);
-		reg_config_status |= api_ecg_reg_write(R2_RATE_REG, 0x04);//Configures the R2 decimation rate as 6
+		reg_config_status |= api_ecg_reg_write(R1_RATE_REG, 0x00);
+		reg_config_status |= api_ecg_reg_write(R2_RATE_REG, 0x01);//Configures the R2 decimation rate as 4
+#if ODR_50
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x80);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 50sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x80);//Configures the R3 decimation rate as 64 for channel 2.
+#elif ODR_100
 		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x40);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 100sps
 		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x40);//Configures the R3 decimation rate as 64 for channel 2.
+#elif ODR_200
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x20);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 200sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x20);//Configures the R3 decimation rate as 64 for channel 2.
+#elif ODR_400
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x10);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 400sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x10);//Configures the R3 decimation rate as 64 for channel 2.
+#elif ODR_533
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x08);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 533sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x08);//Configures the R3 decimation rate as 64 for channel 2.
+#elif ODR_800
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x04);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 800sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x04);//Configures the R3 decimation rate as 64 for channel 2.
+#elif ODR_1067
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x02);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 1067sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x02);//Configures the R3 decimation rate as 64 for channel 2.
+#elif ODR_1600
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x01);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 1600sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x01);//Configures the R3 decimation rate as 64 for channel 2.
+#else
+
+#endif
 		reg_config_status |= api_ecg_reg_write(DRDYB_SRC_REG, DRDYB_SRC_CH1);//Configures the DRDYB source to channel 1 ECG (or fastest channel).
 		reg_config_status |= api_ecg_reg_write(CH_CNFG_REG, 0X10);//Enables channel 1 ECG for loop read-back mode.
-		reg_config_status |= api_ecg_reg_write(AFE_RES_REG, 0x01);
+		reg_config_status |= api_ecg_reg_write(AFE_RES_REG, 0x3F);
 		reg_config_status |= api_ecg_reg_write(FLEX_CH3_CN_REG, 0X40);
 
 	}
@@ -420,7 +460,8 @@ ECG_STATUS API_ECG_Reginit_2Lead()
 	if (reg_config_status == ECG_NO_ERROR)
 	{
 		reg_init = ECG_NO_ERROR;
-		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+		gpio_set_level(ECG_CSn_VCS, 1);
 	}
 
 	else Catch_RunTime_Error(ADS1293_INIT_FAIL);
@@ -537,7 +578,81 @@ ECG_STATUS API_ECG_Reginit_1Lead()
 	{
 		printf("\n ECG Lead 1 Configuration successful\n");
 		reg_init = ECG_NO_ERROR;
-		API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);							// make CS pin low
+//		API_IO_Exp1_P1_write_pin(ECG_CSN,LOW);							// make CS pin low
+		gpio_set_level(ECG_CSn_VCS, 0);
+	}
+
+	return reg_init;
+
+}
+
+ECG_STATUS API_ECG_Reginit_12Lead_new()
+{
+	ECG_STATUS reg_init = ECG_INIT_ERROR;
+	bool reg_config_status = FALSE;
+
+	if(api_ads_check_Response() == ECG_NO_ERROR)
+	{
+		reg_config_status = api_ecg_reg_write(CONFIG_REG, STOP_CONV);								//Stops data conversion
+		//Since wilson ref. terminals are enabled & R123 resistor is removed
+		reg_config_status |= api_ecg_reg_write(FLEX_CH1_CN_REG, CH1_INP_INN);
+		reg_config_status |= api_ecg_reg_write(FLEX_CH2_CN_REG, 0x19);
+		reg_config_status |= api_ecg_reg_write(FLEX_CH3_CN_REG, 0x26);
+		reg_config_status |= api_ecg_reg_write(CMDET_EN_REG, 0x0F);
+		reg_config_status |= api_ecg_reg_write(RLD_CN_REG, RLD_IN5);
+		reg_config_status |= api_ecg_reg_write(WILSON_EN1_REG, 0x01);
+		reg_config_status |= api_ecg_reg_write(WILSON_EN2_REG, 0x02);
+		reg_config_status |= api_ecg_reg_write(WILSON_EN3_REG, 0x03);
+		reg_config_status |= api_ecg_reg_write(WILSON_CN_REG, 0x01);
+		reg_config_status |= api_ecg_reg_write(OSC_CN_REG, OSC_EXT);
+		reg_config_status |= api_ecg_reg_write(AFE_SHDN_CN_REG, AFE_SHDN_CH1_CH2_CH3_ACTIVE);
+		reg_config_status |= api_ecg_reg_write(R1_RATE_REG, 0x00);
+		reg_config_status |= api_ecg_reg_write(R2_RATE_REG, 0x01);//Configures the R2 decimation rate as 4
+#if ODR_50
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x80);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 50sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x80);//Configures the R3 decimation rate as 64 for channel 2.
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH3_REG, 0x80);
+#elif ODR_100
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x40);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 100sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x40);//Configures the R3 decimation rate as 64 for channel 2.
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH3_REG, 0x40);
+#elif ODR_200
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x20);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 200sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x20);//Configures the R3 decimation rate as 64 for channel 2.
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH3_REG, 0x20);
+#elif ODR_400
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x10);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 400sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x10);//Configures the R3 decimation rate as 64 for channel 2.
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH3_REG, 0x10);
+#elif ODR_533
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x08);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 533sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x08);//Configures the R3 decimation rate as 64 for channel 2.
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH3_REG, 0x08);
+#elif ODR_800
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x04);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 800sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x04);//Configures the R3 decimation rate as 64 for channel 2.
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH3_REG, 0x04);
+#elif ODR_1067
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x02);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 1067sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x02);//Configures the R3 decimation rate as 64 for channel 2.
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH3_REG, 0x02);
+#elif ODR_1600
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x01);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 1600sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x01);//Configures the R3 decimation rate as 64 for channel 2.
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH3_REG, 0x01);
+#else
+
+#endif
+		reg_config_status |= api_ecg_reg_write(DRDYB_SRC_REG, DRDYB_SRC_CH1);
+		//reg_write_ads(CN_CNFG, CH_CNFG_CH1_LPRD);//Enables channel 1 ECG for loop read-back mode.
+		reg_config_status |= api_ecg_reg_write(AFE_RES_REG, 0x3F);		//Resolution: 100khz
+		reg_config_status |= api_ecg_reg_write(CH_CNFG_REG, 0X70);
+	}
+
+	if (reg_config_status == ECG_NO_ERROR)
+	{
+		reg_init = ECG_NO_ERROR;
+		gpio_set_level(ECG_CSn_VCS, 0);
 	}
 
 	return reg_init;
@@ -646,7 +761,8 @@ ECG_STATUS API_ECG_Reginit_12Lead()
 		if (reg_config_status == ECG_NO_ERROR)
 		{
 			reg_init = ECG_NO_ERROR;
-			API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);							// make CS pin low
+//			API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);							// make CS pin low
+			gpio_set_level(ECG_CSn_VCS, 0);
 		}
 
 		return reg_init;
@@ -672,6 +788,49 @@ bool API_ECG_Capture_Samples_VLead(float *vlead,uint16_t nbf_samples)
 
 	return read_status;
 }
+
+ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_3Lead(float *buff_lead_1, float *buff_lead_2, float *buff_lead_3)
+{
+	ECG_STATUS read_status = 0;
+	uint8_t sample[9] = {0};
+
+		while(!ECG_Drdy_Flag);	//|| (API_TIMER_Get_Timeout_Flag(Set_1sec_timer) == FALSE)
+//	if(ESP32_MCU_DRDY_PIN)
+	{
+		read_status = api_ecg_reg_read(DATA_CH1_ECG_H_REG,&sample[0U]);				// reading the CH1 data- higher byte
+
+		read_status |= api_ecg_reg_read(DATA_CH1_ECG_M_REG,&sample[1U]);				// reading the CH1 data- middle byte
+
+		read_status |= api_ecg_reg_read(DATA_CH1_ECG_L_REG,&sample[2U]);				// reading the CH1 data- lower byte
+
+		read_status |= api_ecg_reg_read(DATA_CH2_ECG_H_REG,&sample[3U]);				// reading the CH2 data- higher byte
+
+		read_status |= api_ecg_reg_read(DATA_CH2_ECG_M_REG,&sample[4U]);				// reading the CH2 data- middle byte
+
+		read_status |= api_ecg_reg_read(DATA_CH2_ECG_L_REG,&sample[5U]);				// reading the CH2 data- lower byte
+
+		read_status |= api_ecg_reg_read(DATA_CH3_ECG_H_REG,&sample[6U]);				// reading the CH3 data- higher byte
+
+		read_status |= api_ecg_reg_read(DATA_CH3_ECG_M_REG,&sample[7U]);				// reading the CH3 data- middle byte
+
+		read_status |= api_ecg_reg_read(DATA_CH3_ECG_L_REG,&sample[8U]);				// reading the CH3 data- lower byte
+
+		*buff_lead_1= (float)((((uint32_t)sample[0U])<<16U) | (((uint32_t)sample[1U])<<8U) | (sample[2U]) );
+
+		*buff_lead_2= (float)((((uint32_t)sample[3U])<<16U) | (((uint32_t)sample[4U])<<8U) | (sample[5U]) );
+
+		*buff_lead_3= (float)((((uint32_t)sample[6U])<<16U) | (((uint32_t)sample[7U])<<8U) | (sample[8U]) );
+
+		if(read_status == ECG_NO_ERROR)
+		{
+			read_status = ESP_OK;
+		}
+	}
+	ECG_Drdy_Flag = false;
+
+	return read_status;
+}
+
 /*
 * bool API_ECG_Capture_Samples_1Lead(float buff_lead_1)
 * \brief        captures the raw data - 1 lead
@@ -686,7 +845,8 @@ ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_2Lead(float *buff_lead_1, float *bu
 	uint8_t sample[6] = {0};
 
 		while(!ECG_Drdy_Flag);	//|| (API_TIMER_Get_Timeout_Flag(Set_1sec_timer) == FALSE)
-
+//	if(ESP32_MCU_DRDY_PIN)
+	{
 		read_status = api_ecg_reg_read(DATA_CH1_ECG_H_REG,&sample[0U]);				// reading the CH1 data- higher byte
 
 		read_status |= api_ecg_reg_read(DATA_CH1_ECG_M_REG,&sample[1U]);				// reading the CH1 data- middle byte
@@ -703,11 +863,11 @@ ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_2Lead(float *buff_lead_1, float *bu
 
 		*buff_lead_2= (float)((((uint32_t)sample[3U])<<16U) | (((uint32_t)sample[4U])<<8U) | (sample[5U]) );
 
-	if(read_status == ECG_NO_ERROR)
-	{
-		read_status = ESP_OK;
+		if(read_status == ECG_NO_ERROR)
+		{
+			read_status = ESP_OK;
+		}
 	}
-
 	ECG_Drdy_Flag = false;
 
 	return read_status;
@@ -771,13 +931,29 @@ static void api_drdy_input_config()
 
 }
 
+int ECG_Drdy_count = 0;
 static void IRAM_ATTR api_drdy_isr(void* arg)
 {
 	uint32_t gpio_num = (uint32_t) arg;
+	static uint32_t Temp_drdy = 0;
 
-	if(gpio_num == ESP32_MCU_DRDY_PIN){
+	esp_err_t status=ESP_FAIL;
 
-		ECG_Drdy_Flag = true;
+	if(gpio_num == ESP32_MCU_DRDY_PIN)
+	{
+		Temp_drdy++;
+		if(Temp_drdy == 1)
+		{
+			ECG_Drdy_Flag = true;
+			ECG_Drdy_count++;
+			gpio_set_level(JTAG_MTDI_DEBUG, 0);
+		}
+		else if(Temp_drdy > 1)
+		{
+			ECG_Drdy_Flag = false;
+			Temp_drdy = 0;
+			gpio_set_level(JTAG_MTDI_DEBUG, 1);
+		}
 	}
 
 }
@@ -1155,8 +1331,10 @@ bool API_ECG_Init(void)
 	{
 		if(api_ads_check_Response() == ECG_NO_ERROR)
 		{
+			printf("\n[%s:%d:%s]", __FILE__, __LINE__, __func__);
 			if(API_ECG_Reginit_2Lead() == ECG_NO_ERROR)
 			{
+				printf("\n[%s:%d:%s]", __FILE__, __LINE__, __func__);
 				config_status = true;
 				break;
 			}
@@ -1169,7 +1347,8 @@ bool API_ECG_Init(void)
 
 void API_ECG_Chip_Reset(void)
 {
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 	API_IO_Exp1_P1_write_pin(ECG_RESETN,LOW);
 	Delay_ms(500);
 	API_IO_Exp1_P1_write_pin(ECG_RESETN,HIGH);

@@ -4,6 +4,7 @@
 #include "esp_event_loop.h"
 #include "nvs_flash.h"
 #include "driver/gpio.h"
+#include "soc/gpio_periph.h"
 #include "sdkconfig.h"
 #include "stdio.h"
 #include "string.h"
@@ -59,10 +60,31 @@ void TestFlashStorage(void);
         }
 	}*/
 
+    PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[ECG_CSn_VCS], PIN_FUNC_GPIO);
+    PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[JTAG_MTDI_DEBUG], PIN_FUNC_GPIO);
+
+    gpio_set_direction(ECG_CSn_VCS, GPIO_MODE_OUTPUT);
+    gpio_set_direction(JTAG_MTDI_DEBUG, GPIO_MODE_OUTPUT);
+    gpio_set_direction(MAX86150_DRDY_INTR_PIN,GPIO_MODE_INPUT);
+    gpio_set_pull_mode(MAX86150_DRDY_INTR_PIN,GPIO_PULLUP_ONLY);
+    gpio_set_level(JTAG_MTDI_DEBUG, 1);
+    gpio_set_level(ECG_CSn_VCS, 1);
+
 	API_TIMER_Run_1MS_Timer();
 
 	API_IO_Exp_init();
 
+#if 0
+    while(1)
+    {
+#if 0
+	gpio_set_level(MAX86150_DRDY_INTR_PIN, 1);
+	Delay_ms(100);
+	gpio_set_level(MAX86150_DRDY_INTR_PIN, 0);
+	Delay_ms(100);
+#endif
+    }
+#endif
     Interfaces_init();
 
 
@@ -221,16 +243,15 @@ static void Interfaces_init(void)
 	/**************** IR ADC init ***********************************************/
 	API_IR_ADC_Init();
 
-
 	/**************** BLE init ***********************************************/
-	API_BLE_Init();
-
+//	API_BLE_Init();
 }
 
 
 void POR_Init(void)
 {
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
 	API_Select_PID();
 

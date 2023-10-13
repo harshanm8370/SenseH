@@ -76,6 +76,7 @@ typedef uint8_t byte;
   uint8_t getRevisionID();
   uint8_t readPartID();
 	uint8_t readRegLED();
+	extern  uint32_t ppg_count;
 
   // Setup the IC with user selectable settings
   //void setup(byte powerLevel = 0x1F, byte sampleAverage = 4, byte ledMode = 3, int sampleRate = 400, int pulseWidth = 411, int adcRange = 4096);
@@ -99,7 +100,7 @@ typedef uint8_t byte;
 
   bool API_MAX86150_Setup(void);
   bool API_MAX86150_Raw_Data_capture(uint32_t Red_data[],uint32_t IR_data[],uint32_t ECG_Data[],uint32_t nbf_samples,bool is_dummy_capture,uint8_t red_or_ir_or_ecg);
-
+  bool API_MAX86150_Raw_Data_capture_new(uint32_t Red_data[],uint32_t IR_data[],uint32_t ecg_data[],uint16_t capture_number,bool is_dummy_capture);
   void API_DRDY_Pulse_Count(void); // DRDY Count
 
 #endif

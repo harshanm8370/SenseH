@@ -6,8 +6,10 @@
 #include "stdbool.h"
 #include "stdlib.h"
 #include <stdint.h>
+#include "API_ADS.h"
 #define DATA_BUFFER3_LENGTH			20000U
 #define TOTAL_SAMPLES 1200 //1
+#define TOTAL_SAMPLES_VCS (ECG_IN_SECONDS*SET_ODR) //1
 
 /*-----------------------------------MACROS ------------------------------------------------------------------*/
 #define TRUE				1
@@ -55,8 +57,10 @@ extern uint8_t BT_flash_buffer[DATA_BUFFER3_LENGTH];
 
 extern uint32_t SPO2_PPG_IR_BUFF[TOTAL_SAMPLES];
 extern uint32_t SPO2_PPG_RED_BUFF[TOTAL_SAMPLES];
-extern float ECG_Lead1_buff[TOTAL_SAMPLES];
-extern float ECG_Lead2_buff[TOTAL_SAMPLES];
+extern uint32_t SPO2_PPG_ECG_BUFF[TOTAL_SAMPLES];
+extern float ECG_Lead1_buff[TOTAL_SAMPLES_VCS];
+extern float ECG_Lead2_buff[TOTAL_SAMPLES_VCS];
+extern float ECG_Lead3_buff[TOTAL_SAMPLES_VCS];
 extern float BP_ECG_Lead1_buff[TOTAL_SAMPLES];
 extern uint32_t BP_PPG_RED_BUFF[TOTAL_SAMPLES];
 extern uint32_t BP_PPG_IR_BUFF[TOTAL_SAMPLES];
