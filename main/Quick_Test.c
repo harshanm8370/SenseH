@@ -59,7 +59,7 @@
 
 /***************************************************/
 #define BP_PPG_RED_SAMPLES 1200U
-#define BP_ECG_L1_SAMPLES  1200U
+#define BP_ECG_L1_SAMPLES  600U
 #define ECG_L1_SAMPLES  600U
 #define ECG_L2_SAMPLES  600U
 #define SPO2_RED_SAMPLES 600U
@@ -70,6 +70,8 @@ uint32_t SPO2_PPG_IR_BUFF[TOTAL_SAMPLES];
 uint32_t SPO2_PPG_RED_BUFF[TOTAL_SAMPLES];
 uint32_t SPO2_PPG_ECG_BUFF[TOTAL_SAMPLES];
 float ECG_Lead1_buff[TOTAL_SAMPLES_VCS];
+//float BP_ECG_Lead1_buff[TOTAL_SAMPLES_VCS];
+float BP_ECG_Lead2_buff[TOTAL_SAMPLES_VCS];
 float ECG_Lead2_buff[TOTAL_SAMPLES_VCS];
 float ECG_Lead3_buff[TOTAL_SAMPLES_VCS];
 float BP_ECG_Lead1_buff[TOTAL_SAMPLES];
@@ -634,7 +636,7 @@ void Dummy_Capture(uint16_t total_samples)
 			ppg_count = 0;
 			for(raw_data_index=0; raw_data_index<ECG_DUMMY_CAPTURES; raw_data_index++)// ~3sec dummy capture
 			{
-				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index,SPO2_PPG_ECG_BUFF + raw_data_index);
 //				ppg_index_cnt++;
 //				if(ppg_index_cnt >=10)
 				{
@@ -645,8 +647,8 @@ void Dummy_Capture(uint16_t total_samples)
 		}
 
 		printf("\nReal BP Capture START:\n");
-		MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
-		MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
+		MemSet(BP_ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
+		MemSet(BP_ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
 		MemSet(BP_PPG_RED_BUFF,0,sizeof(BP_PPG_RED_BUFF));
 		MemSet(BP_PPG_IR_BUFF,0,sizeof(BP_PPG_IR_BUFF));
 		ppg_count = 0;
@@ -655,7 +657,7 @@ void Dummy_Capture(uint16_t total_samples)
 		Print_time("\nBP start");
 		for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
 		{
-			status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+			status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, BP_ECG_Lead2_buff+raw_data_index);
 //			ppg_index_cnt++;
 //			if(ppg_index_cnt >=10)
 			{
@@ -673,7 +675,7 @@ void Dummy_Capture(uint16_t total_samples)
 		printf("\nECG L1 data:\n");
 		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 		{
-		  printf("\n%f",ECG_Lead1_buff[i]);
+		  printf("\n%f",BP_ECG_Lead1_buff[i]);
 		}
 #if 0
 		printf("\nECG L2 data:\n");
@@ -811,9 +813,10 @@ void Store_QuickTest1_Data_To_Flash(void)
 	if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(BP_DATA_STORE_TO_FLASH_FAIL);
 
 
-		API_Update_Record_Header(ECG_1_Lead,&record_header);
+		API_Update_Record_Header(ECG_6_Lead,&record_header);
 
 		MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
+		//MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
 
 		MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
 		offfset = REC_HEADER_LEN;
@@ -821,7 +824,10 @@ void Store_QuickTest1_Data_To_Flash(void)
 		MemCpy(BT_flash_buffer+offfset,ECG_Lead1_buff,(BP_ECG_L1_SAMPLES*4));
 		offfset += BP_ECG_L1_SAMPLES*4;
 
-		status = API_Flash_Write_Record(ECG_1_Lead,(void*)BT_flash_buffer);
+		MemCpy(BT_flash_buffer+offfset,ECG_Lead2_buff,(BP_ECG_L1_SAMPLES*4));
+		offfset += BP_ECG_L1_SAMPLES*4;
+
+		status = API_Flash_Write_Record(ECG_6_Lead,(void*)BT_flash_buffer);
 
 		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(ECG_DATA_STORE_TO_FLASH_FAIL);
 
@@ -846,7 +852,7 @@ void Store_QuickTest1_Data_To_Flash(void)
 
 		printf("\nTotal SPO2 Records = %ld", get_records_count(SPO2));
 		printf("\nTotal BP1 Records = %ld", get_records_count(BP1));
-		printf("\nTotal ECG L1 Records = %ld", get_records_count(ECG_1_Lead));
+		printf("\nTotal ECG L1 Records = %ld", get_records_count(ECG_6_Lead));
 
 }
 
@@ -1925,6 +1931,7 @@ bool Run_Multi_Vital(void)
 #endif
 
 #if 1 //only 12 Lead capture not sure why previously done quik Vital
+	Run_Quick_Vital();
 	Lead12_Test(); // This is the core function to capture 12Lead ECG
 #endif
 	Disable_Power_Supply();
