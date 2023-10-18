@@ -27,8 +27,8 @@
 #include "Quick_Test.h"
 
 bool Lead12_Data_Capture(void);
-
 bool Lead12_Data_Capture_new(uint32_t vlead);
+uint32_t flagECG=1;
 
 
 bool Lead12_Test(void)
@@ -65,7 +65,7 @@ bool Lead12_Test(void)
 					API_DISP_Display_Screen(DISP_TEST_IN_PROGRESS);
 
 //					Lead12_Data_Capture();
-					for(vlead=0;vlead<=6;vlead++)
+					for(vlead=0;vlead<=5;vlead++)
 					{
 						Lead12_Data_Capture_new(vlead);
 					}
@@ -128,7 +128,7 @@ bool Lead12_Data_Capture_new(uint32_t vlead)
 	if( API_ECG_Reginit_12Lead_new() == ECG_NO_ERROR)
 	{
 		API_ECG_Start_Conversion();
-		printf("\n Lead I Lead II Lead %ld ECG Data capturing", vlead);
+		printf("\n Lead I Lead II V-%ld ECG Data capturing", vlead+1);
 		for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
 		{
 			API_ECG_Capture_Samples_3Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index, ECG_Lead3_buff+raw_data_index);
@@ -142,6 +142,7 @@ bool Lead12_Data_Capture_new(uint32_t vlead)
 		printf("\n12 Lead ECG Register Init Failed");
 	}
 
+#if 1
 	printf("\n Lead- I ECG Data capturing");
 	for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 	{
@@ -153,8 +154,10 @@ bool Lead12_Data_Capture_new(uint32_t vlead)
 	{
 	   printf("\n%f",ECG_Lead2_buff[i]);
 	}
+	flagECG = 0
+#endif
 
-	printf("\n Lead %ld ECG Data capturing", vlead);
+	printf("\n V-%ld ECG Data capturing", vlead+1);
 	for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 	{
 	   printf("\n%f",ECG_Lead3_buff[i]);
@@ -175,7 +178,7 @@ bool Lead12_Data_Capture(void)
 	MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
 	offfset = REC_HEADER_LEN;
 
-	Select_Vlead(LEAD6);
+	Select_Vlead(VGND);
 
 	API_Disp_Lead_Count(6);
 
@@ -239,7 +242,7 @@ void Select_Vlead(VLEAD_TYPE_t vlead_type)
    switch(vlead_type)
 	 {
 
-		   case LEAD6:
+		   case V1:
 		   {
 				API_IO_Exp2_P0_write_pin(ECG12_A0, LOW);
 				API_IO_Exp2_P0_write_pin(ECG12_A1, LOW);
@@ -247,42 +250,42 @@ void Select_Vlead(VLEAD_TYPE_t vlead_type)
 
 				break;
 		   }
-		   case VLEAD1:
+		   case V2:
 		   {
 			   API_IO_Exp2_P0_write_pin(ECG12_A0, HIGH);
 			   API_IO_Exp2_P0_write_pin(ECG12_A1, LOW);
 			   API_IO_Exp2_P0_write_pin(ECG12_A2, LOW);
 			   break;
 		   }
-		   case VLEAD2:
+		   case V3:
 		   {
 			   API_IO_Exp2_P0_write_pin(ECG12_A0, LOW);
 			   API_IO_Exp2_P0_write_pin(ECG12_A1, HIGH);
 			   API_IO_Exp2_P0_write_pin(ECG12_A2, LOW);
 			   break;
 		   }
-		   case VLEAD3:
+		   case V4:
 		   {
 				API_IO_Exp2_P0_write_pin(ECG12_A0, HIGH);
 				API_IO_Exp2_P0_write_pin(ECG12_A1, HIGH);
 				API_IO_Exp2_P0_write_pin(ECG12_A2, LOW);
 			   break;
 		   }
-		   case VLEAD4:
+		   case V5:
 		   {
 				API_IO_Exp2_P0_write_pin(ECG12_A0, LOW);
 				API_IO_Exp2_P0_write_pin(ECG12_A1, LOW);
 				API_IO_Exp2_P0_write_pin(ECG12_A2, HIGH);
 			   break;
 		   }
-		   case VLEAD5:
+		   case V6:
 		   {
 				API_IO_Exp2_P0_write_pin(ECG12_A0, HIGH);
 				API_IO_Exp2_P0_write_pin(ECG12_A1, LOW);
 				API_IO_Exp2_P0_write_pin(ECG12_A2, HIGH);
 			   break;
 		   }
-		   case VLEAD6:
+		   case VGND:
 		   {
 				API_IO_Exp2_P0_write_pin(ECG12_A0, LOW);
 				API_IO_Exp2_P0_write_pin(ECG12_A1, HIGH);

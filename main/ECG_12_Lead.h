@@ -13,13 +13,13 @@
 
 typedef enum
 {
-  LEAD6,
-  VLEAD1,
-  VLEAD2,
-  VLEAD3,
-  VLEAD4,
-  VLEAD5,
-  VLEAD6
+  V1,
+  V2,
+  V3,
+  V4,
+  V5,
+  V6,
+  VGND
 }VLEAD_TYPE_t;
 
 
