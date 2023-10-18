@@ -72,7 +72,7 @@ uint32_t SPO2_PPG_ECG_BUFF[TOTAL_SAMPLES];
 float ECG_Lead1_buff[TOTAL_SAMPLES_VCS];
 float ECG_Lead2_buff[TOTAL_SAMPLES_VCS];
 float ECG_Lead3_buff[TOTAL_SAMPLES_VCS];
-float BP_ECG_Lead1_buff[TOTAL_SAMPLES];
+float BP_ECG_Lead1_buff[TOTAL_SAMPLES_VCS];
 uint32_t BP_PPG_RED_BUFF[TOTAL_SAMPLES];
 uint32_t BP_PPG_IR_BUFF[TOTAL_SAMPLES];
 float FilterOutputBuffer1[TOTAL_SAMPLES];
@@ -634,7 +634,7 @@ void Dummy_Capture(uint16_t total_samples)
 			ppg_count = 0;
 			for(raw_data_index=0; raw_data_index<ECG_DUMMY_CAPTURES; raw_data_index++)// ~3sec dummy capture
 			{
-				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+				status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
 //				ppg_index_cnt++;
 //				if(ppg_index_cnt >=10)
 				{
@@ -645,7 +645,7 @@ void Dummy_Capture(uint16_t total_samples)
 		}
 
 		printf("\nReal BP Capture START:\n");
-		MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
+		MemSet(BP_ECG_Lead1_buff,0,sizeof(BP_ECG_Lead1_buff));
 		MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
 		MemSet(BP_PPG_RED_BUFF,0,sizeof(BP_PPG_RED_BUFF));
 		MemSet(BP_PPG_IR_BUFF,0,sizeof(BP_PPG_IR_BUFF));
@@ -655,7 +655,7 @@ void Dummy_Capture(uint16_t total_samples)
 		Print_time("\nBP start");
 		for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
 		{
-			status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+			status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
 //			ppg_index_cnt++;
 //			if(ppg_index_cnt >=10)
 			{
@@ -673,7 +673,7 @@ void Dummy_Capture(uint16_t total_samples)
 		printf("\nECG L1 data:\n");
 		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 		{
-		  printf("\n%f",ECG_Lead1_buff[i]);
+		  printf("\n%f",BP_ECG_Lead1_buff[i]);
 		}
 #if 0
 		printf("\nECG L2 data:\n");

@@ -154,7 +154,7 @@ bool Lead12_Data_Capture_new(uint32_t vlead)
 	{
 	   printf("\n%f",ECG_Lead2_buff[i]);
 	}
-	flagECG = 0
+	flagECG = 0;
 #endif
 
 	printf("\n V-%ld ECG Data capturing", vlead+1);
