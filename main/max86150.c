@@ -130,11 +130,6 @@ void setPulseAmplitudeRed(uint8_t amplitude)
 	(void)readRegister8(MAX86150_ADDR,MAX86150_LED2_PULSEAMP);
 }
 
-void setRANGE(uint8_t amplitude)
-{
-  writeRegister8(MAX86150_ADDR, MAX86150_LED_RANGE, amplitude);
-}
-
 void setPulseAmplitudeIR(uint8_t amplitude)
 {
   writeRegister8(MAX86150_ADDR, MAX86150_LED1_PULSEAMP, amplitude);
@@ -247,8 +242,8 @@ void Max86150_Configure_Registers_new(void)
 	writeRegister8(MAX86150_ADDR,0x0A,0x9);// ECG in slot 3
 	writeRegister8(MAX86150_ADDR,0x11, 0x55);// LED1 current setting, optimal setting can vary depending on human physiology
 	writeRegister8(MAX86150_ADDR,0x12, 0x55); // LED2 current setting, optimal setting can vary depending on human physiology
-	writeRegister8(MAX86150_ADDR,0x0E, 0xD3); // 0xD3 for PPG_ADC_RGE= 32ï¿½A, PPG_SR = 100Hz, PPG_LED_PW = 400ï¿½s, actual sample rate can vary depending on the use case
-	writeRegister8(MAX86150_ADDR,0x0F, 0x02);// 0x18 for 20ï¿½s delay from the rising edge of the LED to the start of integration
+	writeRegister8(MAX86150_ADDR,0x0E, 0xD3); // 0xD3 for PPG_ADC_RGE= 32µA, PPG_SR = 100Hz, PPG_LED_PW = 400µs, actual sample rate can vary depending on the use case
+	writeRegister8(MAX86150_ADDR,0x0F, 0x02);// 0x18 for 20µs delay from the rising edge of the LED to the start of integration
 }
 
 //Setup the sensor
@@ -308,9 +303,9 @@ void Max86150_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledM
 
 	//writeRegister8(MAX86150_ADDR,0x0E,0xDB);
 	//writeRegister8(MAX86150_ADDR,0x0E,0xDB);
-	setRANGE(0x05);  //set range of vled 50ma to 100ma
-	setPulseAmplitudeRed(0xE5); //90 ma
-	setPulseAmplitudeIR(0xE5); //90ma
+
+	setPulseAmplitudeRed(0xFF);
+	setPulseAmplitudeIR(0xFF);
 
 	//setPulseAmplitudeGreen(powerLevel);
 	//setPulseAmplitudeProximity(powerLevel);

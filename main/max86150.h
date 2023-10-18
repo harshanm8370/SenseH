@@ -21,7 +21,6 @@ typedef uint8_t byte;
   void setPulseWidth(uint8_t pulseWidth);
 
   void setPulseAmplitudeRed(uint8_t value);
-  void setRANGE(uint8_t amplitude);
   void setPulseAmplitudeIR(uint8_t value);
   void setPulseAmplitudeProximity(uint8_t value);
 
