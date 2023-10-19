@@ -266,6 +266,11 @@ void Max86150_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledM
 
 	writeRegister8(MAX86150_ADDR,MAX86150_FIFOCONFIG,0x7F);
 
+	//enabling PPG LEADOFF interrupt
+ 	writeRegister8(MAX86150_ADDR,MAX86150_INTENABLE1,0x10);
+
+
+
 	//sampleAverage=32;
 	//FIFO Configuration
 	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-

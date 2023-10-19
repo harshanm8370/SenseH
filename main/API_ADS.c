@@ -18,7 +18,7 @@
 
 
 /*-------------------------------------MACROS-------------------------------------------------------------------*/
-#define LEAD_ERROR			   		0x08							// to check lead error in error status register // refer manual //
+#define LEAD_ERROR			   		0x08							// to check lead error in error status reg // refer manual //
 #define BAT_LOW_ERROR		   		0x04							// to check battery low error
 #define NO_OF_BYTES			   		3
 
@@ -839,7 +839,7 @@ ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_3Lead(float *buff_lead_1, float *bu
 */
 static uint32_t drdy_count = 0;
 
-ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_2Lead(float *buff_lead_1,float *buff_lead_2)
+ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_2Lead(float *buff_lead_1, float *buff_lead_2)
 {
 	ECG_STATUS read_status = 0;
 	uint8_t sample[6] = {0};

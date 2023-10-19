@@ -30,8 +30,8 @@ bool Lead12_Data_Capture(void);
 bool Lead12_Data_Capture_new(uint32_t vlead);
 void Store_12_Lead_Data_To_Flash(uint8_t flag);
 uint32_t flagECG=1;
-#define   ECG_12L_SAMPLES  600U
-uint32_t offfset = 0;
+#define   ECG_12L_SAMPLES  600U  //for writing the 600 samples flash
+uint32_t offfset = 0;   //setting global variable for flash buffer offset
 bool Lead12_Test(void)
 {
 	uint16_t result[4] = {0};
@@ -271,73 +271,6 @@ bool Lead12_Data_Capture(void)
 	return true;
 }
 
-#if 0
-void Store_12_Lead_Data_To_Flash(uint8_t flag)
-{
-
-	RECORD_OPS_STATUS status;
-
-	//uint32_t offfset = 0;
-	if(flag)
-	{
-		offfset = 0;
-	    API_Update_Record_Header(BP1,&record_header);
-
-	    MemCpy(BT_flash_buffer+offfset,&record_header,REC_HEADER_LEN);
-
-	    offfset = REC_HEADER_LEN;
-	    MemCpy(BT_flash_buffer+offfset,BP_PPG_RED_BUFF,(12L_SAMPLES*4));
-
-	    offfset += *4;
-	    MemCpy(BT_flash_buffer+offfset,BP_ECG_Lead1_buff,(BP_ECG_L1_SAMPLES*4));
-
-	    status = API_Flash_Write_Record(BP1,(void*)BT_flash_buffer);
-
-
-	    if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(BP_DATA_STORE_TO_FLASH_FAIL);
-	}
-
-
-		//API_Update_Record_Header(ECG_1_Lead,&record_header);
-
-		//MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
-		MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
-
-		MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
-		offfset = REC_HEADER_LEN;
-
-		MemCpy(BT_flash_buffer+offfset,ECG_Lead1_buff,(BP_ECG_L1_SAMPLES*4));
-		offfset += BP_ECG_L1_SAMPLES*4;
-
-		status = API_Flash_Write_Record(ECG_1_Lead,(void*)BT_flash_buffer);
-
-		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(ECG_DATA_STORE_TO_FLASH_FAIL);
-
-
-		MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
-
-		API_Update_Record_Header(SPO2,&record_header);
-
-		MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
-		offfset = REC_HEADER_LEN;
-
-		MemCpy(BT_flash_buffer+offfset,SPO2_PPG_RED_BUFF,(SPO2_RED_SAMPLES*4));
-
-		offfset += SPO2_RED_SAMPLES*4;
-		MemCpy(BT_flash_buffer+offfset,SPO2_PPG_IR_BUFF,(SPO2_IR_SAMPLES*4));
-
-		status = API_Flash_Write_Record(SPO2,(void*)BT_flash_buffer);
-
-		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(SPO2_DATA_STORE_TO_FLASH_FAIL);
-
-		IsValidRecordsInFlash = true;
-
-		printf("\nTotal SPO2 Records = %ld", get_records_count(SPO2));
-		printf("\nTotal BP1 Records = %ld", get_records_count(BP1));
-		printf("\nTotal ECG L1 Records = %ld", get_records_count(ECG_1_Lead));
-
-}
-#endif
 
 void Select_Vlead(VLEAD_TYPE_t vlead_type)
 {

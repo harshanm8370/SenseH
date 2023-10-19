@@ -58,8 +58,8 @@
 /* Quick Test Flash Storage Configuration Macros */
 
 /***************************************************/
-#define BP_PPG_RED_SAMPLES 1200U
-#define BP_ECG_L1_SAMPLES  600U
+#define BP_PPG_RED_SAMPLES 1200U //was 1200U
+#define BP_ECG_L1_SAMPLES  1200U
 #define ECG_L1_SAMPLES  600U
 #define ECG_L2_SAMPLES  600U
 #define SPO2_RED_SAMPLES 600U
@@ -68,15 +68,12 @@
 /***************************************************/
 uint32_t SPO2_PPG_IR_BUFF[TOTAL_SAMPLES];
 uint32_t SPO2_PPG_RED_BUFF[TOTAL_SAMPLES];
-uint32_t SPO2_PPG_ECG_BUFF[TOTAL_SAMPLES];
 float ECG_Lead1_buff[TOTAL_SAMPLES_VCS];
-//float BP_ECG_Lead1_buff[TOTAL_SAMPLES_VCS];
-float BP_ECG_Lead2_buff[TOTAL_SAMPLES_VCS];
 float ECG_Lead2_buff[TOTAL_SAMPLES_VCS];
 float ECG_Lead3_buff[TOTAL_SAMPLES_VCS];
 float BP_ECG_Lead1_buff[TOTAL_SAMPLES];
+float BP_ECG_TEMP[ECG_L2_SAMPLES];
 uint32_t BP_PPG_RED_BUFF[TOTAL_SAMPLES];
-uint32_t BP_PPG_IR_BUFF[TOTAL_SAMPLES];
 float FilterOutputBuffer1[TOTAL_SAMPLES];
 float FilterOutputBuffer2[TOTAL_SAMPLES];
 float FilterOutputBuffer3[TOTAL_SAMPLES];
@@ -504,11 +501,14 @@ void Dummy_Capture(uint16_t total_samples)
 			}
 #endif
 #if 1
+		//uint8_t reg,lod_ppg
+		//lod_ppg= readRegister8(0x00,reg);
+		//printf("\t%d\t\n",lod_ppg);
 		if(enableDummyCapture)
 		{
 			ppg_count = 0;
 			do{
-				status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,1);
+				status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,BP_ECG_TEMP,0,1);
 			}while(ppg_count < 200);
 		}
 
@@ -518,7 +518,7 @@ void Dummy_Capture(uint16_t total_samples)
 		ppg_count = 0;
 		Print_time("\nSPO2 start");
 		do{
-			status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
+			status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,BP_ECG_TEMP,0,0);
 		}while(ppg_count < ((ECG_IN_SECONDS*SET_ODR)));
 
 		Print_time("\nSPO2 END");
@@ -575,11 +575,13 @@ void Dummy_Capture(uint16_t total_samples)
 			  printf("\n%f",ECG_Lead1_buff[i]);
 			}
 
+#if 1
 			printf("\nECG L2 data:\n");
 			for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 			{
 			  printf("\n%f",ECG_Lead2_buff[i]);
 			}
+#endif
 		}
 
 	else
@@ -636,11 +638,11 @@ void Dummy_Capture(uint16_t total_samples)
 			ppg_count = 0;
 			for(raw_data_index=0; raw_data_index<ECG_DUMMY_CAPTURES; raw_data_index++)// ~3sec dummy capture
 			{
-				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index,SPO2_PPG_ECG_BUFF + raw_data_index);
+				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index,BP_ECG_TEMP + raw_data_index);
 //				ppg_index_cnt++;
 //				if(ppg_index_cnt >=10)
 				{
-					status = API_MAX86150_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
+					status = API_MAX86150_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_ECG_TEMP,BP_ECG_TEMP,0,0);
 //					ppg_index_cnt = 0;
 				}
 			}
@@ -648,20 +650,19 @@ void Dummy_Capture(uint16_t total_samples)
 
 		printf("\nReal BP Capture START:\n");
 		MemSet(BP_ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
-		MemSet(BP_ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
 		MemSet(BP_PPG_RED_BUFF,0,sizeof(BP_PPG_RED_BUFF));
-		MemSet(BP_PPG_IR_BUFF,0,sizeof(BP_PPG_IR_BUFF));
+		MemSet(BP_PPG_RED_BUFF,0,sizeof(BP_ECG_TEMP));
 		ppg_count = 0;
 		ppg_index_cnt = 0;
 
 		Print_time("\nBP start");
 		for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
 		{
-			status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, BP_ECG_Lead2_buff+raw_data_index);
+			status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, BP_ECG_TEMP+raw_data_index);
 //			ppg_index_cnt++;
 //			if(ppg_index_cnt >=10)
 			{
-				status = API_MAX86150_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
+				status = API_MAX86150_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_ECG_TEMP,BP_ECG_TEMP,0,0);
 //				ppg_index_cnt = 0;
 			}
 		}
@@ -677,31 +678,12 @@ void Dummy_Capture(uint16_t total_samples)
 		{
 		  printf("\n%f",BP_ECG_Lead1_buff[i]);
 		}
-#if 0
-		printf("\nECG L2 data:\n");
-		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
-		{
-		  printf("\n%f",ECG_Lead2_buff[i]);
-		}
-#endif
 
 		printf("\nSPO2 PPG-RED DATA:");
 		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 		{
 		  printf("\n%ld",BP_PPG_RED_BUFF[i]);
 		}
-		printf("\nSPO2 PPG-IR DATA:");
-		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
-		{
-		  printf("\n%ld",BP_PPG_IR_BUFF[i]);
-		}
-#if 0
-		printf("\nSPO2 PPG_ECG_BUFF DATA:");
-		for(int i=0;i<((ECG_IN_SECONDS*SET_ODR));i++)
-		{
-		  printf("\n%ld",SPO2_PPG_ECG_BUFF[i]);
-		}
-#endif
 		printf("\nSPO2 PPG-RED DATA: Capture END");
 #endif
 		return true;
@@ -798,40 +780,38 @@ void Store_QuickTest1_Data_To_Flash(void)
 
 	uint32_t offfset = 0;
 
+#if 1
 	API_Update_Record_Header(BP1,&record_header);
 
 	MemCpy(BT_flash_buffer+offfset,&record_header,REC_HEADER_LEN);
 
 	offfset = REC_HEADER_LEN;
-	MemCpy(BT_flash_buffer+offfset,BP_PPG_RED_BUFF,(BP_PPG_RED_SAMPLES*4));
+	MemCpy(BT_flash_buffer+offfset,BP_PPG_RED_BUFF,(ECG_L1_SAMPLES*4));
 
 	offfset += BP_PPG_RED_SAMPLES*4;
-	MemCpy(BT_flash_buffer+offfset,BP_ECG_Lead1_buff,(BP_ECG_L1_SAMPLES*4));
+	MemCpy(BT_flash_buffer+offfset,BP_ECG_Lead1_buff,(ECG_L1_SAMPLES*4));
 
 	status = API_Flash_Write_Record(BP1,(void*)BT_flash_buffer);
 
 	if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(BP_DATA_STORE_TO_FLASH_FAIL);
-
-
-		API_Update_Record_Header(ECG_6_Lead,&record_header);
+#endif
 
 		MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
-		//MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
+		API_Update_Record_Header(ECG_6_Lead,&record_header);
+
 
 		MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
 		offfset = REC_HEADER_LEN;
 
-		MemCpy(BT_flash_buffer+offfset,ECG_Lead1_buff,(BP_ECG_L1_SAMPLES*4));
+		MemCpy(BT_flash_buffer+offfset,ECG_Lead1_buff,(ECG_L1_SAMPLES*4));
 		offfset += BP_ECG_L1_SAMPLES*4;
 
-		MemCpy(BT_flash_buffer+offfset,ECG_Lead2_buff,(BP_ECG_L1_SAMPLES*4));
+		MemCpy(BT_flash_buffer+offfset,ECG_Lead2_buff,(ECG_L1_SAMPLES*4));
 		offfset += BP_ECG_L1_SAMPLES*4;
-
 		status = API_Flash_Write_Record(ECG_6_Lead,(void*)BT_flash_buffer);
 
 		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(ECG_DATA_STORE_TO_FLASH_FAIL);
-
-
+#if 1
 		MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
 
 		API_Update_Record_Header(SPO2,&record_header);
@@ -847,12 +827,14 @@ void Store_QuickTest1_Data_To_Flash(void)
 		status = API_Flash_Write_Record(SPO2,(void*)BT_flash_buffer);
 
 		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(SPO2_DATA_STORE_TO_FLASH_FAIL);
+#endif
+
 
 		IsValidRecordsInFlash = true;
 
 		printf("\nTotal SPO2 Records = %ld", get_records_count(SPO2));
 		printf("\nTotal BP1 Records = %ld", get_records_count(BP1));
-		printf("\nTotal ECG L1 Records = %ld", get_records_count(ECG_6_Lead));
+		printf("\nTotal ECG_6_Lead Records = %ld", get_records_count(ECG_6_Lead));
 
 }
 
