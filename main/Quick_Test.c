@@ -545,6 +545,18 @@ void Dummy_Capture(uint16_t total_samples)
 
 	else if(captureType == CAPTURE_ECG_L1_AND_L2)
 		{
+		bool leadoffstatus_lead1 = 0, leadoffstatus_lead2 = 0;
+		leadoffstatus_lead1 = API_ECG_Lead_OFF_Detect(LEAD1);
+		leadoffstatus_lead2 = API_ECG_Lead_OFF_Detect(LEAD2);
+		printf("leadoffstatus_lead1=%d,leadoffstatus_lead2=%d\n",leadoffstatus_lead1,leadoffstatus_lead2);
+		if(leadoffstatus_lead1&leadoffstatus_lead1)
+		{
+			printf("leads are not connected\n");
+			API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER_PROPERLY);
+			return false;
+		}
+		else
+		{
 			ECG_Drdy_count = 0;
 			API_ECG_Stop_Conversion();
 			API_ECG_Start_Conversion();
@@ -578,6 +590,7 @@ void Dummy_Capture(uint16_t total_samples)
 			{
 			  printf("\n%f",ECG_Lead2_buff[i]);
 			}
+		}
 		}
 
 	else
@@ -1925,7 +1938,18 @@ bool Run_Multi_Vital(void)
 #endif
 
 #if 1 //only 12 Lead capture not sure why previously done quik Vital
-	Lead12_Test(); // This is the core function to capture 12Lead ECG
+	if(Lead12_LeadOff_Detect() == FALSE)
+	{
+		printf("lead off not detected\n");
+		Lead12_Test(); // This is the core function to capture 12Lead ECG
+	}
+	else
+	{
+		printf("lead off detected\n");
+		API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+		API_Disp_Quick_test_screen(DISP_12LEAD_CABLE_NOT_CONNECTED_PROPERLY);
+		return false;
+	}
 #endif
 	Disable_Power_Supply();
 	return true;

@@ -1367,7 +1367,7 @@ static uint8_t GetLeadOffStatus(void)
 		printf("\nLead off Detection.. Register read fail");
 	}
 
-	printf("\nflags: %d",flags);
+	printf("\nflags: 0x%2X",flags);
 
 	//API_DISP_Error_Code(flags);
 
@@ -1401,7 +1401,7 @@ bool API_ECG_Lead_OFF_Detect(ECG_LEADS_t lead)
 {
     bool leadOffStatus = false;
 
-#ifdef LEAD_OFF_DETECTION
+//ifdef LEAD_OFF_DETECTION
     leadOffStatus = true;
 
 	TIMER_t timeout = TIMER_10SEC;
@@ -1442,7 +1442,7 @@ bool API_ECG_Lead_OFF_Detect(ECG_LEADS_t lead)
 	else if(lead == LEAD12)
 	{
 		leadMask = 0x08;// Lead12 Error Mask
-		timeout = TIMER_3SEC;
+		//timeout = TIMER_3SEC;
 	}
 
 	API_TIMER_Register_Timer(timeout);
@@ -1471,11 +1471,11 @@ bool API_ECG_Lead_OFF_Detect(ECG_LEADS_t lead)
 	}
 
 
-	printf("\counter = %d",counter);
+	printf("\ncounter = %d",counter);
 	API_ECG_Disable_LeadOff_Detection();
 
 
-#endif
+//#endif
 	return leadOffStatus;
 }
 
