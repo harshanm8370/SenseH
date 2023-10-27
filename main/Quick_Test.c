@@ -58,7 +58,7 @@
 /* Quick Test Flash Storage Configuration Macros */
 
 /***************************************************/
-#define BP_PPG_RED_SAMPLES 1200U //was 1200U
+#define BP_PPG_RED_SAMPLES 1200U
 #define BP_ECG_L1_SAMPLES  1200U
 #define ECG_L1_SAMPLES  600U
 #define ECG_L2_SAMPLES  600U
@@ -68,12 +68,14 @@
 /***************************************************/
 uint32_t SPO2_PPG_IR_BUFF[TOTAL_SAMPLES];
 uint32_t SPO2_PPG_RED_BUFF[TOTAL_SAMPLES];
+uint32_t SPO2_PPG_ECG_BUFF[TOTAL_SAMPLES];
 float ECG_Lead1_buff[TOTAL_SAMPLES_VCS];
 float ECG_Lead2_buff[TOTAL_SAMPLES_VCS];
+float ECG_TEMP[TOTAL_SAMPLES_VCS];
 float ECG_Lead3_buff[TOTAL_SAMPLES_VCS];
-float BP_ECG_Lead1_buff[TOTAL_SAMPLES];
-float BP_ECG_TEMP[ECG_L2_SAMPLES];
+float BP_ECG_Lead1_buff[TOTAL_SAMPLES_VCS];
 uint32_t BP_PPG_RED_BUFF[TOTAL_SAMPLES];
+uint32_t BP_PPG_IR_BUFF[TOTAL_SAMPLES];
 float FilterOutputBuffer1[TOTAL_SAMPLES];
 float FilterOutputBuffer2[TOTAL_SAMPLES];
 float FilterOutputBuffer3[TOTAL_SAMPLES];
@@ -196,21 +198,33 @@ bool QUICK_Test1(void)
 
 	if(API_ECG_Init())
 	{
+	    	if(API_ECG_Init())
+	    	{
 
-		printf("\nECG Init Successful");
-		printf("Entering into Max86150 setup");
-
-		   if(API_MAX86150_Setup() == true)
-		   {
-			   printf("\nCapturing data.................");
-			   API_Disp_Quick_test_screen(DISP_QT_TEST_IN_PROGRESS);
-			   // TODO; retry when raw data is not good
-			   if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1,true) == false)
-				   {
-						Disable_Power_Supply();
-
-				   	   return false;
-				   }
+#if 1
+		API_Disp_Quick_test_screen(DISP_QT_PPG_TEST_IN_PROGRESS);
+		Capture_PPG_ECG_Data(CAPTURE_PPG,true);
+		API_IO_Exp_Power_Control(EN_VLED,LOW);
+		API_IO_Exp_Power_Control(EN_IR,LOW);
+#endif
+#if 1
+		API_Disp_Quick_test_screen(DISP_QT_ECG_L1_TEST_IN_PROGRESS);
+		Print_time("/ECG start");
+		if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,true)==false)
+		{
+		   Disable_Power_Supply();
+		   return false;
+		}
+		Print_time("\nECG end");
+#endif
+#if 1
+		printf("\nCapturing BP................");
+		API_IO_Exp_Power_Control(EN_VLED,HIGH);
+		API_IO_Exp_Power_Control(EN_IR,HIGH);
+		Print_time("\nBP START");
+		Capture_BP_Data(true);
+		Print_time("\nBP END");
+#endif
 			   //Filter_Quicktest1_Data();
 			   // Peak detection
 			   // Result Computation
@@ -500,15 +514,17 @@ void Dummy_Capture(uint16_t total_samples)
 				status = API_MAX86150_Raw_Data_capture(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,max_ecg_no_use,1,0,0);
 			}
 #endif
+		//uint8_t reg = 0xA5;
 #if 1
-		//uint8_t reg,lod_ppg
-		//lod_ppg= readRegister8(0x00,reg);
-		//printf("\t%d\t\n",lod_ppg);
+		//uint8_t ret ;
+		//ret = readRegister8(0x00,reg);
+		//printf("\n %x",ret);
+
 		if(enableDummyCapture)
 		{
 			ppg_count = 0;
 			do{
-				status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,BP_ECG_TEMP,0,1);
+				status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,1);
 			}while(ppg_count < 200);
 		}
 
@@ -518,7 +534,7 @@ void Dummy_Capture(uint16_t total_samples)
 		ppg_count = 0;
 		Print_time("\nSPO2 start");
 		do{
-			status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,BP_ECG_TEMP,0,0);
+			status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
 		}while(ppg_count < ((ECG_IN_SECONDS*SET_ODR)));
 
 		Print_time("\nSPO2 END");
@@ -575,13 +591,11 @@ void Dummy_Capture(uint16_t total_samples)
 			  printf("\n%f",ECG_Lead1_buff[i]);
 			}
 
-#if 1
 			printf("\nECG L2 data:\n");
 			for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 			{
 			  printf("\n%f",ECG_Lead2_buff[i]);
 			}
-#endif
 		}
 
 	else
@@ -638,31 +652,32 @@ void Dummy_Capture(uint16_t total_samples)
 			ppg_count = 0;
 			for(raw_data_index=0; raw_data_index<ECG_DUMMY_CAPTURES; raw_data_index++)// ~3sec dummy capture
 			{
-				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index,BP_ECG_TEMP + raw_data_index);
+				status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_TEMP+raw_data_index);
 //				ppg_index_cnt++;
 //				if(ppg_index_cnt >=10)
 				{
-					status = API_MAX86150_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_ECG_TEMP,BP_ECG_TEMP,0,0);
+					status = API_MAX86150_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
 //					ppg_index_cnt = 0;
 				}
 			}
 		}
 
 		printf("\nReal BP Capture START:\n");
-		MemSet(BP_ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
+		MemSet(BP_ECG_Lead1_buff,0,sizeof(BP_ECG_Lead1_buff));
+		//MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
 		MemSet(BP_PPG_RED_BUFF,0,sizeof(BP_PPG_RED_BUFF));
-		MemSet(BP_PPG_RED_BUFF,0,sizeof(BP_ECG_TEMP));
+		MemSet(BP_PPG_IR_BUFF,0,sizeof(BP_PPG_IR_BUFF));
 		ppg_count = 0;
 		ppg_index_cnt = 0;
 
 		Print_time("\nBP start");
 		for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
 		{
-			status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, BP_ECG_TEMP+raw_data_index);
+			status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_TEMP+raw_data_index);
 //			ppg_index_cnt++;
 //			if(ppg_index_cnt >=10)
 			{
-				status = API_MAX86150_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_ECG_TEMP,BP_ECG_TEMP,0,0);
+				status = API_MAX86150_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
 //				ppg_index_cnt = 0;
 			}
 		}
@@ -678,12 +693,31 @@ void Dummy_Capture(uint16_t total_samples)
 		{
 		  printf("\n%f",BP_ECG_Lead1_buff[i]);
 		}
+#if 0
+		printf("\nECG L2 data:\n");
+		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
+		{
+		  printf("\n%f",ECG_Lead2_buff[]);
+		}
+#endif
 
 		printf("\nSPO2 PPG-RED DATA:");
 		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 		{
 		  printf("\n%ld",BP_PPG_RED_BUFF[i]);
 		}
+		printf("\nSPO2 PPG-IR DATA:");
+		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
+		{
+		  printf("\n%ld",BP_PPG_IR_BUFF[i]);
+		}
+#if 0
+		printf("\nSPO2 PPG_ECG_BUFF DATA:");
+		for(int i=0;i<((ECG_IN_SECONDS*SET_ODR));i++)
+		{
+		  printf("\n%ld",SPO2_PPG_ECG_BUFF[i]);
+		}
+#endif
 		printf("\nSPO2 PPG-RED DATA: Capture END");
 #endif
 		return true;
@@ -780,41 +814,53 @@ void Store_QuickTest1_Data_To_Flash(void)
 
 	uint32_t offfset = 0;
 
+
 #if 1
+	MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
+
 	API_Update_Record_Header(BP1,&record_header);
+
 
 	MemCpy(BT_flash_buffer+offfset,&record_header,REC_HEADER_LEN);
 
 	offfset = REC_HEADER_LEN;
-	MemCpy(BT_flash_buffer+offfset,BP_PPG_RED_BUFF,(ECG_L1_SAMPLES*4));
-
-	offfset += BP_PPG_RED_SAMPLES*4;
-	MemCpy(BT_flash_buffer+offfset,BP_ECG_Lead1_buff,(ECG_L1_SAMPLES*4));
-
+	MemCpy(BT_flash_buffer+offfset,BP_PPG_RED_BUFF,(1200*4));
+	offfset += 1200*4;
+	MemCpy(BT_flash_buffer+offfset,BP_ECG_Lead1_buff,(1200*4));
+    offfset += 1200*4;
 	status = API_Flash_Write_Record(BP1,(void*)BT_flash_buffer);
 
 	if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(BP_DATA_STORE_TO_FLASH_FAIL);
 #endif
 
-		MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
+
+		offfset = 0;
 		API_Update_Record_Header(ECG_6_Lead,&record_header);
 
+
+		MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
 
 		MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
 		offfset = REC_HEADER_LEN;
 
-		MemCpy(BT_flash_buffer+offfset,ECG_Lead1_buff,(ECG_L1_SAMPLES*4));
-		offfset += BP_ECG_L1_SAMPLES*4;
+		MemCpy(BT_flash_buffer+offfset,ECG_Lead1_buff,(600*4));
+		offfset += 600*4;
 
-		MemCpy(BT_flash_buffer+offfset,ECG_Lead2_buff,(ECG_L1_SAMPLES*4));
-		offfset += BP_ECG_L1_SAMPLES*4;
+		MemCpy(BT_flash_buffer+offfset,ECG_Lead2_buff,(600*4));
+		offfset += 600*4;
+
+
 		status = API_Flash_Write_Record(ECG_6_Lead,(void*)BT_flash_buffer);
 
 		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(ECG_DATA_STORE_TO_FLASH_FAIL);
-#if 1
+
+		offfset = 0;
 		MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
 
 		API_Update_Record_Header(SPO2,&record_header);
+
+		//MemSet(SPO2_PPG_RED_BUFF,0xA8,sizeof(ECG_Lead1_buff));
+		//MemSet(SPO2_PPG_IR_BUFF,0xA8,sizeof(ECG_Lead1_buff));
 
 		MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
 		offfset = REC_HEADER_LEN;
@@ -827,14 +873,12 @@ void Store_QuickTest1_Data_To_Flash(void)
 		status = API_Flash_Write_Record(SPO2,(void*)BT_flash_buffer);
 
 		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(SPO2_DATA_STORE_TO_FLASH_FAIL);
-#endif
-
 
 		IsValidRecordsInFlash = true;
 
 		printf("\nTotal SPO2 Records = %ld", get_records_count(SPO2));
 		printf("\nTotal BP1 Records = %ld", get_records_count(BP1));
-		printf("\nTotal ECG_6_Lead Records = %ld", get_records_count(ECG_6_Lead));
+		printf("\nTotal ECG L1 Records = %ld", get_records_count(ECG_6_Lead));
 
 }
 

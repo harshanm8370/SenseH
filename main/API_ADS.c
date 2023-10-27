@@ -792,7 +792,8 @@ bool API_ECG_Capture_Samples_VLead(float *vlead,uint16_t nbf_samples)
 ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_3Lead(float *buff_lead_1, float *buff_lead_2, float *buff_lead_3)
 {
 	ECG_STATUS read_status = 0;
-	uint8_t sample[9] = {0};
+	uint8_t sample[10] = {0};
+	sample[9U] = 0x00;
 
 		while(!ECG_Drdy_Flag);	//|| (API_TIMER_Get_Timeout_Flag(Set_1sec_timer) == FALSE)
 //	if(ESP32_MCU_DRDY_PIN)
@@ -815,11 +816,11 @@ ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_3Lead(float *buff_lead_1, float *bu
 
 		read_status |= api_ecg_reg_read(DATA_CH3_ECG_L_REG,&sample[8U]);				// reading the CH3 data- lower byte
 
-		*buff_lead_1= (float)((((uint32_t)sample[0U])<<16U) | (((uint32_t)sample[1U])<<8U) | (sample[2U]) );
+		*buff_lead_1= (float)((((uint32_t)sample[9U])<<24U) | (((uint32_t)sample[0U])<<16U) | (((uint32_t)sample[1U])<<8U) | (sample[2U]) );
 
-		*buff_lead_2= (float)((((uint32_t)sample[3U])<<16U) | (((uint32_t)sample[4U])<<8U) | (sample[5U]) );
+		*buff_lead_2= (float)((((uint32_t)sample[9U])<<24U) | (((uint32_t)sample[3U])<<16U) | (((uint32_t)sample[4U])<<8U) | (sample[5U]) );
 
-		*buff_lead_3= (float)((((uint32_t)sample[6U])<<16U) | (((uint32_t)sample[7U])<<8U) | (sample[8U]) );
+		*buff_lead_3= (float)((((uint32_t)sample[9U])<<24U) | (((uint32_t)sample[6U])<<16U) | (((uint32_t)sample[7U])<<8U) | (sample[8U]) );
 
 		if(read_status == ECG_NO_ERROR)
 		{
@@ -842,7 +843,10 @@ static uint32_t drdy_count = 0;
 ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_2Lead(float *buff_lead_1, float *buff_lead_2)
 {
 	ECG_STATUS read_status = 0;
-	uint8_t sample[6] = {0};
+//	uint8_t sample[0] = 0x11;
+//	uint8_t sample[1] = 0x11;
+//	uint8_t sample[2] = 0x11;
+	uint8_t sample[7] = {0};
 
 		while(!ECG_Drdy_Flag);	//|| (API_TIMER_Get_Timeout_Flag(Set_1sec_timer) == FALSE)
 //	if(ESP32_MCU_DRDY_PIN)
@@ -858,10 +862,14 @@ ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_2Lead(float *buff_lead_1, float *bu
 		read_status |= api_ecg_reg_read(DATA_CH2_ECG_M_REG,&sample[4U]);				// reading the CH2 data- middle byte
 
 		read_status |= api_ecg_reg_read(DATA_CH2_ECG_L_REG,&sample[5U]);				// reading the CH2 data- lower byte
+		/*sample[0] = 0x00;
+		sample[1] = 0xA2;
+		sample[2] = 0xA2;*/
+		sample[6] = 0x00;
 
-		*buff_lead_1= (float)((((uint32_t)sample[0U])<<16U) | (((uint32_t)sample[1U])<<8U) | (sample[2U]) );
+		*buff_lead_1= (float)((((uint32_t)sample[6U])<<24U) | (((uint32_t)sample[0U])<<16U) | (((uint32_t)sample[1U])<<8U) | (sample[2U]) );
 
-		*buff_lead_2= (float)((((uint32_t)sample[3U])<<16U) | (((uint32_t)sample[4U])<<8U) | (sample[5U]) );
+		*buff_lead_2= (float)((((uint32_t)sample[6U])<<24U) | (((uint32_t)sample[3U])<<16U) | (((uint32_t)sample[4U])<<8U) | (sample[5U]) );
 
 		if(read_status == ECG_NO_ERROR)
 		{
