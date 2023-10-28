@@ -97,6 +97,12 @@ bool Lead12_Test(void)
 
 					    if(flash_write_status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(LEAD12_ECG_DATA_STORE_TO_FLASH_FAIL);
 
+					  /*  for(int i =0;i< offfset;i++)
+					    {
+					    	printf("\n\t%02X",BT_flash_buffer[i]);
+
+					    }*/
+
 						IsValidRecordsInFlash = 1;
 
 						API_Disp_Quick_Test_Result(result);

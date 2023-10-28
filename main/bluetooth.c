@@ -410,8 +410,14 @@ bool bt_send_single_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 		total_length_to_send = (one_record_len + BT_PACKET_FIELD_LENGTH);
 		switch (bt_response_state) {
 			case INIT_STATE:
+				RECORD_POINTER_t records_pointer;
+				get_record_pointer_details (vital, &records_pointer);
 				status = API_Flash_Read_Record(vital, BT_flash_buffer);
 				//If no data in the flash than we send ack as data not available
+				/*for(int i = 0;i<((records_pointer.one_record_len));i++)
+				{
+					printf("\n%02X",BT_flash_buffer[i]);
+				}*/
 				if(status == NO_RECORDS_IN_FLASH) {
 					bt_send_ack_or_nack_response(NACK_DATA_NOT_AVAILABLE);
 					bt_response_session_complete = TRUE;
@@ -491,12 +497,12 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 				get_record_pointer_details (vital, &records_pointer);
 				total_length_to_send = (REC_HEADER_LEN + BT_PACKET_FIELD_LENGTH);
 				status = API_Flash_Read_Record(vital, BT_flash_buffer);
-				memcpy(Read_buff,BT_flash_buffer+54,(records_pointer.one_record_len - 54));
+				//memcpy(Read_buff,BT_flash_buffer+0,(records_pointer.one_record_len - 0));
 				//printf("\n\t vital type : -%d",vital);
 				//printf("\n\t - %d",skip_count);
-				/*for(int i = 54;i<((records_pointer.one_record_len - 54));i++)
+				/*for(int i = 0;i<((records_pointer.one_record_len - 0));i++)
 				{
-					printf("\n%02X",BT_flash_buffer[i]);
+					printf("\n%02X",Read_buff[i]);
 				}*/
 				/*this block will send DATA_NOT_AVAILABLE nack if no record found */
 				if(status == NO_RECORDS_IN_FLASH){
