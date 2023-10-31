@@ -862,10 +862,6 @@ ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_2Lead(float *buff_lead_1, float *bu
 		read_status |= api_ecg_reg_read(DATA_CH2_ECG_M_REG,&sample[4U]);				// reading the CH2 data- middle byte
 
 		read_status |= api_ecg_reg_read(DATA_CH2_ECG_L_REG,&sample[5U]);				// reading the CH2 data- lower byte
-		/*sample[0] = 0x00;
-		sample[1] = 0xA2;
-		sample[2] = 0xA2;*/
-		sample[6] = 0x00;
 
 		*buff_lead_1= (float)((((uint32_t)sample[6U])<<24U) | (((uint32_t)sample[0U])<<16U) | (((uint32_t)sample[1U])<<8U) | (sample[2U]) );
 
@@ -1375,7 +1371,7 @@ static uint8_t GetLeadOffStatus(void)
 		printf("\nLead off Detection.. Register read fail");
 	}
 
-	printf("\nflags: %d",flags);
+	printf("\nflags: 0x%2X",flags);
 
 	//API_DISP_Error_Code(flags);
 
@@ -1407,17 +1403,15 @@ static void SetDcLeadOffCurrent_in_Steps_8nA(uint16_t currentIn_nA)
 
 bool API_ECG_Lead_OFF_Detect(ECG_LEADS_t lead)
 {
-    bool leadOffStatus = false;
-
-#ifdef LEAD_OFF_DETECTION
-    leadOffStatus = true;
-
+    bool leadOffStatus = true;
+    ECG_STATUS error_status = 0xFF;
 	TIMER_t timeout = TIMER_10SEC;
 
 	ECG_STATUS write_read_status = 0;
 
     uint8_t counter = 0;
     uint8_t leadMask=0xFF;
+    uint8_t lod = 0;
 
 	API_ECG_Enable_LeadOff_Detection();
 
@@ -1437,6 +1431,11 @@ bool API_ECG_Lead_OFF_Detect(ECG_LEADS_t lead)
 	// Enable Lead OFF detection
 	write_read_status |= api_ecg_reg_write(LOD_EN_REG, 0x3F);
 
+	error_status=api_ecg_reg_read(ERROR_STATUS_REG,&lod);
+
+	if(error_status != ECG_NO_ERROR ){
+		printf("\nLead off Detection.. Register read fail");
+	}
 
 	if(lead == LEAD1)
 	{
@@ -1477,13 +1476,20 @@ bool API_ECG_Lead_OFF_Detect(ECG_LEADS_t lead)
 	    	break;
 	    }
 	}
+	printf("error_status=0x%2X\n",lod);
+
+	if(lod&0x08)
+	{
+		printf("lead of detected\n");
+		API_ECG_Disable_LeadOff_Detection();
+		return true;
+	}
 
 
-	printf("\counter = %d",counter);
+	printf("\ncounter = %d",counter);
 	API_ECG_Disable_LeadOff_Detection();
 
 
-#endif
 	return leadOffStatus;
 }
 

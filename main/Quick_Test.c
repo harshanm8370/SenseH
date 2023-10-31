@@ -198,33 +198,21 @@ bool QUICK_Test1(void)
 
 	if(API_ECG_Init())
 	{
-	    	if(API_ECG_Init())
-	    	{
 
-#if 1
-		API_Disp_Quick_test_screen(DISP_QT_PPG_TEST_IN_PROGRESS);
-		Capture_PPG_ECG_Data(CAPTURE_PPG,true);
-		API_IO_Exp_Power_Control(EN_VLED,LOW);
-		API_IO_Exp_Power_Control(EN_IR,LOW);
-#endif
-#if 1
-		API_Disp_Quick_test_screen(DISP_QT_ECG_L1_TEST_IN_PROGRESS);
-		Print_time("/ECG start");
-		if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,true)==false)
-		{
-		   Disable_Power_Supply();
-		   return false;
-		}
-		Print_time("\nECG end");
-#endif
-#if 1
-		printf("\nCapturing BP................");
-		API_IO_Exp_Power_Control(EN_VLED,HIGH);
-		API_IO_Exp_Power_Control(EN_IR,HIGH);
-		Print_time("\nBP START");
-		Capture_BP_Data(true);
-		Print_time("\nBP END");
-#endif
+		printf("\nECG Init Successful");
+		printf("Entering into Max86150 setup");
+
+		   if(API_MAX86150_Setup() == true)
+		   {
+			   printf("\nCapturing data.................");
+			   API_Disp_Quick_test_screen(DISP_QT_TEST_IN_PROGRESS);
+			   // TODO; retry when raw data is not good
+			   if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1,true) == false)
+				   {
+						Disable_Power_Supply();
+
+				   	   return false;
+				   }
 			   //Filter_Quicktest1_Data();
 			   // Peak detection
 			   // Result Computation
@@ -563,6 +551,18 @@ void Dummy_Capture(uint16_t total_samples)
 
 	else if(captureType == CAPTURE_ECG_L1_AND_L2)
 		{
+		bool leadoffstatus_lead1 = 0, leadoffstatus_lead2 = 0;
+		leadoffstatus_lead1 = API_ECG_Lead_OFF_Detect(LEAD1);
+		leadoffstatus_lead2 = API_ECG_Lead_OFF_Detect(LEAD2);
+		printf("leadoffstatus_lead1=%d,leadoffstatus_lead2=%d\n",leadoffstatus_lead1,leadoffstatus_lead2);
+		if(leadoffstatus_lead1&leadoffstatus_lead1)
+		{
+			printf("leads are not connected\n");
+			API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER_PROPERLY);
+			return false;
+		}
+		else
+		{
 			ECG_Drdy_count = 0;
 			API_ECG_Stop_Conversion();
 			API_ECG_Start_Conversion();
@@ -596,6 +596,8 @@ void Dummy_Capture(uint16_t total_samples)
 			{
 			  printf("\n%f",ECG_Lead2_buff[i]);
 			}
+			
+		}
 		}
 
 	else
@@ -697,7 +699,7 @@ void Dummy_Capture(uint16_t total_samples)
 		printf("\nECG L2 data:\n");
 		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 		{
-		  printf("\n%f",ECG_Lead2_buff[]);
+		  printf("\n%f",ECG_Lead2_buff[i]);
 		}
 #endif
 
@@ -814,10 +816,6 @@ void Store_QuickTest1_Data_To_Flash(void)
 
 	uint32_t offfset = 0;
 
-
-#if 1
-	MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
-
 	API_Update_Record_Header(BP1,&record_header);
 
 
@@ -831,7 +829,6 @@ void Store_QuickTest1_Data_To_Flash(void)
 	status = API_Flash_Write_Record(BP1,(void*)BT_flash_buffer);
 
 	if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(BP_DATA_STORE_TO_FLASH_FAIL);
-#endif
 
 
 		offfset = 0;
@@ -858,9 +855,6 @@ void Store_QuickTest1_Data_To_Flash(void)
 		MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
 
 		API_Update_Record_Header(SPO2,&record_header);
-
-		//MemSet(SPO2_PPG_RED_BUFF,0xA8,sizeof(ECG_Lead1_buff));
-		//MemSet(SPO2_PPG_IR_BUFF,0xA8,sizeof(ECG_Lead1_buff));
 
 		MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
 		offfset = REC_HEADER_LEN;
@@ -1957,8 +1951,18 @@ bool Run_Multi_Vital(void)
 #endif
 
 #if 1 //only 12 Lead capture not sure why previously done quik Vital
-	Run_Quick_Vital();
-	Lead12_Test(); // This is the core function to capture 12Lead ECG
+	if(Lead12_LeadOff_Detect() == FALSE)
+	{
+		printf("lead off not detected\n");
+		Lead12_Test(); // This is the core function to capture 12Lead ECG
+	}
+	else
+	{
+		printf("lead off detected\n");
+		API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+		API_Disp_Quick_test_screen(DISP_12LEAD_CABLE_NOT_CONNECTED_PROPERLY);
+		return false;
+	}
 #endif
 	Disable_Power_Supply();
 	return true;

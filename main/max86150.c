@@ -316,9 +316,6 @@ void Max86150_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledM
 	//setPulseAmplitudeProximity(powerLevel);
 	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-	writeRegister8(MAX86150_ADDR,MAX86150_INTENABLE1, 0x10 );
-	writeRegister8(MAX86150_ADDR,MAX86150_LED_PROX_AMP, 0x00 );
-
 	//Multi-LED Mode Configuration, Enable the reading of the three LEDs
 	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 	enableSlot(1, SLOT_RED_LED);
@@ -601,10 +598,9 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
  bool API_MAX86150_Raw_Data_capture_new(uint32_t Red_data[],uint32_t IR_data[],uint32_t ecg_data[],uint16_t capture_number,bool is_dummy_capture)
    {
   		uint8_t sample_buff[20U];
-  		uint8_t temp = 0x00;
   		bool done = false;
 
-  		uint32_t one_sample,two_sample, PPG_Data_count = 0U;
+  		uint32_t one_sample, PPG_Data_count = 0U;
 
   		if(!is_dummy_capture)
   		{
@@ -618,12 +614,10 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 
 					if(!is_dummy_capture)
 					{
-						one_sample = 0;
-						two_sample = 0;
-						one_sample  = (sample_buff[2U] | (sample_buff[1U] << 8U) | ((sample_buff[0U] &0x07) <<16U)) ;
-						Red_data[ppg_count] = (one_sample >> 2U);
+						one_sample  = sample_buff[2U] | (sample_buff[1U] << 8U) | ((sample_buff[0U] & 0x07) << 16U);
+						Red_data[ppg_count] = one_sample >> 2U;
 
-						two_sample = sample_buff[5U] | (sample_buff[4U] << 8U) | ((sample_buff[3U]  & 0x07) << 16U);
+						one_sample = sample_buff[5U] | (sample_buff[4U] << 8U) | ((sample_buff[3U]  & 0x07) << 16U);
 						IR_data[ppg_count] = one_sample >> 2U;
 
 						one_sample = sample_buff[8U] | (sample_buff[4U] << 7U) | ((sample_buff[6U]  & 0x03) << 16U);

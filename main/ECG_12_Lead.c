@@ -80,16 +80,14 @@ bool Lead12_Test(void)
 							Lead12_Data_Capture_new(vlead);
 							if(!vlead)
 							{
-
-								//MemSet(ECG_Lead1_buff,0xAA,sizeof(ECG_Lead1_buff));
-								//MemSet(ECG_Lead2_buff,0xAA,sizeof(ECG_Lead1_buff));
+							
 								MemCpy((void*)BT_flash_buffer+offfset,(void*)ECG_Lead1_buff,(600*4));
 								offfset +=(600*4);
 
 								MemCpy((void*)BT_flash_buffer+offfset,(void*)ECG_Lead2_buff,(600*4));
 								offfset += (600*4);
 							}
-							//MemSet(ECG_Lead3_buff,0xAA,sizeof(ECG_Lead3_buff));
+	
 							MemCpy((void*)BT_flash_buffer+offfset,(void*)ECG_Lead3_buff,(600*4));
 							offfset += (600*4);
 						}
@@ -97,11 +95,6 @@ bool Lead12_Test(void)
 
 					    if(flash_write_status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(LEAD12_ECG_DATA_STORE_TO_FLASH_FAIL);
 
-					  /*  for(int i =0;i< offfset;i++)
-					    {
-					    	printf("\n\t%02X",BT_flash_buffer[i]);
-
-					    }*/
 
 						IsValidRecordsInFlash = 1;
 
@@ -181,7 +174,8 @@ bool Lead12_Data_Capture_new(uint32_t vlead)
 		printf("\n12 Lead ECG Register Init Failed");
 	}
 
-#if 1
+if(!vlead)
+{
 	printf("\n Lead- I ECG Data capturing");
 	for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 	{
@@ -193,8 +187,7 @@ bool Lead12_Data_Capture_new(uint32_t vlead)
 	{
 	   printf("\n%f",ECG_Lead2_buff[i]);
 	}
-	flagECG = 0;
-#endif
+}
 
 	printf("\n V-%ld ECG Data capturing", vlead+1);
 	for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)

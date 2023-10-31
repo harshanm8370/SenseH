@@ -477,10 +477,6 @@ uint32_t API_BLE_Transmit(uint8_t *buf, uint16_t numbytes)
         return TX_RX_FAILED;
     }
 
-    /*for(int i=0;i<numbytes;i++)
-       {
-       	printf("\n%02X",buf[i]);
-       }*/
 
 	memset(tx_buf.buf, 0x0, sizeof(tx_buf.buf));
     memcpy(tx_buf.buf, buf, numbytes);

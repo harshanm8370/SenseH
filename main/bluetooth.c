@@ -88,8 +88,6 @@ static char mobile_number[10] = {'\0'};
 static bool is_arrived_timesynq_req = FALSE;
 static bool is_OTA_request_arrived  = FALSE;
 uint8_t BT_flash_buffer[DATA_BUFFER3_LENGTH];
-uint8_t Read_buff[10000];
-uint8_t vital11;
 //for testing
 /************************strctures*******************************/
 
@@ -410,14 +408,7 @@ bool bt_send_single_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 		total_length_to_send = (one_record_len + BT_PACKET_FIELD_LENGTH);
 		switch (bt_response_state) {
 			case INIT_STATE:
-				RECORD_POINTER_t records_pointer;
-				get_record_pointer_details (vital, &records_pointer);
 				status = API_Flash_Read_Record(vital, BT_flash_buffer);
-				//If no data in the flash than we send ack as data not available
-				/*for(int i = 0;i<((records_pointer.one_record_len));i++)
-				{
-					printf("\n%02X",BT_flash_buffer[i]);
-				}*/
 				if(status == NO_RECORDS_IN_FLASH) {
 					bt_send_ack_or_nack_response(NACK_DATA_NOT_AVAILABLE);
 					bt_response_session_complete = TRUE;
@@ -459,7 +450,6 @@ TOTAL_RECORDS_STRUCT_t Total_Read_CurrentRecords;
 
 bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 {
-	vital11 = vital;
 	uint16_t crc_value = 0;
 	uint8_t status = FALSE;
 
@@ -493,17 +483,8 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 			case INIT_STATE:
 
 				BP_Length_tx = 0;
-				RECORD_POINTER_t records_pointer;
-				get_record_pointer_details (vital, &records_pointer);
 				total_length_to_send = (REC_HEADER_LEN + BT_PACKET_FIELD_LENGTH);
 				status = API_Flash_Read_Record(vital, BT_flash_buffer);
-				//memcpy(Read_buff,BT_flash_buffer+0,(records_pointer.one_record_len - 0));
-				//printf("\n\t vital type : -%d",vital);
-				//printf("\n\t - %d",skip_count);
-				/*for(int i = 0;i<((records_pointer.one_record_len - 0));i++)
-				{
-					printf("\n%02X",Read_buff[i]);
-				}*/
 				/*this block will send DATA_NOT_AVAILABLE nack if no record found */
 				if(status == NO_RECORDS_IN_FLASH){
 					bt_send_ack_or_nack_response(NACK_DATA_NOT_AVAILABLE);
@@ -650,28 +631,9 @@ void Load_Raw_Data_To_Buffer(uint8_t command)
 {
 	uint16_t length = BT_RAW_DATA_LENGTH + EOS_SIZE + CHKSUM_SIZE;
 	uint16_t crc_value = 0;
-	MemSet(bt_tx_buff,0,sizeof(bt_tx_buff));
 	bt_tx_buff[0] = SOS;
 	bt_tx_buff[1] = command;
-	/*if(vital11 == 3)
-	{
-		MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE), &length, LENGTH_SIZE); //2 is to skip those many bytes (SOS, COR each one byte)
-		MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE),(((uint8_t*)(Read_buff)) + (BT_RAW_DATA_LENGTH * skip_count)), BT_RAW_DATA_LENGTH);
-		bt_tx_buff[BT_RAW_DATA_LENGTH + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE)] = EOS; //fill EOS after raw data(240)and 4 bytes SOS, COR,length 2 bytes
-		crc_value = compute_crc_16(bt_tx_buff,(BT_PACKET_SIZE - CHKSUM_SIZE));
-		MemCpy(bt_tx_buff + (BT_RAW_DATA_LENGTH + SOS_SIZE + CMD_SIZE + LENGTH_SIZE + EOS_SIZE), &crc_value, CHKSUM_SIZE); //fill the checksum after filling all the filds
 
-	}
-	else
-
-
-	{*/
-   /* printf("\n \t bt flash first samples");
-	for(int i =0 ; i<600;i++)
-	{
-		printf("\n%02X",BT_flash_buffer[54+i]);
-	}*/
-    printf("\t \n no of sample taken from btbuffer - %d\n",REC_HEADER_LEN + (BT_RAW_DATA_LENGTH * skip_count));
 	MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE), &length, LENGTH_SIZE); //2 is to skip those many bytes (SOS, COR each one byte)
 	MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE),(((uint8_t*)(BT_flash_buffer)) + REC_HEADER_LEN + (BT_RAW_DATA_LENGTH * skip_count)), BT_RAW_DATA_LENGTH);
 	bt_tx_buff[BT_RAW_DATA_LENGTH + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE)] = EOS; //fill EOS after raw data(240)and 4 bytes SOS, COR,length 2 bytes
