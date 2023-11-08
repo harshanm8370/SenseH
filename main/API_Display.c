@@ -2499,7 +2499,7 @@ uint8_t left_offset = 0;
 
   		if(API_TIMER_Get_Timeout_Flag(DATE_TIME_FLIP_TIME) == TRUE) // call get_time_out function
   		{
-			API_DISP_Toggle_Date_Time();
+			//API_DISP_Toggle_Date_Time();
 			API_TIMER_Register_Timer(DATE_TIME_FLIP_TIME);
   		}
 
@@ -3602,7 +3602,7 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
   		if(API_TIMER_Get_Timeout_Flag(DATE_TIME_FLIP_TIME) == TRUE) // call get_time_out function
   		{
-			API_DISP_Toggle_Date_Time();
+			//API_DISP_Toggle_Date_Time();
 			API_TIMER_Register_Timer(DATE_TIME_FLIP_TIME);
   		}
 

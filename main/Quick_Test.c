@@ -246,7 +246,7 @@ bool QUICK_Test1(void)
 	printf("\nQuick Test2 Started");
 
 	Is_time_displayed = TRUE;
-	API_DISP_Toggle_Date_Time();
+	//API_DISP_Toggle_Date_Time();
 //	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
 	gpio_set_level(ECG_CSn_VCS, 1);
 

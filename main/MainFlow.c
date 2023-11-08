@@ -258,7 +258,7 @@ void POR_Init(void)
 	memset(PatientID.pid,'\0',sizeof(PatientID.pid));
 
 	API_Disp_Reset_Screen();
-	API_DISP_Toggle_Date_Time();
+	//API_DISP_Toggle_Date_Time();
 	API_Disp_BT_Icon(WHITE);
 	flash_data.sys_mode = DEVICE_ACTIVE_MODE;
 	Did_Push_Button_Pressed = false;

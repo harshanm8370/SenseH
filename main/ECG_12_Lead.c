@@ -39,7 +39,7 @@ bool Lead12_Test(void)
 		printf("\n12 Lead ECG Test Started");
 
 		Is_time_displayed = TRUE;
-		API_DISP_Toggle_Date_Time();
+		//API_DISP_Toggle_Date_Time();
 
 		if((Selected_PID_type == VALID_PID) || (Selected_PID_type == GUEST_PID))
 		{
