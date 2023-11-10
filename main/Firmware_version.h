@@ -8,8 +8,8 @@
 *****************************************************************************************/
 
 
-#define FIRMWARE_VER      		"APP:2023-11-DM"
-#define FIRMWARE_VERSION  		"2023-11-DM"
+#define FIRMWARE_VER      		"APP:2023-10-Demo"
+#define FIRMWARE_VERSION  		"2023-10-Demo"
 #define FW_VER_SIZE				10
 
 #endif

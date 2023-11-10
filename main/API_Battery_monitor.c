@@ -47,7 +47,7 @@ float API_ADC_Read_Battery_Voltage(void)
 				adc_raw_data = adc1_get_raw((adc1_channel_t)channel);
 
 				temp = adc_raw_data*3.6807/4095;
-				battery_vol += temp*4 + 0.2;
+				battery_vol += temp*4 + 0.35;
 				for(int i=0;i<5000;i++){}// Software delay
 			}
 

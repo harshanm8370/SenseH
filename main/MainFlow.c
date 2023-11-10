@@ -30,22 +30,39 @@
 #include "Hardware.h"
 #include "esp_sleep.h"
 #include "API_utility.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 static void Interfaces_init(void);
 void POR_Init(void);
 void Manage_Device_Sleep(void);
-
+bool flag = 1,ota_flag=1;
+void API_display_backlight_on(void);
 void TestNbfsTests_PerBatteryFull(void);
 void ExecuteComplianceSequence(void);
 void HandleDataSync(void);
-
+void API_display_backlight_off(void);
 void TestFlashStorage(void);
+void Led_Blink(void *pvParameters);
+
+
+TaskHandle_t myTaskHandle = NULL;
+
+
 
  void Application_Run(void)
 {
+	 ota_flag = 0;
+	// flag = 1;
 	static SELECTED_TEST_t state;
+	 xTaskCreate(Led_Blink, "Led_Blink", 4096, NULL, 5, &myTaskHandle);
 
 	printf("\nSystem turning on..");
+
+
+	//xTaskCreate(myTask, "My Task", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
+	// Start the scheduler
+   // vTaskStartScheduler();
 
 	/*API_IO_Exp_PowerOnReset_Configuration();
 
@@ -112,25 +129,55 @@ void TestFlashStorage(void);
 	/** Testing */
 	/***************************************************/
 
-	Selected_PID_type = VALID_PID;
+	//Selected_PID_type = VALID_PID;
 
 	/***************************************************/
 		char datetime[18]; // Assuming you want to store the result in a char array
 	    const char *customFormat = "%Y-%m-%d %H:%M:%S"; // Example date-time format
+	 //   while(1)
+	  //  {
+	  //      API_RUN_TEMPERATURE_TEST();
+	    //}
+	   // API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
+	    //API_IO_Exp2_P0_write_pin(BAT_CHARGE, LOW);
+/* while(1)
+ {
+	 Detect_low_battery_display_notification();
+	 API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
+	 API_IO_Exp1_P0_write_pin(BAT_CHARGE,LOW);
 
+ }*/
+	 /*   uint8_t btn_press=0;
+	    while(1){
+	    	btn_press = API_Push_Btn_Get_Buttton_Press();
+	    	//if( API_Push_Btn_Get_Buttton_Press())
+	    	//{
+	    	if(btn_press)
+	    	printf("\n%d",btn_press);
+	    	//is_wakeup_button_pressd = false;
+	    	//}
+	    }*/
+	    API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
+	    API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
+	  //  uint16_t result[5] ={0};
+
+	    //API_Disp_Quick_Test_Result(result);
+	    //Delay_ms(15000);
 
 	while(1)
 	{
+		//ota_flag = 1;
 		if(flash_data.sys_mode == DEVICE_ACTIVE_MODE)
 		{
 			    if(Detect_low_battery_display_notification()==false)
 				{
-			    	  //state = API_Disp_Select_PID_Screen();
-			    	  state = VIEW_SCREEN;
+			    	  state = API_Disp_Select_PID_Screen();
+			    	  //state = VIEW_SCREEN;
 
 			    	    if(state == VIEW_SCREEN)
 			    	    {
 			    	    	state = API_Display_View_Screen();
+			    	    	//ota_flag = 1;
 			    	    	//API_RTC_Update_Date_Time(8, 8, 2023, 16, 24, 17);
 							API_RTC_Get_Date_Time(datetime, customFormat);
 							printf("Formatted Date and Time: %s\n", datetime);
@@ -159,8 +206,10 @@ void TestFlashStorage(void);
 						switch(state)
 						{
 							case QUICK_VITALS:{
+
 								Is_Test_In_Progress = true;
 								Run_Quick_Vital();
+								//ota_flag = 0;
 								Is_Test_In_Progress = false;
 								break;
 							}
@@ -190,6 +239,7 @@ void TestFlashStorage(void);
 
 						if (is_firmware_data_available())
 						{
+							ota_flag = 1;
 							API_TIMER_Kill_Timer(USER_INACTIVE_TIMEOUT);
 							Firmware_upgrade();
 						}
@@ -215,6 +265,52 @@ void TestFlashStorage(void);
 	}
 
 }
+
+
+
+
+
+ void API_display_backlight_on(void)
+ {
+ 	API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,HIGH);
+ 	API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
+ }
+ void API_display_backlight_off(void)
+ {
+ 	API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
+ 	API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,LOW);
+ }
+
+
+
+
+ void Led_Blink(void *pvParameters) {
+     while (1) {
+     	//printf("\n in task function");
+     	vTaskDelay(pdMS_TO_TICKS(2000/portTICK_PERIOD_MS));
+     	if(ota_flag)
+     	{
+         // Your task code here
+        // vTaskDelay(pdMS_TO_TICKS(1000/portTICK_PERIOD_MS)); // Delay the task for 1000 milliseconds
+     		// vTaskDelay(pdMS_TO_TICKS(2000/portTICK_PERIOD_MS)); // Delay the task for 1000 milliseconds
+            if(flag)
+            {
+         	   API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
+         	   flag = !flag;
+         	   //vTaskDelay(pdMS_TO_TICKS(1000/portTICK_PERIOD_MS)); // Delay the task for 1000 milliseconds
+            }
+            else
+            {
+ 				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
+ 				flag = !flag;
+ 				//vTaskDelay(pdMS_TO_TICKS(1000/portTICK_PERIOD_MS)); // Delay the task for 1000 milliseconds
+            }
+     	}
+     }
+     vTaskDelete(NULL);
+
+ }
+
 
 static void Interfaces_init(void)
 {
@@ -361,6 +457,7 @@ void ExecuteComplianceSequence(void)
 void HandleDataSync(void)
 {
 	uint8_t btn_press;
+	uint32_t flag=0,Dflag=20000;
 
 	API_DISP_Display_Screen(DISP_DATA_SYNC_IN_PROGRESS);
 	API_Disp_Display_Exit_Bottom_Section();
@@ -369,11 +466,27 @@ void HandleDataSync(void)
 	{
 		while(1)
 		{
+			if(Dflag-- > 1)
+			{
+				API_display_backlight_off();
+			}
+			ota_flag = 1;
+			if(flag++ < 250)
+			{
+			     API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
+			}
+			else if(flag > 250)
+			{
+				if(flag == 500)
+				flag = 0;
+				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
+			}
 			btn_press = API_Push_Btn_Get_Buttton_Press();
 
 			if(API_TIMER_Get_Timeout_Flag(DATA_SYNC_TIMEOUT)) // call get_time_out function
 			{
 				BT_Sync_Timeout_Init_State();
+				API_display_backlight_on();
 				API_DISP_Display_Screen(DISP_DATA_SYNC_FAIL);
 				Delay_ms(2000);
 				 EnterSleepMode(SYSTEM_DEEP_SLEEP);
@@ -382,13 +495,16 @@ void HandleDataSync(void)
 			if(IsValidRecordsInFlash == false)// No records in flash
 			{
 				API_DISP_Display_Screen(DISP_DATA_SYNC_COMPLETED);
-				Delay_ms(2000);
+				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
+			    Delay_ms(5000);
+				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
 				break;
 			}
 
 			if((btn_press == 1) || ((btn_press == 2)))
 			{
 				API_DISP_Display_Screen(DISP_DATA_SYNC_FAIL);
+				API_display_backlight_on();
 				Delay_ms(2000);
 				break;
 			}
@@ -396,6 +512,7 @@ void HandleDataSync(void)
 	}
 	else
 	{
+		API_display_backlight_on();
 		API_DISP_Display_Screen(DISP_DATA_SYNC_FAIL);
 		Delay_ms(2000);
 		EnterSleepMode(SYSTEM_DEEP_SLEEP);
