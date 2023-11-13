@@ -189,6 +189,7 @@ if(!vlead)
 	}
 }
 
+
 	printf("\n V-%ld ECG Data capturing", vlead+1);
 	for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 	{
