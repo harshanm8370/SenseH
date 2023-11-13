@@ -232,7 +232,8 @@ typedef enum
 	DISP_12LEAD_CABLE_NOT_CONNECTED_PROPERLY,
 	DISP_QT_ECG_L1_TEST_IN_PROGRESS,
 	DISP_QT_ECG_L2_TEST_IN_PROGRESS,
-	DISP_QT_PPG_TEST_IN_PROGRESS
+	DISP_QT_PPG_TEST_IN_PROGRESS,
+	DISP_QT_BP_TEST_IN_PROGRESS
 
 }DISP_QUICK_TEST_SCREENS_t;
 
@@ -293,6 +294,7 @@ void API_DISP_Update_Battery_Status(BATTERY_PONINTS_t points,bool charging, bool
 
 void API_DISP_Error_Code(uint32_t Error);
 void API_Disp_Quick_Test_Icon(void);
+void API_Disp_Exit_Text(void);
 bool API_Check_USB_Charger_Connection_Display_Notification(void);
 void API_Disp_BT_Icon(uint16_t icon_color);
 void API_Disp_Lead_Count(uint8_t lead);

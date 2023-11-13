@@ -88,6 +88,7 @@ static char mobile_number[10] = {'\0'};
 static bool is_arrived_timesynq_req = FALSE;
 static bool is_OTA_request_arrived  = FALSE;
 uint8_t BT_flash_buffer[DATA_BUFFER3_LENGTH];
+//for testing
 /************************strctures*******************************/
 
 bool FW_complete_data_received = false;
@@ -408,7 +409,6 @@ bool bt_send_single_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 		switch (bt_response_state) {
 			case INIT_STATE:
 				status = API_Flash_Read_Record(vital, BT_flash_buffer);
-				//If no data in the flash than we send ack as data not available
 				if(status == NO_RECORDS_IN_FLASH) {
 					bt_send_ack_or_nack_response(NACK_DATA_NOT_AVAILABLE);
 					bt_response_session_complete = TRUE;
@@ -483,7 +483,6 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 			case INIT_STATE:
 
 				BP_Length_tx = 0;
-
 				total_length_to_send = (REC_HEADER_LEN + BT_PACKET_FIELD_LENGTH);
 				status = API_Flash_Read_Record(vital, BT_flash_buffer);
 				/*this block will send DATA_NOT_AVAILABLE nack if no record found */
@@ -494,6 +493,7 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 				}
 				Load_record_header_to_buffer();
 				bt_response_state = WAIT_ACK_SOR_STATE;
+				skip_count = 0;
 				break;
 
 				//to send the continuation of the record
@@ -504,8 +504,8 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 				count = (one_record_len - REC_HEADER_LEN)/BT_RAW_DATA_LENGTH;
 				remainder = (one_record_len - REC_HEADER_LEN)%BT_RAW_DATA_LENGTH;
 				printf("count: %d, remainder: %ld\n", count, remainder);
-				if(count){
-					Load_Raw_Data_To_Buffer(COR);	//load the raw data to the buffer
+               if(count){
+					Load_Raw_Data_To_Buffer(SOR);	//load the raw data to the buffer
 					skip_count ++;					//increment the skip_counter to point to next 240 bytes
 					count --;						//after sending every packet we decrement the count
 					printf("2. %s --> Length: %ld\n", __func__, total_length_to_send);
@@ -631,9 +631,9 @@ void Load_Raw_Data_To_Buffer(uint8_t command)
 {
 	uint16_t length = BT_RAW_DATA_LENGTH + EOS_SIZE + CHKSUM_SIZE;
 	uint16_t crc_value = 0;
-
 	bt_tx_buff[0] = SOS;
 	bt_tx_buff[1] = command;
+
 	MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE), &length, LENGTH_SIZE); //2 is to skip those many bytes (SOS, COR each one byte)
 	MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE),(((uint8_t*)(BT_flash_buffer)) + REC_HEADER_LEN + (BT_RAW_DATA_LENGTH * skip_count)), BT_RAW_DATA_LENGTH);
 	bt_tx_buff[BT_RAW_DATA_LENGTH + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE)] = EOS; //fill EOS after raw data(240)and 4 bytes SOS, COR,length 2 bytes

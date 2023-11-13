@@ -126,6 +126,7 @@ uint8_t TestStateCounter = 0;
 
 #define ENABLE_3_WIRE_DISP     true
 #define DONT_DISPLAY           0
+//#define MARKETING_REQUIREMENT 1
 
 static void send_d_or_c_bit(bool d_or_c);
 
@@ -149,6 +150,7 @@ static void api_disp_display_screen1_PIDS(void);
 
 static void api_disp_display_time(uint8_t hour, uint8_t minute);
 static void api_disp_display_date(uint8_t day,char * month);
+void API_Disp_Exit_Text(void);
 
 static void api_disp_display_icon(const uint8_t *ImgPointer, uint8_t left_offset, uint8_t top_offset, uint16_t IconColor, uint16_t BGColor);
 
@@ -688,6 +690,8 @@ void API_DISP_Clear_Full_Screen_3_Wire(uint16_t color)
 	int i;
 //	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
 	gpio_set_level(ECG_CSn_VCS, 1);
+	API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
+	API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
 
 	API_IO_Exp1_P1_write_pin(DISPLAY_CSN, LOW);
 	api_disp_write_com(SET_COLUMN_ADDRESS); // Column address setting
@@ -702,6 +706,8 @@ api_disp_write_data(0x7f);         // end address 127
 	api_disp_write_data(0x00);         // end address 0
 	api_disp_write_data(0xA0);           // end address 160
 	api_disp_write_com(WRITE_MEMORY_START); //command for storing the pixel data in the display_RAM
+	//API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
+	//API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
 
 	for(i = 0; i < DISP_TOTAL_PIXELS; i++)//Transmit all 128*160 pixel data ,per pixel will have 16bit
 	{
@@ -2499,7 +2505,7 @@ uint8_t left_offset = 0;
 
   		if(API_TIMER_Get_Timeout_Flag(DATE_TIME_FLIP_TIME) == TRUE) // call get_time_out function
   		{
-			API_DISP_Toggle_Date_Time();
+			//API_DISP_Toggle_Date_Time();
 			API_TIMER_Register_Timer(DATE_TIME_FLIP_TIME);
   		}
 
@@ -2824,6 +2830,20 @@ uint8_t left_offset = 0;
 
 				break;
 
+  		case DISP_QT_BP_TEST_IN_PROGRESS :
+
+  				mid_text4.text_starting_addr = " BP Test In ";
+  				mid_text5.text_starting_addr = "  Progress  ";
+  				mid_text6.text_starting_addr = "            ";
+  				bottom_icon.icon_status		 = FALSE;
+
+  				btm_icon.icon_status        = FALSE;
+  				btm_text.text_status        = display;
+  				btm_text.text_starting_addr = "    Exit    ";
+  				btm_text.color              = WHITE;
+
+  				break;
+
   		case DISP_QT_PLACE_FINGER_PROPERLY :
 
   			mid_text4.text_starting_addr = "   Place    ";
@@ -2870,7 +2890,7 @@ uint8_t left_offset = 0;
   	}
 
   	API_Disp_Display_Text(mid_text1,mid_text2,mid_text3,mid_text4,mid_text5,mid_text6,mid_text7);
-  //	API_Display_Bottom_Section(btm_icon, btm_text);
+  	//API_Display_Bottom_Section(btm_icon, btm_text);
   	if(disp_qt_screen == DISP_QT_SCREEN)
   	{
   		API_Clear_Display (DISP_BOTTOM_SEC ,BLUE);
@@ -3069,6 +3089,28 @@ uint8_t left_offset = 0;
 
 
   }
+
+
+
+
+  void API_Disp_Exit_Text(void)
+    {
+	  struct DISPLAY_TEXT bottom_text;
+	  struct DISPLAY_ICON bottom_icon;
+
+	  bottom_icon.icon_starting_addr = STARTIcon1;
+	  bottom_icon.color              = BLUE;
+	  bottom_icon.icon_status        = OFF;
+
+	  bottom_text.text_starting_addr    = "    EXIT    ";
+	  bottom_text.color                 = WHITE;
+	  bottom_text.text_status           = display;
+	  API_Display_Bottom_Section(bottom_icon,bottom_text);
+
+    }
+
+
+
 
   void API_Disp_Quick_Test_Icon(void)
   {
@@ -3497,9 +3539,9 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
 	text2.text_status = display;
 
-  	text4.color = BLUE;
-  	text4.text_starting_addr = " Enter      ";
-  	text4.text_status = 0;
+  	//text4.color = BLUE;
+  	//text4.text_starting_addr = " Enter      ";
+  	//text4.text_status = 0;
 
 	text5.color = BLUE;
   	text5.text_starting_addr = " Exit       ";
@@ -3507,6 +3549,7 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
 
 	text3.text_status = 0;
+	text4.text_status = 0;
   	text6.text_status = 0;
   	text7.text_status = 0;
 	if(Selected_PID_type != VALID_PID)
@@ -3602,7 +3645,7 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
   		if(API_TIMER_Get_Timeout_Flag(DATE_TIME_FLIP_TIME) == TRUE) // call get_time_out function
   		{
-			API_DISP_Toggle_Date_Time();
+			//API_DISP_Toggle_Date_Time();
 			API_TIMER_Register_Timer(DATE_TIME_FLIP_TIME);
   		}
 
@@ -3655,6 +3698,10 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 			{
 				printf("%d",pidArray[i]);
 			}
+
+			//count = 2;
+			Delay_ms(5000);
+			return VIEW_SCREEN;
 
   		}
   	}

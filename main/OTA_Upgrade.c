@@ -26,6 +26,8 @@
 #include <stdbool.h>
 #include "API_timer.h"
 
+extern bool ota_flag;
+
 #define BUFFSIZE 			1024
 #define HASH_LEN 			32 /* SHA-256 digest length */
 #define TIME_OUT_DELAY		60   //wait delay in sec
@@ -232,15 +234,22 @@ bool start_firmware_Upgrade(void)
 bool Firmware_upgrade (void)
 {
 	API_DISP_Display_Screen(DISP_DEVICE_UPGRADING);
+	Delay_ms(5000);
+	API_display_backlight_off();
 
 	if(start_firmware_Upgrade())
 	{
+		API_display_backlight_on();
 		API_DISP_Display_Screen(DISP_DEVICE_UPGRADED);
+		ota_flag = 0;
+		API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
 	}
 
 	else
 	{
+		API_display_backlight_on();
 		API_DISP_Display_Screen(DISP_DEVICE_UPGRADATION_FAIL);
+		ota_flag = 0;
 	}
 
 	Delay_ms(5000);
