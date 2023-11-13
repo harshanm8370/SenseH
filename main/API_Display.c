@@ -690,6 +690,8 @@ void API_DISP_Clear_Full_Screen_3_Wire(uint16_t color)
 	int i;
 //	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
 	gpio_set_level(ECG_CSn_VCS, 1);
+	API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
+	API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
 
 	API_IO_Exp1_P1_write_pin(DISPLAY_CSN, LOW);
 	api_disp_write_com(SET_COLUMN_ADDRESS); // Column address setting
@@ -704,6 +706,8 @@ api_disp_write_data(0x7f);         // end address 127
 	api_disp_write_data(0x00);         // end address 0
 	api_disp_write_data(0xA0);           // end address 160
 	api_disp_write_com(WRITE_MEMORY_START); //command for storing the pixel data in the display_RAM
+	//API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
+	//API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
 
 	for(i = 0; i < DISP_TOTAL_PIXELS; i++)//Transmit all 128*160 pixel data ,per pixel will have 16bit
 	{

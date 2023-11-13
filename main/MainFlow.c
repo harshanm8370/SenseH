@@ -37,11 +37,9 @@ static void Interfaces_init(void);
 void POR_Init(void);
 void Manage_Device_Sleep(void);
 bool flag = 1,ota_flag=1;
-void API_display_backlight_on(void);
 void TestNbfsTests_PerBatteryFull(void);
 void ExecuteComplianceSequence(void);
 void HandleDataSync(void);
-void API_display_backlight_off(void);
 void TestFlashStorage(void);
 void Led_Blink(void *pvParameters);
 
@@ -90,6 +88,8 @@ TaskHandle_t myTaskHandle = NULL;
 	API_TIMER_Run_1MS_Timer();
 
 	API_IO_Exp_init();
+	//API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
+    //API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
 
 #if 0
     while(1)
@@ -129,7 +129,7 @@ TaskHandle_t myTaskHandle = NULL;
 	/** Testing */
 	/***************************************************/
 
-	//Selected_PID_type = VALID_PID;
+	Selected_PID_type = VALID_PID;
 
 	/***************************************************/
 		char datetime[18]; // Assuming you want to store the result in a char array
@@ -140,13 +140,10 @@ TaskHandle_t myTaskHandle = NULL;
 	    //}
 	   // API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
 	    //API_IO_Exp2_P0_write_pin(BAT_CHARGE, LOW);
-/* while(1)
- {
-	 Detect_low_battery_display_notification();
-	 API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
-	 API_IO_Exp1_P0_write_pin(BAT_CHARGE,LOW);
-
- }*/
+     /* while(1)
+     {
+	     API_Check_USB_Charger_Connection_Display_Notification();
+     }*/
 	 /*   uint8_t btn_press=0;
 	    while(1){
 	    	btn_press = API_Push_Btn_Get_Buttton_Press();
@@ -157,8 +154,8 @@ TaskHandle_t myTaskHandle = NULL;
 	    	//is_wakeup_button_pressd = false;
 	    	//}
 	    }*/
-	    API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
-	    API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
+	  //  API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
+	   // API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
 	  //  uint16_t result[5] ={0};
 
 	    //API_Disp_Quick_Test_Result(result);
@@ -171,8 +168,8 @@ TaskHandle_t myTaskHandle = NULL;
 		{
 			    if(Detect_low_battery_display_notification()==false)
 				{
-			    	  state = API_Disp_Select_PID_Screen();
-			    	  //state = VIEW_SCREEN;
+			    	  //state = API_Disp_Select_PID_Screen();
+			    	  state = VIEW_SCREEN;
 
 			    	    if(state == VIEW_SCREEN)
 			    	    {
@@ -239,6 +236,7 @@ TaskHandle_t myTaskHandle = NULL;
 
 						if (is_firmware_data_available())
 						{
+							//API_display_backlight_on();
 							ota_flag = 1;
 							API_TIMER_Kill_Timer(USER_INACTIVE_TIMEOUT);
 							Firmware_upgrade();
@@ -466,11 +464,11 @@ void HandleDataSync(void)
 	{
 		while(1)
 		{
-			if(Dflag-- > 1)
+			if(Dflag-- <= 1)
 			{
 				API_display_backlight_off();
 			}
-			ota_flag = 1;
+			//ota_flag = 1;
 			if(flag++ < 250)
 			{
 			     API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
@@ -494,6 +492,7 @@ void HandleDataSync(void)
 
 			if(IsValidRecordsInFlash == false)// No records in flash
 			{
+				API_display_backlight_on();
 				API_DISP_Display_Screen(DISP_DATA_SYNC_COMPLETED);
 				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
 			    Delay_ms(5000);
@@ -503,8 +502,8 @@ void HandleDataSync(void)
 
 			if((btn_press == 1) || ((btn_press == 2)))
 			{
-				API_DISP_Display_Screen(DISP_DATA_SYNC_FAIL);
 				API_display_backlight_on();
+				API_DISP_Display_Screen(DISP_DATA_SYNC_FAIL);
 				Delay_ms(2000);
 				break;
 			}

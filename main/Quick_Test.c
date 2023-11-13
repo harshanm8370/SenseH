@@ -426,7 +426,6 @@ void Dummy_Capture(uint16_t total_samples)
 	API_IO_Exp1_P1_write_pin(DISPLAY_CSN,HIGH);
 
 	API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
-
 	if(captureType == CAPTURE_ECG_L1)
 	{
 		API_ECG_Start_Conversion();
@@ -446,6 +445,7 @@ void Dummy_Capture(uint16_t total_samples)
 			{
 				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
 			}
+		API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
 
 		for(int i=0;i<600;i++)
 					{
@@ -548,6 +548,7 @@ void Dummy_Capture(uint16_t total_samples)
 			}
 			status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
 		}while(ppg_count < ((ECG_IN_SECONDS*SET_ODR)));
+		API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
 
 		Print_time("\nSPO2 END");
 		ppg_count = 0;
@@ -590,6 +591,7 @@ void Dummy_Capture(uint16_t total_samples)
 			ECG_Drdy_count = 0;
 			API_ECG_Stop_Conversion();
 			API_ECG_Start_Conversion();
+			API_Disp_Exit_Text();
 			if(enableDummyCapture)
 			{
 				for(raw_data_index=0; raw_data_index<ECG_DUMMY_CAPTURES; raw_data_index++)// ~3sec dummy capture
@@ -614,6 +616,7 @@ void Dummy_Capture(uint16_t total_samples)
 				}
 				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
 			}
+			API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
 
 			//printf("\n total data ready interrupts = %d\n", ECG_Drdy_count);
 			ECG_Drdy_count = 0;
@@ -725,6 +728,7 @@ void Dummy_Capture(uint16_t total_samples)
 //				ppg_index_cnt = 0;
 			}
 		}
+		API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
 		ppg_index_cnt = 0;
 		Print_time("\nBP END");
 

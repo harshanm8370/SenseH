@@ -77,5 +77,7 @@ void MemCpy(void *dest, void *src, uint32_t size);
 uint16_t Get_strlen(const char* source);
 uint32_t Length_padding_multiple_of_four(uint32_t len);
 void Hex_to_Float(uint8_t hex_val[], float* float_val);
+void API_display_backlight_off(void);
+void API_display_backlight_on(void);
 
 #endif /* API_API_UTILITY_H_ */

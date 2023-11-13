@@ -706,16 +706,27 @@ void API_IO_Exp_Reset(void)
 
 bool IsUSB_Charger_Connected(void)
 {
+
 	bool is_charger_connected = false;
 
-	uint8_t read = 0;
+	uint8_t read = 0,count=0;
 
 	API_IO_Exp_Select(IO_EXPANDER_2);
 
-	 API_IO_Exp_Read_reg(IO_EXP2_SLAVE_ADDR,0x00,&read);
+	 //API_IO_Exp_Read_reg(IO_EXP2_SLAVE_ADDR,0x00,&read);
+	 for(int i =0;i<10;i++)
+	 {
+		 API_IO_Exp_Read_reg(IO_EXP2_SLAVE_ADDR,0x00,&read);
+		 if(read & 0x02) // Detect pin 2
+		 {
+			 count++;
+			//is_charger_connected = true;
+			 //printf("\nUSB Charger connected");
+		 }
+	 }
 
 
-	 if(read & 0x02) // Detect pin 2
+	 if(count > 5) // Detect pin 2
 	 {
 		 is_charger_connected = true;
 		 printf("\nUSB Charger connected");
