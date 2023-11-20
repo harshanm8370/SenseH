@@ -42,7 +42,7 @@ void ExecuteComplianceSequence(void);
 void HandleDataSync(void);
 void TestFlashStorage(void);
 void Led_Blink(void *pvParameters);
-
+extern BT_STATUS Is_Device_Paired;
 
 TaskHandle_t myTaskHandle = NULL;
 
@@ -154,8 +154,8 @@ TaskHandle_t myTaskHandle = NULL;
 	    	//is_wakeup_button_pressd = false;
 	    	//}
 	    }*/
-	  //  API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
-	   // API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
+	      API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
+	      API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
 	  //  uint16_t result[5] ={0};
 
 	    //API_Disp_Quick_Test_Result(result);
@@ -458,7 +458,7 @@ void HandleDataSync(void)
 	uint32_t flag=0,Dflag=20000;
 
 	API_DISP_Display_Screen(DISP_DATA_SYNC_IN_PROGRESS);
-	API_Disp_Display_Exit_Bottom_Section();
+	//API_Disp_Display_Exit_Bottom_Section();
 
 	if(Detect_low_battery_display_notification()==false)
 	{
@@ -490,7 +490,16 @@ void HandleDataSync(void)
 				 EnterSleepMode(SYSTEM_DEEP_SLEEP);
 			}
 
-			if(IsValidRecordsInFlash == false)// No records in flash
+			if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
+			 {
+				API_display_backlight_on();
+				API_DISP_Display_Screen(DISP_DATA_SYNC_FAIL);
+				break;
+			  	//API_Disp_BT_Icon(GREEN);
+			  	//Is_Device_Paired = DEFAULT;// to avoid Redisplaying the same thing again
+			 }
+
+			if(IsValidRecordsInFlash == FALSE)// No records in flash
 			{
 				API_display_backlight_on();
 				API_DISP_Display_Screen(DISP_DATA_SYNC_COMPLETED);
@@ -502,10 +511,12 @@ void HandleDataSync(void)
 
 			if((btn_press == 1) || ((btn_press == 2)))
 			{
+				API_DISP_Display_Screen(DISP_DATA_SYNC_IN_PROGRESS);
+				Delay_ms(200);
 				API_display_backlight_on();
-				API_DISP_Display_Screen(DISP_DATA_SYNC_FAIL);
 				Delay_ms(2000);
-				break;
+				API_display_backlight_off();
+				//break;
 			}
 		}
 	}
