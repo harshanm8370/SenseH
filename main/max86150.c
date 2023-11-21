@@ -308,9 +308,9 @@ void Max86150_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledM
 
 	//writeRegister8(MAX86150_ADDR,0x0E,0xDB);
 	//writeRegister8(MAX86150_ADDR,0x0E,0xDB);
-	setRANGE(0x05);  //set range of vled 50ma to 100ma
-	setPulseAmplitudeRed(0xE5); //90 ma
-	setPulseAmplitudeIR(0xE5); //90ma
+	//setRANGE(0x05);  //set range of vled 50ma to 100ma
+	setPulseAmplitudeRed(0xFF); //90 ma
+	setPulseAmplitudeIR(0xFF); //90ma
 
 	//setPulseAmplitudeGreen(powerLevel);
 	//setPulseAmplitudeProximity(powerLevel);

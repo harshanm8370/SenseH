@@ -77,7 +77,10 @@ bool Lead12_Test(void)
 	//					Lead12_Data_Capture();
 						for(vlead=0;vlead<=5;vlead++)
 						{
-							Lead12_Data_Capture_new(vlead);
+							if(!(Lead12_Data_Capture_new(vlead)))
+							{
+								return 0;
+							}
 							if(!vlead)
 							{
 							
@@ -151,7 +154,7 @@ bool Lead12_Data_Capture_new(uint32_t vlead)
 
 	Select_Vlead(vlead);
 	API_IO_Exp1_P1_write_pin(DC_LEAD_OFF_V,HIGH);
-	API_Disp_Lead_Count(6);
+	API_Disp_Lead_Count(6+vlead);
 
 	MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff)); // In this block making use of ECG_Lead1_buff to capture I lead data.
 	MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff)); // In this block making use of ECG_Lead2_buff to capture II lead data.
@@ -161,12 +164,17 @@ bool Lead12_Data_Capture_new(uint32_t vlead)
 	{
 		API_ECG_Start_Conversion();
 		printf("\n Lead I Lead II V-%ld ECG Data capturing", vlead+1);
+		API_Disp_Exit_Text();
 		for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
 		{
+			if(API_Push_Btn_Get_Buttton_Press())
+			{
+				return 0;
+			}
 			API_ECG_Capture_Samples_3Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index, ECG_Lead3_buff+raw_data_index);
 
 		}
-
+		API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
 		API_ECG_Stop_Conversion();
 	}
 	else

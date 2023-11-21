@@ -362,6 +362,11 @@ void BT_process_requests(void)
 				is_OTA_request_arrived = FALSE;
 				//BT_ongoing_session = FALSE;
 			} //ACK response will be sent after reading firmware data in case of recevied packet is good
+			else if(ret == BLUETOOTH_DISCONNECTED)
+			{
+				FW_complete_data_received = FALSE;
+				is_OTA_request_arrived = FALSE;
+			}
 			break;
 
 		default:
@@ -761,6 +766,13 @@ int BTL_validate_and_copy2buf(uint8_t * fw_buff)
 	FW_buff_index += bt_total_received_bytes - 7;
 	printf ("bt_total_received_bytes: %d\n", bt_total_received_bytes);
 	while (validation_completed != TRUE) { 
+
+		if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
+	    {
+			API_display_backlight_on();
+			API_DISP_Display_Screen(BLUETOOTH_DISCONNECTED);
+			return BLUETOOTH_DISCONNECTED;
+		}
 		if(fw_buff[index1] == 0){ // indicates that end the record arrived
 			FW_complete_data_received = true;
 			validation_completed = TRUE;

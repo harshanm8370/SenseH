@@ -1740,6 +1740,14 @@ return 1;
  				bottom_icon.icon_starting_addr 	= FALSE ;
  				break;
  		}
+ 		case BLUETOOTH_DISCONNECTED:
+		{
+ 			mid_text1.text_starting_addr = "  Bluetooth ";
+ 			mid_text2.text_starting_addr = "disconnected";
+ 			mid_text3.text_status = FALSE;
+ 			break;
+
+		}
 
 
  		default :break;

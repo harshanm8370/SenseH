@@ -2000,7 +2000,8 @@ bool Run_Multi_Vital(void)
 	//if(Lead12_LeadOff_Detect() == FALSE)
 	if(1)
 	{
-		printf("lead off not detected\n");
+		Run_Quick_Vital();
+		//printf("lead off not detected\n");
 		Lead12_Test(); // This is the core function to capture 12Lead ECG
 	}
 	else

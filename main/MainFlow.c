@@ -129,7 +129,7 @@ TaskHandle_t myTaskHandle = NULL;
 	/** Testing */
 	/***************************************************/
 
-	Selected_PID_type = VALID_PID;
+	//Selected_PID_type = VALID_PID;
 
 	/***************************************************/
 		char datetime[18]; // Assuming you want to store the result in a char array
@@ -168,8 +168,8 @@ TaskHandle_t myTaskHandle = NULL;
 		{
 			    if(Detect_low_battery_display_notification()==false)
 				{
-			    	  //state = API_Disp_Select_PID_Screen();
-			    	  state = VIEW_SCREEN;
+			    	  state = API_Disp_Select_PID_Screen();
+			    	  //state = VIEW_SCREEN;
 
 			    	    if(state == VIEW_SCREEN)
 			    	    {
@@ -183,7 +183,7 @@ TaskHandle_t myTaskHandle = NULL;
 						if(state == DATA_SYNC)
 						{
 							HandleDataSync();
-							state = NO_TEST;
+							state = VIEW_SCREEN;
 						}
 
 						 if((state == QUICK_VITALS) || (state == MULTI_VITALS))
@@ -455,22 +455,25 @@ void ExecuteComplianceSequence(void)
 void HandleDataSync(void)
 {
 	uint8_t btn_press;
-	uint32_t flag=0,Dflag=20000;
+	uint16_t flag=0;
+	//int Dflag=20000;
 
 	API_DISP_Display_Screen(DISP_DATA_SYNC_IN_PROGRESS);
 	//API_Disp_Display_Exit_Bottom_Section();
-
+	//Delay_ms(1000);
+	//API_display_backlight_off();
 	if(Detect_low_battery_display_notification()==false)
 	{
 		while(1)
 		{
-			if(Dflag-- <= 1)
+			/*if(Dflag-- <= 1)
 			{
 				API_display_backlight_off();
-			}
+			}*/
 			//ota_flag = 1;
 			if(flag++ < 250)
 			{
+				API_display_backlight_off();
 			     API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
 			}
 			else if(flag > 250)
@@ -481,19 +484,21 @@ void HandleDataSync(void)
 			}
 			btn_press = API_Push_Btn_Get_Buttton_Press();
 
-			if(API_TIMER_Get_Timeout_Flag(DATA_SYNC_TIMEOUT)) // call get_time_out function
+			/*if(API_TIMER_Get_Timeout_Flag(DATA_SYNC_TIMEOUT)) // call get_time_out function
 			{
 				BT_Sync_Timeout_Init_State();
 				API_display_backlight_on();
 				API_DISP_Display_Screen(DISP_DATA_SYNC_FAIL);
 				Delay_ms(2000);
 				 EnterSleepMode(SYSTEM_DEEP_SLEEP);
-			}
+			}*/
 
 			if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
 			 {
 				API_display_backlight_on();
-				API_DISP_Display_Screen(DISP_DATA_SYNC_FAIL);
+				API_DISP_Display_Screen(BLUETOOTH_DISCONNECTED);
+				Delay_ms(1000);
+				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
 				break;
 			  	//API_Disp_BT_Icon(GREEN);
 			  	//Is_Device_Paired = DEFAULT;// to avoid Redisplaying the same thing again
