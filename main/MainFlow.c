@@ -43,6 +43,9 @@ void HandleDataSync(void);
 void TestFlashStorage(void);
 void Led_Blink(void *pvParameters);
 extern BT_STATUS Is_Device_Paired;
+bool qv_flag,mv_flag;
+bool BLE_DS;
+#define test 0
 
 TaskHandle_t myTaskHandle = NULL;
 
@@ -128,32 +131,14 @@ TaskHandle_t myTaskHandle = NULL;
 
 	/** Testing */
 	/***************************************************/
-
-	//Selected_PID_type = VALID_PID;
+#if test
+	Selected_PID_type = VALID_PID;
+#endif
 
 	/***************************************************/
 		char datetime[18]; // Assuming you want to store the result in a char array
 	    const char *customFormat = "%Y-%m-%d %H:%M:%S"; // Example date-time format
-	 //   while(1)
-	  //  {
-	  //      API_RUN_TEMPERATURE_TEST();
-	    //}
-	   // API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
-	    //API_IO_Exp2_P0_write_pin(BAT_CHARGE, LOW);
-     /* while(1)
-     {
-	     API_Check_USB_Charger_Connection_Display_Notification();
-     }*/
-	 /*   uint8_t btn_press=0;
-	    while(1){
-	    	btn_press = API_Push_Btn_Get_Buttton_Press();
-	    	//if( API_Push_Btn_Get_Buttton_Press())
-	    	//{
-	    	if(btn_press)
-	    	printf("\n%d",btn_press);
-	    	//is_wakeup_button_pressd = false;
-	    	//}
-	    }*/
+
 	      API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
 	      API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
 	  //  uint16_t result[5] ={0};
@@ -168,9 +153,11 @@ TaskHandle_t myTaskHandle = NULL;
 		{
 			    if(Detect_low_battery_display_notification()==false)
 				{
-			    	  state = API_Disp_Select_PID_Screen();
-			    	  //state = VIEW_SCREEN;
-
+#if test
+			    	 state = VIEW_SCREEN;
+#else
+			    	 state = API_Disp_Select_PID_Screen();
+#endif
 			    	    if(state == VIEW_SCREEN)
 			    	    {
 			    	    	state = API_Display_View_Screen();
@@ -180,9 +167,16 @@ TaskHandle_t myTaskHandle = NULL;
 							printf("Formatted Date and Time: %s\n", datetime);
 			    	    }
 
+
+
 						if(state == DATA_SYNC)
 						{
 							HandleDataSync();
+							if(BLE_DS)
+							{
+								Selected_PID_type = 0;
+								BLE_DS = 0;
+							}
 							state = VIEW_SCREEN;
 						}
 
@@ -199,13 +193,31 @@ TaskHandle_t myTaskHandle = NULL;
 						{
 							API_TIMER_Kill_Timer(USER_INACTIVE_TIMEOUT);
 						}
-
+					/*	 if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
+						 {
+								Selected_PID_type = PID_NOT_SELECTED;
+						 }*/
+						//API_BLE_Init();
 						switch(state)
 						{
 							case QUICK_VITALS:{
-
+                                qv_flag = 1;
 								Is_Test_In_Progress = true;
+#if !test
+								if(Is_Device_Paired == DEFAULTD) // Paired condition
+								{
+									//printf("\n\t%d",Is_Device_Paired);
+								   Selected_PID_type = PID_NOT_SELECTED;
+								}
+#endif
 								Run_Quick_Vital();
+#if !test
+								if(Is_Device_Paired == DEFAULTD) // Paired condition
+								{
+									Selected_PID_type = PID_NOT_SELECTED;
+								}
+#endif
+								 qv_flag = 0;
 								//ota_flag = 0;
 								Is_Test_In_Progress = false;
 								break;
@@ -213,7 +225,22 @@ TaskHandle_t myTaskHandle = NULL;
 
 							case MULTI_VITALS:{
 								Is_Test_In_Progress = true;
+								mv_flag =1 ;
+								qv_flag = 0;
+#if !test
+								if(Is_Device_Paired == DEFAULTD) // Paired condition
+								{
+									Selected_PID_type = PID_NOT_SELECTED;
+							    }
+#endif
 								Run_Multi_Vital();
+#if !test
+								if(Is_Device_Paired == DEFAULTD) // Paired condition
+								{
+									Selected_PID_type = PID_NOT_SELECTED;
+								}
+#endif
+								mv_flag = 0;
 								Is_Test_In_Progress = false;
 
 								break;
@@ -237,6 +264,13 @@ TaskHandle_t myTaskHandle = NULL;
 						if (is_firmware_data_available())
 						{
 							//API_display_backlight_on();
+							/*if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
+						    {
+								    API_display_backlight_on();
+									API_DISP_Display_Screen(DISP_DEVICE_UPGRADATION_FAIL);
+									ota_flag = 0;
+									API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
+							}*/
 							ota_flag = 1;
 							API_TIMER_Kill_Timer(USER_INACTIVE_TIMEOUT);
 							Firmware_upgrade();
@@ -256,10 +290,10 @@ TaskHandle_t myTaskHandle = NULL;
 		}
 
 		if(flash_data.sys_mode == DEVICE_HIBERNET_MODE)
-				{
-					EnterSleepMode(SYSTEM_DEEP_SLEEP);
+		{
+			EnterSleepMode(SYSTEM_DEEP_SLEEP);
 
-				}
+		}
 	}
 
 }
@@ -394,7 +428,7 @@ void Manage_Device_Sleep(void)
 			if(API_Push_Btn_Get_Buttton_Press())
 			 {
 				POR_Init();
-
+				 Interfaces_init();
 				break;
 			 }
 		}
@@ -499,6 +533,7 @@ void HandleDataSync(void)
 				API_DISP_Display_Screen(BLUETOOTH_DISCONNECTED);
 				Delay_ms(1000);
 				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
+				BLE_DS = 1;
 				break;
 			  	//API_Disp_BT_Icon(GREEN);
 			  	//Is_Device_Paired = DEFAULT;// to avoid Redisplaying the same thing again

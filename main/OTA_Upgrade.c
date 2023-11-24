@@ -15,6 +15,7 @@
 #include "driver/gpio.h"
 #include "errno.h"
 #include "esp_log.h"
+#include "bluetooth.h"
 
 #include "OTA_Upgrade.h"
 #include "API_utility.h"
@@ -87,6 +88,11 @@ static bool ota_firmware_upgrade(void)
     while (1)
     {
 		int data_read = read_firmware_data (ota_write_data, BUFFSIZE);
+
+		if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
+		{
+		      return FALSE;
+		}
 
         if (data_read > 0) {
             if (image_header_was_checked == false) {
@@ -244,12 +250,19 @@ bool Firmware_upgrade (void)
 		ota_flag = 0;
 		API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
 	}
-
+	/*else if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
+	 {
+		API_display_backlight_on();
+		API_DISP_Display_Screen(DISP_DEVICE_UPGRADATION_FAIL);
+		ota_flag = 0;
+		API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
+	 }*/
 	else
 	{
 		API_display_backlight_on();
 		API_DISP_Display_Screen(DISP_DEVICE_UPGRADATION_FAIL);
 		ota_flag = 0;
+		API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
 	}
 
 	Delay_ms(5000);

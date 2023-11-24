@@ -189,6 +189,8 @@ typedef enum __attribute__((__packed__))
 	BT_DISCONNECTED=1,
 	BT_PAIRED,
 	DEFAULT,
+	DEFAULTP,
+	DEFAULTD,
 } BT_STATUS;
 
 extern bool Data_sync_in_progress;

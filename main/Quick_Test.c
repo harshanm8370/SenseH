@@ -18,6 +18,7 @@
 #include "ECG_12_Lead.h"
 #include "driver/periph_ctrl.h"
 #include "Hardware.h"
+#include "bluetooth.h"
 
 // MACROS REQUIRED FOR WDOG SpO2
 
@@ -80,7 +81,7 @@ float FilterOutputBuffer1[TOTAL_SAMPLES];
 float FilterOutputBuffer2[TOTAL_SAMPLES];
 float FilterOutputBuffer3[TOTAL_SAMPLES];
 float FilterOutputBuffer4[TOTAL_SAMPLES];
-
+extern bool qv_flag,mv_flag;
 char date_info[50];
 typedef struct __attribute__((__packed__))
 {
@@ -219,8 +220,10 @@ bool QUICK_Test1(void)
 			   Vital_result.SBP1 = 0; // Should remove this when BP estimation Algorithm implemented
 			   Vital_result.DBP1 = 0; // Should remove this when BP estimation Algorithm implemented
 
-
+               if(qv_flag)
+               {
 			   API_Disp_Quick_Test_Result(result);
+               }
 			   if(Selected_PID_type != GUEST_PID) Store_QuickTest1_Data_To_Flash();
 		   }
 
@@ -317,7 +320,7 @@ bool QUICK_Test1(void)
 							API_IO_Exp_Power_Control(EN_IR,LOW);
 #endif
 #if 1
-							API_Disp_Quick_test_screen(DISP_QT_ECG_L1_TEST_IN_PROGRESS);
+							API_Disp_Quick_test_screen(DISP_QT_ECG_TEST_IN_PROGRESS);
 							Print_time("/ECG start");
 							if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,TRUE)==FALSE)
 							{
@@ -347,8 +350,10 @@ bool QUICK_Test1(void)
 							result[1] = 85;
 							result[2] = 115;
 							result[3] = 85;
-
-							API_Disp_Quick_Test_Result(result);
+                            if(qv_flag)
+                            {
+							    API_Disp_Quick_Test_Result(result);
+                            }
 							if(Selected_PID_type != GUEST_PID) Store_QuickTest1_Data_To_Flash();
 					   }
 				 }
@@ -381,7 +386,12 @@ bool QUICK_Test1(void)
 
 	Disable_Power_Supply();
 
-  	printf("\nTest completed.");
+  	printf("\nTest completed.\t%d",Is_Device_Paired);
+
+  	if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
+  	{
+  		Selected_PID_type = PID_NOT_SELECTED;
+  	}
 
 	return true;
 }
@@ -2000,9 +2010,17 @@ bool Run_Multi_Vital(void)
 	//if(Lead12_LeadOff_Detect() == FALSE)
 	if(1)
 	{
-		Run_Quick_Vital();
+		if(!(Run_Quick_Vital()))
+		{
+			Disable_Power_Supply();
+			return 0;
+		}
 		//printf("lead off not detected\n");
-		Lead12_Test(); // This is the core function to capture 12Lead ECG
+		if(!(Lead12_Test()))
+		{
+			Disable_Power_Supply();
+			return 0; // This is the core function to capture 12Lead ECG
+		}
 	}
 	else
 	{

@@ -2430,7 +2430,7 @@ uint8_t left_offset = 0;
   	text3.text_status = display;
 
   	text4.color = BLUE;
-  	text4.text_starting_addr = "    Exit    ";
+  	text4.text_starting_addr = "    Sleep    ";
   	text4.text_status = display;
 
   	//text6.color = BLUE;
@@ -2453,6 +2453,9 @@ uint8_t left_offset = 0;
   	while(1)
   	{
 		//btn_press = API_Push_Btn_Get_hold_time();
+
+
+
 
   		btn_press = API_Push_Btn_Get_Buttton_Press();
 
@@ -2528,13 +2531,13 @@ uint8_t left_offset = 0;
   		if(Is_Device_Paired == BT_PAIRED) // Paired condition
   		{
   			API_Disp_BT_Icon(GREEN);
-  			Is_Device_Paired = DEFAULT;// to avoid Redisplaying the same thing again
+  			Is_Device_Paired = DEFAULTP;// to avoid Redisplaying the same thing again
   		}
 
   		else if(Is_Device_Paired == BT_DISCONNECTED) // disconnected condition
 		{
 			API_Disp_BT_Icon(WHITE);
-			Is_Device_Paired = DEFAULT;
+			Is_Device_Paired = DEFAULTD;
 		}
 
   		//printf("\nbtn_press=%d\n",btn_press);
@@ -2809,6 +2812,21 @@ uint8_t left_offset = 0;
   	  			btm_text.color              = WHITE;
 
   	  			break;
+
+  		case DISP_QT_ECG_TEST_IN_PROGRESS :
+
+  		  	  			mid_text4.text_starting_addr = " ECG Test  ";
+  		  	  			mid_text5.text_starting_addr = "In Progress ";
+  		  	  			mid_text6.text_starting_addr = "            ";
+  		  	  			bottom_icon.icon_status		 = FALSE;
+
+  		  	  			btm_icon.icon_status        = FALSE;
+  		  	  			btm_text.text_status        = display;
+  		  	  			btm_text.text_starting_addr = "    Exit    ";
+  		  	  			btm_text.color              = WHITE;
+
+  		  	  			break;
+
 
   		case DISP_QT_ECG_L2_TEST_IN_PROGRESS :
 
@@ -3092,6 +3110,9 @@ uint8_t left_offset = 0;
   	mid_icon.color              = BLUE;
 
   	API_Display_Middle_Section(mid_icon,mid_text1,mid_text2,mid_text3);
+  	Delay_ms(500);
+  	API_Clear_Display(DISP_MIDDLE_SEC,WHITE);
+
 
   	#endif
 
@@ -3528,8 +3549,10 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
 	char pidArray[12]={'\0'};
 
+	API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
+
 	VITAL_TYPE_t ret_msg=0xFF;
-	uint8_t top_offset = 20;
+	uint8_t top_offset = 80;
 	uint8_t count = 1;
 	uint8_t left_offset = 2;
 	uint8_t btn_press;
@@ -3538,27 +3561,27 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
   	struct DISPLAY_TEXT text1,text2,text3,text4,text5,text6,text7;
 
-  	text1.color= BLUE;
-  	text1.text_starting_addr = "  Register  ";
-  	text1.text_status = display;
+  	text4.color= BLUE;
+  	text4.text_starting_addr = " Enter PID  ";
+  	text4.text_status = display;
 
-  	text2.color = BLUE;
-  	text2.text_starting_addr = "    PID     ";
+  //	text2.color = BLUE;
+  	//text2.text_starting_addr = "           ";
 
-	text2.text_status = display;
+	//text2.text_status = display;
 
   	//text4.color = BLUE;
   	//text4.text_starting_addr = " Enter      ";
   	//text4.text_status = 0;
 
-	text5.color = BLUE;
-  	text5.text_starting_addr = " Exit       ";
-  	text5.text_status = display;
+	text6.color = BLUE;
+  	text6.text_starting_addr = " Exit       ";
+  	text6.text_status = display;
 
-
+  	text2.text_status = 0;
 	text3.text_status = 0;
-	text4.text_status = 0;
-  	text6.text_status = 0;
+	text1.text_status = 0;
+  	text5.text_status = 0;
   	text7.text_status = 0;
 	if(Selected_PID_type != VALID_PID)
 	{
@@ -3573,6 +3596,9 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
 	btn_press = API_Push_Btn_Get_Buttton_Press(); // Dummy read
 	api_disp_display_icon(star,left_offset,top_offset,RED,WHITE);
+
+	//api_disp_set_pointer_driver_side(col_start,DISP_MAX_COLS,row_start,DISP_MAX_ROWS);
+			 	 api_disp_display_icon (logo, 40, 30,BLUE, WHITE);
 
   	while(1)
   	{
@@ -3599,13 +3625,13 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
 					if(count == 2)
 					{
-						top_offset = top_offset + 80;
+						top_offset = top_offset + 40 ;
 					}
 
 					else
 					{
 						count=1;
-						top_offset=20;
+						top_offset=80;
 						API_TIMER_Kill_Timer(TEST_ENTERY_TIMEOUT);
 					}
 				}
@@ -3620,13 +3646,13 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 					{
 						count = 1;
 						left_offset = 2;
-						top_offset = 20;
+						top_offset = 80;
 						API_TIMER_Kill_Timer(TEST_ENTERY_TIMEOUT);
 					}
 
 					else
 					{
-						top_offset = top_offset + 20;
+						top_offset = top_offset + 40;
 					}
 				}
 
@@ -3668,30 +3694,36 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
   		if(Is_Device_Paired == BT_PAIRED) // Paired condition
   		{
   			API_Disp_BT_Icon(GREEN);
-  			Is_Device_Paired = DEFAULT;// to avoid Redisplaying the same thing again
+  			Is_Device_Paired = DEFAULTP;// to avoid Redisplaying the same thing again
   		}
 
   		else if(Is_Device_Paired == BT_DISCONNECTED) // disconnected condition
 		{
 			API_Disp_BT_Icon(WHITE);
-			Is_Device_Paired = DEFAULT;
+			Is_Device_Paired = DEFAULTD;
 		}
 
   		if((Selected_PID_type == VALID_PID) && (!is_Pid_Displayed))
   		{
+  			API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
   			pidArray[0]=' ';
   			MemCpy(pidArray+1,(char*)(PatientID.pid+10),8);
   			pidArray[11]='\0';
 
-  		  	text1.text_starting_addr = "   Select   ";
-
-			text3.text_starting_addr =pidArray;
-			text3.text_status = display;
+  		  //	text1.text_starting_addr = "    PID    ";
+  		    text4.text_starting_addr = " PID is ";
+			text5.text_starting_addr =pidArray;
+			text3.text_status = 0;
+			text1.text_status = 0;
+			text2.text_status = 0;
+			text6.text_status = 0;
+			text7.text_status = 0;
 		  	text4.text_status = display;
 		  	text5.text_status = display;
-		  	API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+		  	//API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
 
-		  	API_Disp_Display_Text(text1, text2, text3, text4, text5, text6, text7);
+		  	API_Disp_Display_Text(text1,text2,text3,text4, text5,text6,text7);
+		  	api_disp_display_icon (logo, 40, 30,BLUE, WHITE);
 			api_disp_display_icon(star,left_offset,top_offset,RED,WHITE);
 
 			is_Pid_Displayed = true;

@@ -25,6 +25,7 @@
 #include "Error_Handling.h"
 #include "API_Flash_org.h"
 #include "Quick_Test.h"
+#include "bluetooth.h"
 
 bool Lead12_Data_Capture(void);
 bool Lead12_Data_Capture_new(uint32_t vlead);
@@ -138,6 +139,9 @@ bool Lead12_Test(void)
 	  	 API_Buzzer_Sound(SHORT_BEEP);
 
 	  	 printf("\nTest completed.");
+
+
+
 		return true;
 }
 
