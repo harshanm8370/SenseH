@@ -83,6 +83,7 @@ float FilterOutputBuffer3[TOTAL_SAMPLES];
 float FilterOutputBuffer4[TOTAL_SAMPLES];
 extern bool qv_flag,mv_flag;
 char date_info[50];
+uint8_t reg;
 typedef struct __attribute__((__packed__))
 {
 	uint32_t  		record_len;
@@ -258,6 +259,8 @@ bool QUICK_Test1(void)
 	 API_IO_Exp_Power_Control(EN_ANALOG,HIGH);
 	 API_IO_Exp_Power_Control(EN_IR,HIGH);
 
+
+
 	if((Selected_PID_type == VALID_PID) || (Selected_PID_type == GUEST_PID))
 	{
 			if(API_Flash_Org_Check_For_Memory_Free())
@@ -304,6 +307,21 @@ bool QUICK_Test1(void)
 				 {
 					if(API_ECG_Init())
 						{
+
+						  uint8_t ret;
+
+					     /* while(1)
+						  {
+							 ret = readRegister8(0x00,reg);
+							 if(ret)
+							 printf("\n %x",ret);
+							 if(API_Push_Btn_Get_Buttton_Press())
+					         {
+								Disable_Power_Supply();
+							    return 0;
+							 }
+
+						  }*/
 #if 1
 						    if(API_Push_Btn_Get_Buttton_Press())
 						    {
@@ -356,6 +374,14 @@ bool QUICK_Test1(void)
                             }
 							if(Selected_PID_type != GUEST_PID) Store_QuickTest1_Data_To_Flash();
 					   }
+					else
+					{
+						 printf("\nECg init failed ....\n");
+					}
+				 }
+				 else
+				 {
+					 printf("\nMAx init failed ....\n");
 				 }
 			}
 
@@ -529,6 +555,7 @@ void Dummy_Capture(uint16_t total_samples)
 #endif
 		//uint8_t reg = 0xA5;
 #if 1
+		//while()
 		//uint8_t ret ;
 		//ret = readRegister8(0x00,reg);
 		//printf("\n %x",ret);

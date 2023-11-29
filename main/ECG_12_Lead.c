@@ -157,6 +157,7 @@ bool Lead12_Data_Capture_new(uint32_t vlead)
 	offfset = REC_HEADER_LEN;
 
 	Select_Vlead(vlead);
+
 	API_IO_Exp1_P1_write_pin(DC_LEAD_OFF_V,HIGH);
 	API_Disp_Lead_Count(6+vlead);
 

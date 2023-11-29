@@ -32,6 +32,7 @@
 #include "API_utility.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "ECG_12_Lead.h"
 
 static void Interfaces_init(void);
 void POR_Init(void);
@@ -45,7 +46,7 @@ void Led_Blink(void *pvParameters);
 extern BT_STATUS Is_Device_Paired;
 bool qv_flag,mv_flag;
 bool BLE_DS;
-#define test 0
+#define test 1
 
 TaskHandle_t myTaskHandle = NULL;
 
@@ -94,17 +95,6 @@ TaskHandle_t myTaskHandle = NULL;
 	//API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
     //API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
 
-#if 0
-    while(1)
-    {
-#if 0
-	gpio_set_level(MAX86150_DRDY_INTR_PIN, 1);
-	Delay_ms(100);
-	gpio_set_level(MAX86150_DRDY_INTR_PIN, 0);
-	Delay_ms(100);
-#endif
-    }
-#endif
     Interfaces_init();
 
 
@@ -128,9 +118,10 @@ TaskHandle_t myTaskHandle = NULL;
 	/* Delay Provided for the User to read the Firmware version */
 	Delay_ms(3000);
 	POR_Init();
-
 	/** Testing */
 	/***************************************************/
+
+
 #if test
 	Selected_PID_type = VALID_PID;
 #endif
@@ -197,7 +188,7 @@ TaskHandle_t myTaskHandle = NULL;
 						 {
 								Selected_PID_type = PID_NOT_SELECTED;
 						 }*/
-						//API_BLE_Init();
+
 						switch(state)
 						{
 							case QUICK_VITALS:{
