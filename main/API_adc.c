@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include "driver/gpio.h"
 #include "driver/adc.h"
+#include "API_IO_Exp.h"
 #include "API_timer.h"
 
 #if CONFIG_IDF_TARGET_ESP32
@@ -119,6 +120,7 @@ void API_ADC_Conv_Avg(float ref_vol, uint16_t data_buff[],uint8_t avg_len,char *
 
 void API_RUN_TEMPERATURE_TEST(void)
 {
+	API_IO_Exp_Power_Control(EN_IR,HIGH);
 	uint16_t obj_data;
 	uint16_t amb_data;
 	printf("\n\nIR Data Capture 10 SPS");

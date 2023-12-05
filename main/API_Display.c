@@ -3342,7 +3342,7 @@ bool API_DISP_Memory_Full_Status(void)
   {
 	  bool status = false;
 
-       if(IsUSB_Charger_Connected())
+       if((IsUSB_Charger_Connected()))
        {
 
    		struct DISPLAY_TEXT mid_sec_text1,mid_sec_text2,mid_sec_text3,mid_sec_text4,mid_sec_text5,mid_sec_text6,mid_sec_text7;

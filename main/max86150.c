@@ -140,8 +140,13 @@ void setPulseAmplitudeIR(uint8_t amplitude)
   writeRegister8(MAX86150_ADDR, MAX86150_LED1_PULSEAMP, amplitude);
 }
 
-void setPulseAmplitudeProximity(uint8_t amplitude) {
-  writeRegister8(MAX86150_ADDR, MAX86150_LED_PROX_AMP, amplitude);
+/*void setPulseAmplitudeIR(uint8_t amplitude)
+{
+  writeRegister8(MAX86150_ADDR, MAX86150_LED1_PULSEAMP, amplitude);
+}
+*/
+void setpilotPulseAmplitudeProximity(uint8_t amplitude) {
+  writeRegister8(MAX86150_ADDR, MAX86150_LED_PILOT_PA, amplitude);
 }
 
 void setProximityThreshold(uint8_t threshMSB)
@@ -311,6 +316,8 @@ void Max86150_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledM
 	setRANGE(0x05);  //set range of vled 50ma to 100ma
 	setPulseAmplitudeRed(0xBE); //90 ma
 	setPulseAmplitudeIR(0xBE); //90ma
+
+	//setpilotPulseAmplitudeProximity(0xFF);
 
 	//setPulseAmplitudeGreen(powerLevel);
 	//setPulseAmplitudeProximity(powerLevel);

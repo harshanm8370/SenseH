@@ -257,7 +257,7 @@ bool QUICK_Test1(void)
 
 	 API_IO_Exp_Power_Control(EN_VLED,HIGH);
 	 API_IO_Exp_Power_Control(EN_ANALOG,HIGH);
-	 API_IO_Exp_Power_Control(EN_IR,HIGH);
+	// API_IO_Exp_Power_Control(EN_IR,HIGH);
 
 
 
@@ -305,12 +305,12 @@ bool QUICK_Test1(void)
 */
 				 if(API_MAX86150_Setup())
 				 {
-					if(API_ECG_Init())
+					if((API_ECG_Init()))
 						{
 
 						  uint8_t ret;
 
-					     /* while(1)
+					    /*  while(1)
 						  {
 							 ret = readRegister8(0x00,reg);
 							 if(ret)

@@ -23,6 +23,7 @@ typedef uint8_t byte;
   void setPulseAmplitudeRed(uint8_t value);
   void setRANGE(uint8_t amplitude);
   void setPulseAmplitudeIR(uint8_t value);
+  void setpilotPulseAmplitudeProximity(uint8_t amplitude);
   void setPulseAmplitudeProximity(uint8_t value);
 
   void setProximityThreshold(uint8_t threshMSB);

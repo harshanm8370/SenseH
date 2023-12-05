@@ -97,6 +97,7 @@ TaskHandle_t myTaskHandle = NULL;
 
     Interfaces_init();
 
+    //API_RUN_TEMPERATURE_TEST();
 
 	if(API_Flash_Initialize_Data_pointers() == RECORDS_UPDATE_FAILED)
 	   {

@@ -25,7 +25,7 @@ static const uint8_t MAX86150_LED_PROX_AMP = 	0x10;
 static const uint8_t MAX86150_LED1_PULSEAMP = 	0x11;
 static const uint8_t MAX86150_LED2_PULSEAMP = 	0x12;
 static const uint8_t MAX86150_LED_RANGE 		= 	0x14;
-//static const uint8_t MAX86150_LED_PILOT_PA 	= 	0x15;
+static const uint8_t MAX86150_LED_PILOT_PA 	= 	0x15;
 
 static const uint8_t MAX86150_ECG_CONFIG1 	= 	0x3C;
 static const uint8_t MAX86150_ECG_CONFIG3 	= 	0x3E;
