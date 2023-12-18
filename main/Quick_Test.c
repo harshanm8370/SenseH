@@ -345,13 +345,14 @@ bool QUICK_Test1(void)
 							   Disable_Power_Supply();
 							   return FALSE;
 							}
+
 							Print_time("\nECG end");
 #endif
 #if 1
 							API_Disp_Quick_test_screen(DISP_QT_BP_TEST_IN_PROGRESS);
 							printf("\nCapturing BP................");
 							API_IO_Exp_Power_Control(EN_VLED,HIGH);
-							API_IO_Exp_Power_Control(EN_IR,HIGH);
+							//API_IO_Exp_Power_Control(EN_IR,HIGH);
 							Print_time("\nBP START");
 							if(!(Capture_BP_Data(TRUE)))
 							{
@@ -644,7 +645,6 @@ void Dummy_Capture(uint16_t total_samples)
 
 			MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
 			MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
-
 			for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
 			{
 				if(API_Push_Btn_Get_Buttton_Press())
@@ -658,6 +658,7 @@ void Dummy_Capture(uint16_t total_samples)
 			//printf("\n total data ready interrupts = %d\n", ECG_Drdy_count);
 			ECG_Drdy_count = 0;
 			API_ECG_Stop_Conversion();
+#if 1
 			printf("\nECG L1 data:\n");
 			for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
 			{
@@ -669,6 +670,7 @@ void Dummy_Capture(uint16_t total_samples)
 			{
 			  printf("\n%f",ECG_Lead2_buff[i]);
 			}
+#endif
 			
 		}
 		}

@@ -3553,7 +3553,7 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
 	VITAL_TYPE_t ret_msg=0xFF;
 	uint8_t top_offset = 80;
-	uint8_t count = 1;
+	int count = -1;
 	uint8_t left_offset = 2;
 	uint8_t btn_press;
 
@@ -3565,9 +3565,9 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
   	text4.text_starting_addr = " Enter PID  ";
   	text4.text_status = display;
 
-  //	text2.color = BLUE;
-  	//text2.text_starting_addr = "           ";
-
+  	text5.color = BLUE;
+  	text5.text_starting_addr = " --------- ";
+  	text5.text_status = display;
 	//text2.text_status = display;
 
   	//text4.color = BLUE;
@@ -3575,13 +3575,13 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
   	//text4.text_status = 0;
 
 	text6.color = BLUE;
-  	text6.text_starting_addr = " Exit       ";
+  	text6.text_starting_addr = "    Exit   ";
   	text6.text_status = display;
 
   	text2.text_status = 0;
 	text3.text_status = 0;
 	text1.text_status = 0;
-  	text5.text_status = 0;
+  //	text5.text_status = 0;
   	text7.text_status = 0;
 	if(Selected_PID_type != VALID_PID)
 	{
@@ -3595,7 +3595,7 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
   	printf("\n\nIn View Screen\n");
 
 	btn_press = API_Push_Btn_Get_Buttton_Press(); // Dummy read
-	api_disp_display_icon(star,left_offset,top_offset,RED,WHITE);
+//	api_disp_display_icon(star,left_offset,top_offset,RED,WHITE);
 
 	//api_disp_set_pointer_driver_side(col_start,DISP_MAX_COLS,row_start,DISP_MAX_ROWS);
 			 	 api_disp_display_icon (logo, 40, 30,BLUE, WHITE);
@@ -3626,12 +3626,14 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 					if(count == 2)
 					{
 						top_offset = top_offset + 40 ;
+						left_offset += 30;
 					}
 
 					else
 					{
 						count=1;
 						top_offset=80;
+						left_offset = 2;
 						API_TIMER_Kill_Timer(TEST_ENTERY_TIMEOUT);
 					}
 				}

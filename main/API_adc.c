@@ -14,6 +14,7 @@
 #include "driver/adc.h"
 #include "API_IO_Exp.h"
 #include "API_timer.h"
+#include "API_utility.h"
 
 #if CONFIG_IDF_TARGET_ESP32
 #include "esp_adc_cal.h"
@@ -124,12 +125,18 @@ void API_RUN_TEMPERATURE_TEST(void)
 	uint16_t obj_data;
 	uint16_t amb_data;
 	printf("\n\nIR Data Capture 10 SPS");
-
+	float a[4] = {2786.2664,-166.4331934,3.609542263,-0.016136966};
+	char str1[10];
 	while(1)
 	{
-	  API_IR_Data_Read(&obj_data, &amb_data,true,1);
 
-	  printf("\n%d    %d",obj_data,amb_data);
+	  API_IR_Data_Read(&obj_data, &amb_data,true,1);
+	  IntergerToString(str1,obj_data);
+	//	mid_text1.text_starting_addr = " Test Done! ";
+	//	mid_text1.color       = BLUE;
+
+	  printf("\n%d    ",obj_data);
+
 	  Delay_ms(100);
 	}
 }

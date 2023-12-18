@@ -97,7 +97,7 @@ TaskHandle_t myTaskHandle = NULL;
 
     Interfaces_init();
 
-    //API_RUN_TEMPERATURE_TEST();
+   // API_RUN_TEMPERATURE_TEST();
 
 	if(API_Flash_Initialize_Data_pointers() == RECORDS_UPDATE_FAILED)
 	   {
@@ -486,7 +486,8 @@ void HandleDataSync(void)
 
 	API_DISP_Display_Screen(DISP_DATA_SYNC_IN_PROGRESS);
 	//API_Disp_Display_Exit_Bottom_Section();
-	//Delay_ms(1000);
+
+	Delay_ms(1000);
 	//API_display_backlight_off();
 	if(Detect_low_battery_display_notification()==false)
 	{
@@ -536,7 +537,7 @@ void HandleDataSync(void)
 				API_display_backlight_on();
 				API_DISP_Display_Screen(DISP_DATA_SYNC_COMPLETED);
 				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
-			    Delay_ms(5000);
+			    Delay_ms(1000);
 				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
 				break;
 			}
