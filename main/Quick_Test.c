@@ -204,7 +204,7 @@ bool QUICK_Test1(void)
 		printf("\nECG Init Successful");
 		printf("Entering into Max86150 setup");
 
-		   if(API_MAX86150_Setup() == true)
+		   if(API_MAX30101_Setup() == true)
 		   {
 			   printf("\nCapturing data.................");
 			   API_Disp_Quick_test_screen(DISP_QT_TEST_IN_PROGRESS);
@@ -308,7 +308,7 @@ bool QUICK_Test1(void)
 				printf("\n\t\t\t%d",gpio_get_level(25));
 
 
-				 if(API_MAX86150_Setup())
+				 if(API_MAX30101_Setup())
 				 {
 					if((API_ECG_Init()))
 						{
@@ -583,7 +583,7 @@ void Dummy_Capture(uint16_t total_samples)
 				{
 					return 0;
 				}
-				status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,1);
+				status = API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,1);
 			}while(ppg_count < 200);
 		}
 
@@ -597,7 +597,7 @@ void Dummy_Capture(uint16_t total_samples)
 			{
 				return 0;
 			}
-			status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
+			status = API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
 		}while(ppg_count < ((ECG_IN_SECONDS*SET_ODR)));
 		API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
 
@@ -751,7 +751,7 @@ void Dummy_Capture(uint16_t total_samples)
 //				ppg_index_cnt++;
 //				if(ppg_index_cnt >=10)
 				{
-					status = API_MAX86150_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
+					status = API_MAX30101_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
 //					ppg_index_cnt = 0;
 				}
 			}
@@ -776,7 +776,7 @@ void Dummy_Capture(uint16_t total_samples)
 //			ppg_index_cnt++;
 //			if(ppg_index_cnt >=10)
 			{
-				status = API_MAX86150_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
+				status = API_MAX30101_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
 //				ppg_index_cnt = 0;
 			}
 		}

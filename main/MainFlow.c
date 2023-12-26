@@ -470,7 +470,7 @@ void ExecuteComplianceSequence(void)
 {
 	uint8_t btn_press=0;
 	API_ECG_Init();
-	API_MAX86150_Setup();
+	API_MAX30101_Setup();
 	API_ECG_Reginit_12Lead();
 	API_TIMER_Register_Timer(USER_INACTIVE_TIMEOUT);
 

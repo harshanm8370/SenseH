@@ -203,6 +203,14 @@ void Max86150_Clear_Fifo(void) {
   writeRegister8(MAX86150_ADDR, MAX86150_FIFOREADPTR, 0);
 }
 
+
+void Max30101_Clear_Fifo(void) {
+  writeRegister8(MAX30101_ADDR, MAX86150_FIFOWRITEPTR, 0);
+  writeRegister8(MAX30101_ADDR, MAX86150_FIFOOVERFLOW, 0);
+  writeRegister8(MAX30101_ADDR, MAX86150_FIFOREADPTR, 0);
+}
+
+
 //Enable roll over if FIFO over flows
 void enableFIFORollover(void) {
   bitMask(MAX86150_FIFOCONFIG, MAX86150_ROLLOVER_MASK, MAX86150_ROLLOVER_ENABLE);
@@ -221,12 +229,12 @@ void setFIFOAlmostFull(uint8_t numberOfSamples) {
 
 //Read the FIFO Write Pointer
 uint8_t getWritePointer(void) {
-  return (readRegister8(MAX86150_ADDR, MAX86150_FIFOWRITEPTR));
+  return (readRegister8(MAX30101_ADDR, MAX86150_FIFOWRITEPTR));
 }
 
 //Read the FIFO Read Pointer
 uint8_t getReadPointer(void) {
-  return (readRegister8(MAX86150_ADDR, MAX86150_FIFOREADPTR));
+  return (readRegister8(MAX30101_ADDR, MAX86150_FIFOREADPTR));
 }
 
 // Set the PROX_INT_THRESHold
@@ -237,15 +245,16 @@ void setPROXINTTHRESH(uint8_t val) {
 //
 // Device ID and Revision
 //
-uint8_t readPartID(uint8_t regaddr) {
-  return readRegister8(MAX30102_ADDR, regaddr);
+uint8_t readPartID(uint8_t regaddr)
+{
+  return readRegister8(MAX30101_ADDR,regaddr);
 }
 
 
 void Max30101_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledMode, int sampleRate, int pulseWidth, int adcRange)
 {
 	activeDevices=3;
-	writeRegister8(MAX86150_ADDR,MAX30101_MODECONFIG,0x40);
+	writeRegister8(MAX30101_ADDR,MAX30101_MODECONFIG,0x40);
 	Delay_ms(200);
 
 	//writeRegister8(MAX86150_ADDR,REG_INTR_STATUS_1,INTR_ENABLE_1);
@@ -276,22 +285,22 @@ void Max30101_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledM
 	//writeRegister8(MAX86150_ADDR,MAX86150_FIFOCONTROL2, (char)(FIFOCode >>8) );
 	/********* END CRITICAL FOR LED GLOW ************/
 
-	writeRegister8(MAX86150_ADDR,REG_INTR_ENABLE_2,INTR_ENABLE_2);	//0b11 0111 11 //0b11 0100 11
+	writeRegister8(MAX30101_ADDR,REG_INTR_ENABLE_2,INTR_ENABLE_2);	//0b11 0111 11 //0b11 0100 11
 
-	writeRegister8(MAX86150_ADDR,REG_FIFO_WR_PTR,FIFO_WR_PTR);//Some catch is here 0x02 works
+	writeRegister8(MAX30101_ADDR,REG_FIFO_WR_PTR,FIFO_WR_PTR);//Some catch is here 0x02 works
 	//Delay_ms(500);
 	 //printf("\nDevice ID = 0x%2X.\n",readPartID(0x02));
-	writeRegister8(MAX86150_ADDR,REG_OVF_COUNTER,OVF_COUNTER); // PPG_ADC_RGE: 32768nA
+	writeRegister8(MAX30101_ADDR,REG_OVF_COUNTER,OVF_COUNTER); // PPG_ADC_RGE: 32768nA
 
-	writeRegister8(MAX86150_ADDR,REG_FIFO_RD_PTR,FIFO_RD_PTR);//start FIFO
+	writeRegister8(MAX30101_ADDR,REG_FIFO_RD_PTR,FIFO_RD_PTR);//start FIFO
 
-	writeRegister8(MAX86150_ADDR,REG_FIFO_CONFIG,FIFO_CONFIG_SpO2); // SR: 200 = MAX86150_ECG_CONFIG1,0b00000011
+	writeRegister8(MAX30101_ADDR,REG_FIFO_CONFIG,FIFO_CONFIG_SpO2); // SR: 200 = MAX86150_ECG_CONFIG1,0b00000011
 
-	writeRegister8(MAX86150_ADDR,REG_MODE_CONFIG,MODE_CONFIG_SpO2); // IA Gain: 9.5 / PGA Gain: 8
-	writeRegister8(MAX86150_ADDR,REG_SPO2_CONFIG,SPO2_CONFIG_SpO2);
-	writeRegister8(MAX86150_ADDR,REG_LED1_PA,LED1_PA);
-	writeRegister8(MAX86150_ADDR,REG_LED2_PA,LED2_PA);
-	writeRegister8(MAX86150_ADDR,REG_PILOT_PA,PILOT_PA);
+	writeRegister8(MAX30101_ADDR,REG_MODE_CONFIG,MODE_CONFIG_SpO2); // IA Gain: 9.5 / PGA Gain: 8
+	writeRegister8(MAX30101_ADDR,REG_SPO2_CONFIG,SPO2_CONFIG_SpO2);
+	writeRegister8(MAX30101_ADDR,REG_LED1_PA,LED1_PA);
+	writeRegister8(MAX30101_ADDR,REG_LED2_PA,LED2_PA);
+	writeRegister8(MAX30101_ADDR,REG_PILOT_PA,PILOT_PA);
 	//writeRegister8(MAX86150_ADDR,0xFF,0x00); //exit test mode
 	//debug.Write("Registers written");
 
@@ -321,7 +330,7 @@ void Max30101_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledM
 	//enableSlot(3, SLOT_GREEN_PILOT);
 	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 
-	Max86150_Clear_Fifo(); //Reset the FIFO before we begin checking the sensor
+	Max30101_Clear_Fifo(); //Reset the FIFO before we begin checking the sensor
 }
 
 
@@ -453,6 +462,31 @@ uint16_t Max86150_CheckDataAvailibity(void)
 //  printf("\nbytesLeftToRead = %d\n", bytesLeftToRead);
     return bytesLeftToRead;
 }
+
+uint16_t Max30101_CheckDataAvailibity(void)
+{
+  //Read register FIDO_DATA in (3-byte * number of active LED) chunks
+  //Until FIFO_RD_PTR = FIFO_WR_PTR
+
+  byte readPointer = getReadPointer();
+  byte writePointer = getWritePointer();
+  int bytesLeftToRead = 0;
+
+  int numberOfSamples = 0;
+
+  if (readPointer != writePointer)
+  {
+    numberOfSamples = writePointer - readPointer;
+    if (numberOfSamples < 0) numberOfSamples += 32; //Wrap condition
+
+     bytesLeftToRead = numberOfSamples * activeDevices * 3;
+  }
+
+//  printf("\nbytesLeftToRead = %d\n", bytesLeftToRead);
+    return bytesLeftToRead;
+}
+
+
 
 //Given a register, read it, mask it, and then set the thing
 void bitMask(uint8_t reg, uint8_t mask, uint8_t thing)
@@ -626,7 +660,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
  }
 
 
- bool API_MAX86150_Setup(void)
+ bool API_MAX30101_Setup(void)
  {
      bool status = false;
 
@@ -699,7 +733,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
   }
 
  uint32_t ppg_count = 0;
- bool API_MAX86150_Raw_Data_capture_new(uint32_t Red_data[],uint32_t IR_data[],uint32_t ecg_data[],uint16_t capture_number,bool is_dummy_capture)
+ bool API_MAX30101_Raw_Data_capture_new(uint32_t Red_data[],uint32_t IR_data[],uint32_t ecg_data[],uint16_t capture_number,bool is_dummy_capture)
    {
   		uint8_t sample_buff[20U];
   		bool done = false;
@@ -711,11 +745,11 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 			do{
 				memset(sample_buff,0x00,sizeof(sample_buff));
 
-				PPG_Data_count = Max86150_CheckDataAvailibity();
+				PPG_Data_count = Max30101_CheckDataAvailibity();
 				//printf("\nPPG count available %ld",PPG_Data_count);
 				if(PPG_Data_count>=9U)
 				{
-					API_max86150_Read_brust(MAX86150_ADDR, 0x07U,sample_buff,9U);//9
+					API_max86150_Read_brust(MAX30101_ADDR, 0x07U,sample_buff,9U);//9
 					/*printf("\nPPG red data");
 					for(int i=0;i<3;i++)
 					{
@@ -747,7 +781,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 				PPG_Data_count = Max86150_CheckDataAvailibity();
 				if(PPG_Data_count>=9U)
 				{
-					API_max86150_Read_brust(MAX86150_ADDR, 0x07U,sample_buff,6U);//9
+					API_max86150_Read_brust(MAX30101_ADDR, 0x07U,sample_buff,6U);//9
 					ppg_count++;
 					done = true;
 				}

@@ -57,6 +57,7 @@ typedef uint8_t byte;
 
   //FIFO Reading
   uint16_t Max86150_CheckDataAvailibity(void); //Checks for new data and fills FIFO
+  uint16_t Max30101_CheckDataAvailibity(void);
   uint8_t available(void); //Tells caller how many new samples are available (head - tail)
   void nextSample(void); //Advances the tail of the sense array
   uint32_t getFIFORed(void); //Returns the FIFO sample pointed to by tail
@@ -67,6 +68,7 @@ typedef uint8_t byte;
   uint8_t getWritePointer(void);
   uint8_t getReadPointer(void);
   void Max86150_Clear_Fifo(void); //Sets the read/write pointers to zero
+  void Max30101_Clear_Fifo(void);
 
   //Proximity Mode Interrupt Threshold
   void setPROXINTTHRESH(uint8_t val);
@@ -102,9 +104,9 @@ typedef uint8_t byte;
   void API_max86150_drdy_handle(void);
   uint16_t API_MAX86150_Check_NewData(void);
 
-  bool API_MAX86150_Setup(void);
+  bool API_MAX30101_Setup(void);
   bool API_MAX86150_Raw_Data_capture(uint32_t Red_data[],uint32_t IR_data[],uint32_t ECG_Data[],uint32_t nbf_samples,bool is_dummy_capture,uint8_t red_or_ir_or_ecg);
-  bool API_MAX86150_Raw_Data_capture_new(uint32_t Red_data[],uint32_t IR_data[],uint32_t ecg_data[],uint16_t capture_number,bool is_dummy_capture);
+  bool API_MAX30101_Raw_Data_capture_new(uint32_t Red_data[],uint32_t IR_data[],uint32_t ecg_data[],uint16_t capture_number,bool is_dummy_capture);
   void API_DRDY_Pulse_Count(void); // DRDY Count
 
 #endif
