@@ -21,7 +21,7 @@
 #include "esp_sleep.h"
 #include "push_button.h"
 #include "esp_bt.h"
-#include "max86150.h"
+#include "max30101.h"
 #include "esp_bt_main.h"
 #include "driver/periph_ctrl.h"
 #include "soc/rtc_cntl_reg.h"

@@ -1,5 +1,6 @@
-#include "max86150.h"
-#include "Max86150_Config.h"
+#include "max30101.h"
+
+#include "Max30101_Config.h"
 #include "stdint.h"
 #include <stdio.h>
 #include "driver/i2c.h"

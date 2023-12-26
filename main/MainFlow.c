@@ -11,7 +11,7 @@
 #include "stdlib.h"
 #include "stdbool.h"
 #include "esp_ota_ops.h"
-#include "max86150.h"
+#include "max30101.h"
 #include "API_Display.h"
 #include "API_adc.h"
 #include "API_IO_Exp.h"

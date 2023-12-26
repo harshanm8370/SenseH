@@ -19,7 +19,7 @@
 #include "push_button.h"
 #include "API_timer.h"
 #include <math.h>
-#include "max86150.h"
+#include "max30101.h"
 #include "API_IO_Exp.h"
 #include "API_ADS.h"
 #include "Error_Handling.h"

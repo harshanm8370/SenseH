@@ -1,5 +1,5 @@
-#ifndef MAX_MAX86150_H
-#define MAX_MAX86150_H
+#ifndef MAX_MAX30101_H
+#define MAX_MAX30101_H
 
 #include <stdint.h>
 #include <stdbool.h>

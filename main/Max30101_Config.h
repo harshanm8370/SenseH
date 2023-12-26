@@ -1,5 +1,5 @@
-#ifndef _MAX86150_CONFIG_H_
-#define _MAX86150_CONFIG_H_
+#ifndef _MAX30101_CONFIG_H_
+#define _MAX30101_CONFIG_H_
 
 #include <stdint.h>
 
