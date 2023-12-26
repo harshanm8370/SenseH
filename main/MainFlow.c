@@ -356,7 +356,7 @@ static void Interfaces_init(void)
 	API_DISP_Clear_Full_Screen_3_Wire(WHITE);
 
 	/*********** MAX86150 ********************************************************/
-	API_MAX86150_I2C_Init();
+	API_MAX30101_I2C_Init();
 
 	/*********** Battery Monitor  ***********************************************/
 	API_Battery_monitor_Init();

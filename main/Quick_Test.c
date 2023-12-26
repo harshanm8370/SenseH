@@ -333,7 +333,7 @@ bool QUICK_Test1(void)
 							 }
 
 						  }*/
-#if 1
+#if 0
 						    if(API_Push_Btn_Get_Buttton_Press())
 						    {
 						    	Disable_Power_Supply();
@@ -348,7 +348,7 @@ bool QUICK_Test1(void)
 							API_IO_Exp_Power_Control(EN_VLED,LOW);
 							API_IO_Exp_Power_Control(EN_IR,LOW);
 #endif
-#if 1
+#if 0
 							API_Disp_Quick_test_screen(DISP_QT_ECG_TEST_IN_PROGRESS);
 							Print_time("/ECG start");
 							if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,TRUE)==FALSE)

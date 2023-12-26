@@ -90,7 +90,7 @@ typedef uint8_t byte;
   uint8_t readRegister8(uint8_t address, uint8_t reg);
   void writeRegister8(uint8_t address, uint8_t reg, uint8_t value);
 
-  void API_MAX86150_I2C_Init(void);
+  void API_MAX30101_I2C_Init(void);
   void API_MAX86150_I2C_DeInit(void);
 
   void readRevisionID();

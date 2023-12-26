@@ -528,7 +528,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 	}
 }
 
- void API_MAX86150_I2C_Init(void)
+ void API_MAX30101_I2C_Init(void)
 {
 	 esp_err_t error;
 	 i2c_config_t conf;
