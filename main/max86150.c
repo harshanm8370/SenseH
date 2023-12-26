@@ -13,7 +13,7 @@
 #include "API_IO_Exp.h"
 #include "push_button.h"
 
-#define DRDY_INPUT_PIN_SEL  (1ULL<<MAX86150_DRDY_INTR_PIN)
+#define DRDY_INPUT_PIN_SEL  (1ULL<<MAX30101_DRDY_INTR_PIN)
 #define DRDY_INTR_FLAG_DEFAULT 0
 
 #define DATA_LENGTH 512                  /*!< Data buffer length of test buffer */
@@ -140,11 +140,11 @@ void setPulseAmplitudeIR(uint8_t amplitude)
   writeRegister8(MAX86150_ADDR, MAX86150_LED1_PULSEAMP, amplitude);
 }
 
-/*void setPulseAmplitudeIR(uint8_t amplitude)
+void setProxythresh(uint8_t amplitude)
 {
-  writeRegister8(MAX86150_ADDR, MAX86150_LED1_PULSEAMP, amplitude);
+  writeRegister8(MAX86150_ADDR, MAX86150_LED_PROX_AMP, amplitude);
 }
-*/
+
 void setpilotPulseAmplitudeProximity(uint8_t amplitude) {
   writeRegister8(MAX86150_ADDR, MAX86150_LED_PILOT_PA, amplitude);
 }
@@ -237,9 +237,94 @@ void setPROXINTTHRESH(uint8_t val) {
 //
 // Device ID and Revision
 //
-uint8_t readPartID() {
-  return readRegister8(MAX86150_ADDR, MAX86150_PARTID);
+uint8_t readPartID(uint8_t regaddr) {
+  return readRegister8(MAX30102_ADDR, regaddr);
 }
+
+
+void Max30101_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledMode, int sampleRate, int pulseWidth, int adcRange)
+{
+	activeDevices=3;
+	writeRegister8(MAX86150_ADDR,MAX30101_MODECONFIG,0x40);
+	Delay_ms(200);
+
+	//writeRegister8(MAX86150_ADDR,REG_INTR_STATUS_1,INTR_ENABLE_1);
+
+	/*sampleAverage=32;
+	//FIFO Configuration
+	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	//The chip will average multiple samples of same type together if you wish
+	if (sampleAverage == 1) setFIFOAverage(MAX86150_SAMPLEAVG_1); //No averaging per FIFO record
+	else if (sampleAverage == 2) setFIFOAverage(MAX86150_SAMPLEAVG_2);
+	else if (sampleAverage == 4) setFIFOAverage(MAX86150_SAMPLEAVG_4);
+	else if (sampleAverage == 8) setFIFOAverage(MAX86150_SAMPLEAVG_8);
+	else if (sampleAverage == 16) setFIFOAverage(MAX86150_SAMPLEAVG_16);
+	else if (sampleAverage == 32) setFIFOAverage(MAX86150_SAMPLEAVG_32);
+	else setFIFOAverage(MAX86150_SAMPLEAVG_4);
+
+	uint16_t FIFOCode = 0x00;
+
+	FIFOCode = FIFOCode<<4 | 0x0009;// : FIFOCode;  //insert ECG front of ETI in FIFO
+	FIFOCode = FIFOCode<<8 | 0x0021;//) : FIFOCode; //insert Red(2) and IR (1) in front of ECG in FIFO
+
+
+	//FIFO Control 1 = FD2|FD1, FIFO Control 2 = FD4|FD3*/
+
+	/*writeRegister8(MAX86150_ADDR,MAX86150_FIFOCONTROL1,(0b00100001));
+	writeRegister8(MAX86150_ADDR,MAX86150_FIFOCONTROL2,(0b00001001));*/
+	//writeRegister8(MAX86150_ADDR,MAX86150_FIFOCONTROL1, (char)(FIFOCode & 0x00FF) );
+	//writeRegister8(MAX86150_ADDR,MAX86150_FIFOCONTROL2, (char)(FIFOCode >>8) );
+	/********* END CRITICAL FOR LED GLOW ************/
+
+	writeRegister8(MAX86150_ADDR,REG_INTR_ENABLE_2,INTR_ENABLE_2);	//0b11 0111 11 //0b11 0100 11
+
+	writeRegister8(MAX86150_ADDR,REG_FIFO_WR_PTR,FIFO_WR_PTR);//Some catch is here 0x02 works
+	//Delay_ms(500);
+	 //printf("\nDevice ID = 0x%2X.\n",readPartID(0x02));
+	writeRegister8(MAX86150_ADDR,REG_OVF_COUNTER,OVF_COUNTER); // PPG_ADC_RGE: 32768nA
+
+	writeRegister8(MAX86150_ADDR,REG_FIFO_RD_PTR,FIFO_RD_PTR);//start FIFO
+
+	writeRegister8(MAX86150_ADDR,REG_FIFO_CONFIG,FIFO_CONFIG_SpO2); // SR: 200 = MAX86150_ECG_CONFIG1,0b00000011
+
+	writeRegister8(MAX86150_ADDR,REG_MODE_CONFIG,MODE_CONFIG_SpO2); // IA Gain: 9.5 / PGA Gain: 8
+	writeRegister8(MAX86150_ADDR,REG_SPO2_CONFIG,SPO2_CONFIG_SpO2);
+	writeRegister8(MAX86150_ADDR,REG_LED1_PA,LED1_PA);
+	writeRegister8(MAX86150_ADDR,REG_LED2_PA,LED2_PA);
+	writeRegister8(MAX86150_ADDR,REG_PILOT_PA,PILOT_PA);
+	//writeRegister8(MAX86150_ADDR,0xFF,0x00); //exit test mode
+	//debug.Write("Registers written");
+
+	//writeRegister8(MAX86150_ADDR,0x0E,0xDB);
+	//writeRegister8(MAX86150_ADDR,0x0E,0xDB);
+	//setRANGE(0x05);  //set range of vled 50ma to 100ma
+	/*setPulseAmplitudeRed(0x00); //90 ma
+	setPulseAmplitudeIR(0xFF); //90ma
+
+	setpilotPulseAmplitudeProximity(0xFF);
+	setProxythresh(0x01);
+
+	//setPulseAmplitudeGreen(powerLevel);
+	//setPulseAmplitudeProximity(powerLevel);
+	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+	//Multi-LED Mode Configuration, Enable the reading of the three LEDs
+	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+	enableSlot(1, SLOT_RED_LED);
+	printf("\n################################\n");
+	printf("\nledMode = %d\n", ledMode);
+	printf("\n################################\n");
+	if (ledMode > 1) enableSlot(2, SLOT_IR_LED);
+	if (ledMode > 2) enableSlot(3, SLOT_ECG);
+	//enableSlot(1, SLOT_RED_PILOT);
+	//enableSlot(2, SLOT_IR_PILOT);
+	//enableSlot(3, SLOT_GREEN_PILOT);
+	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
+
+	Max86150_Clear_Fifo(); //Reset the FIFO before we begin checking the sensor
+}
+
+
 
 void Max86150_Configure_Registers_new(void)
 {
@@ -300,6 +385,8 @@ void Max86150_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledM
 	writeRegister8(MAX86150_ADDR,MAX86150_PPGCONFIG1,0b11011111);	//0b11 0111 11 //0b11 0100 11
 
 	writeRegister8(MAX86150_ADDR,MAX86150_PPGCONFIG2, 0x02);//Some catch is here 0x02 works
+	//Delay_ms(500);
+	 //printf("\nDevice ID = 0x%2X.\n",readPartID(0x02));
 	writeRegister8(MAX86150_ADDR,MAX86150_LED_RANGE, 0x00 ); // PPG_ADC_RGE: 32768nA
 
 	writeRegister8(MAX86150_ADDR,MAX86150_SYSCONTROL,0x04);//start FIFO
@@ -314,10 +401,11 @@ void Max86150_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledM
 	//writeRegister8(MAX86150_ADDR,0x0E,0xDB);
 	//writeRegister8(MAX86150_ADDR,0x0E,0xDB);
 	//setRANGE(0x05);  //set range of vled 50ma to 100ma
-	setPulseAmplitudeRed(0xFF); //90 ma
+	setPulseAmplitudeRed(0x00); //90 ma
 	setPulseAmplitudeIR(0xFF); //90ma
 
-	//setpilotPulseAmplitudeProximity(0xFF);
+	setpilotPulseAmplitudeProximity(0xFF);
+	setProxythresh(0x01);
 
 	//setPulseAmplitudeGreen(powerLevel);
 	//setPulseAmplitudeProximity(powerLevel);
@@ -401,7 +489,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 
 	if(reg_data != value)
 	{
-		//printf("Reg config fail .......... Reg addr =0x%X, write = 0x%X, Read = 0x%X\n",reg,value,reg_data);
+		//printf("Reg config fail .......... Reg addr =0x%2X, write = 0x%2X, Read = 0x%2X\n",reg,value,reg_data);
 	}
 }
 
@@ -520,18 +608,19 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 	    gpio_config(&io_conf);
 
 	    //change gpio intrrupt type for one pin
-	    gpio_set_intr_type(MAX86150_DRDY_INTR_PIN, GPIO_INTR_NEGEDGE);
+	    gpio_set_intr_type(MAX30101_DRDY_INTR_PIN, GPIO_INTR_NEGEDGE);
 
 	    //install gpio isr service
 	    gpio_install_isr_service(DRDY_INTR_FLAG_DEFAULT);
 	    //hook isr handler for specific gpio pin
-	   gpio_isr_handler_add(MAX86150_DRDY_INTR_PIN, drdy_intr_catch, (void*) MAX86150_DRDY_INTR_PIN);
+	   gpio_isr_handler_add(MAX30101_DRDY_INTR_PIN, drdy_intr_catch, (void*) MAX30101_DRDY_INTR_PIN);
 
  }
 
 
  static void IRAM_ATTR drdy_intr_catch(void* arg)
  {
+	 printf("interupt is here guys cmon\n");
 	 DRDY_Intr = true;
 	 DRDY_count++;
  }
@@ -541,18 +630,26 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
  {
      bool status = false;
 
-     API_IO_Exp_Power_Control(EN_VLED,LOW);
+     API_IO_Exp_Power_Control(EN_VLED,HIGH);
 
-	 if(readPartID() == 0x1EU)
+     printf("\nDevice ID = 0x%2X.\n",readPartID(0xFF));
+
+	 if(readPartID(0xFF) == 0x15U)
 	 {
-		 printf("\nDevice ID = 0x%2X.\n",readPartID());
-		 Max86150_SoftReset();
+		 printf("\nDevice ID = 0x%2X.\n",readPartID(0xFF));
+		 //Max86150_SoftReset();
 //		 Max86150_Configure_Registers_new();
-		 Max86150_Configure_Registers(0x10,4,0x07, 50, 50, 16384);
+		 //enableDATARDY();
+		 Max30101_Configure_Registers(0x10,4,0x07, 50, 50, 16384);
+		 //Max86150_Configure_Registers(0x10,4,0x07, 50, 50, 16384);
 		 //API_max86150_drdy_handle();
-		 enableDATARDY();
-		 enableAFULL();
-
+		// enableDATARDY();
+		 //enableAFULL();
+		/* while(1)
+		 {
+			 Delay_ms(500);
+		 printf("\nDevice ID = 0x%2X.\n",readPartID(0x02));
+		 }*/
 		 status = true;
 
 	 }
@@ -615,16 +712,22 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 				memset(sample_buff,0x00,sizeof(sample_buff));
 
 				PPG_Data_count = Max86150_CheckDataAvailibity();
+				//printf("\nPPG count available %ld",PPG_Data_count);
 				if(PPG_Data_count>=9U)
 				{
-					API_max86150_Read_brust(MAX86150_ADDR, 0x07U,sample_buff,12U);//9
+					API_max86150_Read_brust(MAX86150_ADDR, 0x07U,sample_buff,9U);//9
+					/*printf("\nPPG red data");
+					for(int i=0;i<3;i++)
+					{
+						printf("\n %d",sample_buff[i]);
+					}*/
 
 					if(!is_dummy_capture)
 					{
-						one_sample  = sample_buff[2U] | (sample_buff[1U] << 8U) | ((sample_buff[0U] & 0x07) << 16U);
+						one_sample  = sample_buff[2U] | (sample_buff[1U] << 8U) | ((sample_buff[0U] & 0x03) << 16U);
 						Red_data[ppg_count] = one_sample >> 2U;
 
-						one_sample = sample_buff[5U] | (sample_buff[4U] << 8U) | ((sample_buff[3U]  & 0x07) << 16U);
+						one_sample = sample_buff[5U] | (sample_buff[4U] << 8U) | ((sample_buff[3U]  & 0x03) << 16U);
 						IR_data[ppg_count] = one_sample >> 2U;
 
 						one_sample = sample_buff[8U] | (sample_buff[4U] << 7U) | ((sample_buff[6U]  & 0x03) << 16U);

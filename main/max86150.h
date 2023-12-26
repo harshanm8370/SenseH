@@ -23,6 +23,7 @@ typedef uint8_t byte;
   void setPulseAmplitudeRed(uint8_t value);
   void setRANGE(uint8_t amplitude);
   void setPulseAmplitudeIR(uint8_t value);
+  void setProxythresh(uint8_t amplitude);
   void setpilotPulseAmplitudeProximity(uint8_t amplitude);
   void setPulseAmplitudeProximity(uint8_t value);
 
@@ -76,7 +77,7 @@ typedef uint8_t byte;
 
   // Detecting ID/Revision
   uint8_t getRevisionID();
-  uint8_t readPartID();
+  uint8_t readPartID(uint8_t regaddr);
 	uint8_t readRegLED();
 	extern  uint32_t ppg_count;
 
@@ -94,6 +95,7 @@ typedef uint8_t byte;
 
   void bitMask(uint8_t reg, uint8_t mask, uint8_t thing);
   void Max86150_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledMode, int sampleRate, int pulseWidth, int adcRange);
+  void Max30101_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledMode, int sampleRate, int pulseWidth, int adcRange);
 
   esp_err_t API_max86150_Read_brust(uint8_t address, uint8_t reg_start_addr,uint8_t data_buff[],uint8_t nbf_bytes);
 

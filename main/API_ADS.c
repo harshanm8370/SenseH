@@ -15,6 +15,7 @@
 #include "push_button.h"
 
 #define ECG_DRDY_PIN_SEL  ( 1ULL<<ESP32_MCU_DRDY_PIN )
+#define PPG_INTR_PIN_SEL  ( 1ULL<<MAX30101_DRDY_INTR_PIN )
 
 
 /*-------------------------------------MACROS-------------------------------------------------------------------*/
@@ -74,6 +75,37 @@ static void SetDcLeadOffCurrent_in_Steps_8nA(uint16_t currentIn_nA);
  *
  * \retval		ECG_STATUS,ECG_NO_ERROR on successful init
  */
+
+
+void api_PPG_drdy_input_config()
+{
+	esp_err_t error;
+
+    gpio_config_t io_conf;
+
+    MemSet(&io_conf,0,sizeof(io_conf));
+
+    //interrupt of rising edge
+    io_conf.intr_type = GPIO_INTR_POSEDGE;
+
+    io_conf.pin_bit_mask = PPG_INTR_PIN_SEL;
+    //set as input mode
+    io_conf.mode = GPIO_MODE_INPUT;
+    //enable pull-up mode
+    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+
+    error = gpio_config(&io_conf);
+
+    //change gpio intrrupt type for one pin
+    error |= gpio_set_intr_type(MAX30101_DRDY_INTR_PIN, GPIO_INTR_POSEDGE);
+
+    error |= gpio_install_isr_service(0);
+    //hook isr handler for specific gpio pin
+    error |= gpio_isr_handler_add(MAX30101_DRDY_INTR_PIN, api_drdy_isr, (void*) MAX30101_DRDY_INTR_PIN);
+
+}
+
+
 ECG_STATUS API_ECG_Chip_Init(void)
 {
 	ECG_STATUS ecg_init = ECG_INIT_ERROR;

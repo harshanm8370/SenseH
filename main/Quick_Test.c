@@ -303,16 +303,27 @@ bool QUICK_Test1(void)
 					API_ECG_Chip_Reset();
 				}
 */
+				//uint8_t ret;
+
+				printf("\n\t\t\t%d",gpio_get_level(25));
+
+
 				 if(API_MAX86150_Setup())
 				 {
 					if((API_ECG_Init()))
 						{
-
+						printf("\n\t%d",gpio_get_level(25));
 						  uint8_t ret;
-
-					    /*  while(1)
+						 /* while(1)
 						  {
-							 ret = readRegister8(0x00,reg);
+						  printf("\nDevice ID = 0x%2X.\n",readPartID(0x04));
+						}*/
+
+						 // while(1)
+							  printf("\n\t%d",gpio_get_level(25));
+					      /*while(1)
+						  {
+							 ret = readRegister8(0x15,reg);
 							 if(ret)
 							 printf("\n %x",ret);
 							 if(API_Push_Btn_Get_Buttton_Press())
@@ -556,10 +567,12 @@ void Dummy_Capture(uint16_t total_samples)
 #endif
 		//uint8_t reg = 0xA5;
 #if 1
-		//while()
-		//uint8_t ret ;
-		//ret = readRegister8(0x00,reg);
-		//printf("\n %x",ret);
+		uint8_t ret ;
+		/*while(1)
+		{
+		ret = readRegister8(0x00,reg);
+		printf("\n %x",ret);
+		}*/
 
 		API_Disp_Exit_Text();
 		if(enableDummyCapture)

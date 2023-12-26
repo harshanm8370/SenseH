@@ -46,7 +46,7 @@ void Led_Blink(void *pvParameters);
 extern BT_STATUS Is_Device_Paired;
 bool qv_flag,mv_flag;
 bool BLE_DS;
-#define test 0
+#define test 1
 
 TaskHandle_t myTaskHandle = NULL;
 
@@ -84,10 +84,12 @@ TaskHandle_t myTaskHandle = NULL;
 
     gpio_set_direction(ECG_CSn_VCS, GPIO_MODE_OUTPUT);
     gpio_set_direction(JTAG_MTDI_DEBUG, GPIO_MODE_OUTPUT);
-    gpio_set_direction(MAX86150_DRDY_INTR_PIN,GPIO_MODE_INPUT);
-    gpio_set_pull_mode(MAX86150_DRDY_INTR_PIN,GPIO_PULLUP_ONLY);
+    gpio_set_direction(MAX30101_DRDY_INTR_PIN,GPIO_MODE_INPUT);
+    gpio_set_pull_mode(MAX30101_DRDY_INTR_PIN,GPIO_PULLUP_ONLY);
     gpio_set_level(JTAG_MTDI_DEBUG, 1);
     gpio_set_level(ECG_CSn_VCS, 1);
+
+
 
 	API_TIMER_Run_1MS_Timer();
 
@@ -137,6 +139,11 @@ TaskHandle_t myTaskHandle = NULL;
 
 	    //API_Disp_Quick_Test_Result(result);
 	    //Delay_ms(15000);
+	     /* API_IO_Exp_Power_Control(EN_VLED,LOW);
+	      while(1)
+	      {
+	      printf("\nDevice ID = 0x%2X.\n",readPartID(0xFF));
+	      }*/
 
 	while(1)
 	{
@@ -185,7 +192,7 @@ TaskHandle_t myTaskHandle = NULL;
 						{
 							API_TIMER_Kill_Timer(USER_INACTIVE_TIMEOUT);
 						}
-					/*	 if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
+				/*	     if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
 						 {
 								Selected_PID_type = PID_NOT_SELECTED;
 						 }*/

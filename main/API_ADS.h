@@ -62,6 +62,7 @@ void API_ECG_Registers_Check_For_Corruption(void);
 void API_ECG_Start_Conversion(void);
 void API_ECG_Stop_Conversion(void);
 ECG_STATUS API_ECG_Chip_Init(void);
+void api_PPG_drdy_input_config(void);
 extern int ECG_Drdy_count;
 
 #define ODR_50 0
