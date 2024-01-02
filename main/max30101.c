@@ -680,6 +680,8 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 		 //API_max86150_drdy_handle();
 		// enableDATARDY();
 		 //enableAFULL();
+
+
 		/* while(1)
 		 {
 			 Delay_ms(500);

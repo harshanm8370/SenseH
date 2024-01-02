@@ -29,8 +29,8 @@ static const uint8_t MAX30101_MODECONFIG =		0x09;
 #define OVF_COUNTER					(uint8_t)0x00u					// OVF_COUNTER counts the number of samples lost. It saturates at 0xF.
 #define FIFO_RD_PTR					(uint8_t)0x00u					// FIFO Read Pointer points to the location from where the processor gets the next sample from the FIFO
 
-#define LED1_PA						(uint8_t)0x3Du					// Choose value for approx. 7.4mA for LED1
-#define LED2_PA						(uint8_t)0x3Du					// Choose value for approx. 7.4mA for LED2
+#define LED1_PA						(uint8_t)0x33u					// Choose value for approx. 7.4mA for LED1
+#define LED2_PA						(uint8_t)0x33u					// Choose value for approx. 7.4mA for LED2
 #define PILOT_PA					(uint8_t)0x7Fu					// Choose value for approx. 25.4mA for Pilot LED
 
 
@@ -38,7 +38,7 @@ static const uint8_t MAX30101_MODECONFIG =		0x09;
 /* BP Config */
 #define MODE_CONFIG_BP				(uint8_t)0x02u					// Heart Rate mode, Red LED only
 #define FIFO_CONFIG_BP				(uint8_t)0x0Fu					// 1 SAMPLES AVERAGED PER FIFO SAMPLE,FIFO is not updated until FIFO_DATA is read, fifo almost full = 17
-#define SPO2_CONFIG_BP				(uint8_t)0x29u					// SPO2_ADC range = 4096nA, SPO2 sample rate - 200sps, LED pulseWidth - (118uS)
+#define SPO2_CONFIG_BP				(uint8_t)0x15u//29					// SPO2_ADC range = 4096nA, SPO2 sample rate - 200sps, LED pulseWidth - (118uS)
 
 
 

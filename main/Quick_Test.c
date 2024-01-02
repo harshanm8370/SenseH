@@ -301,8 +301,21 @@ bool QUICK_Test1(void)
 						return false;
 					}
 					API_ECG_Chip_Reset();
-				}
-*/
+				}*/
+				/*  uint8_t ret;
+				float temp;
+				 while(1)
+				 {
+				       Delay_ms(100);
+					   writeRegister8(MAX30101_ADDR,0x21,0x01);
+
+					   ret = (readPartID(0x20) & 0x0F);
+					   temp = ret * 0.0625;
+				       temp = temp + readPartID(0x1F);
+				       printf("\n %f",temp);
+
+				}*/
+
 				//uint8_t ret;
 
 				printf("\n\t\t\t%d",gpio_get_level(25));
@@ -321,6 +334,10 @@ bool QUICK_Test1(void)
 
 						 // while(1)
 							  printf("\n\t%d",gpio_get_level(25));
+                              // uint8_t ret;
+
+							//  writeRegister8(MAX30101_ADDR,0x21,0x01);
+
 					      /*while(1)
 						  {
 							 ret = readRegister8(0x15,reg);
@@ -333,6 +350,8 @@ bool QUICK_Test1(void)
 							 }
 
 						  }*/
+
+
 #if 0
 						    if(API_Push_Btn_Get_Buttton_Press())
 						    {
@@ -348,7 +367,7 @@ bool QUICK_Test1(void)
 							API_IO_Exp_Power_Control(EN_VLED,LOW);
 							API_IO_Exp_Power_Control(EN_IR,LOW);
 #endif
-#if 0
+#if 1
 							API_Disp_Quick_test_screen(DISP_QT_ECG_TEST_IN_PROGRESS);
 							Print_time("/ECG start");
 							if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,TRUE)==FALSE)
@@ -359,7 +378,7 @@ bool QUICK_Test1(void)
 
 							Print_time("\nECG end");
 #endif
-#if 1
+#if 0
 							API_Disp_Quick_test_screen(DISP_QT_BP_TEST_IN_PROGRESS);
 							printf("\nCapturing BP................");
 							API_IO_Exp_Power_Control(EN_VLED,HIGH);
@@ -407,6 +426,7 @@ bool QUICK_Test1(void)
 					 printf("\n Deleting Record = %d",delete_rec);
 					 erase_one_record(BP1);
 					 erase_one_record(ECG_1_Lead);
+					 erase_one_record(ECG_6_Lead);
 					 erase_one_record(SPO2);
 					 API_Flash_Check_Update_Valid_Record_Status();
 				 }
