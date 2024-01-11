@@ -33,8 +33,8 @@
 #define NACK_VAL 0x1
 
 
- static esp_err_t api_max86150_write_reg(i2c_port_t i2c_num, uint8_t slave_addr,uint8_t reg_add, uint8_t reg_data);
- static esp_err_t api_max86150_read_reg(i2c_port_t i2c_num, uint8_t slave_addr, uint8_t reg_addr, uint8_t *reg_data);
+ static esp_err_t api_max30101_write_reg(i2c_port_t i2c_num, uint8_t slave_addr,uint8_t reg_add, uint8_t reg_data);
+ static esp_err_t api_max30101_read_reg(i2c_port_t i2c_num, uint8_t slave_addr, uint8_t reg_addr, uint8_t *reg_data);
  static void IRAM_ATTR drdy_intr_catch(void* arg);
 
  static uint8_t activeDevices = 0U; //Gets set during setup. Allows check() to calculate how many bytes to read from FIFO
@@ -506,7 +506,7 @@ uint8_t readRegister8(uint8_t address, uint8_t reg) {
 
 	uint8_t reg_data = 0;
 
-	api_max86150_read_reg(MAX86150_I2C_PORT_NUMBER,address,reg,&reg_data);
+	api_max30101_read_reg(MAX86150_I2C_PORT_NUMBER,address,reg,&reg_data);
 
 	return reg_data;
 }
@@ -517,7 +517,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 
 	for(int retry=0;retry<5;retry++)
 	{
-		api_max86150_write_reg(MAX86150_I2C_PORT_NUMBER,address,reg,value);
+		api_max30101_write_reg(MAX86150_I2C_PORT_NUMBER,address,reg,value);
 		reg_data = readRegister8(address,reg);
 		if(reg_data == value) break;
 	}
@@ -555,7 +555,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
  {
 	  i2c_driver_delete(MAX86150_I2C_PORT_NUMBER);
  }
- static esp_err_t api_max86150_read_reg(i2c_port_t i2c_num, uint8_t slave_addr, uint8_t reg_addr, uint8_t *reg_data)
+ static esp_err_t api_max30101_read_reg(i2c_port_t i2c_num, uint8_t slave_addr, uint8_t reg_addr, uint8_t *reg_data)
  {
 		i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 
@@ -575,7 +575,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
  }
 
 
- static esp_err_t api_max86150_write_reg(i2c_port_t i2c_num, uint8_t slave_addr,uint8_t reg_add, uint8_t reg_data)
+ static esp_err_t api_max30101_write_reg(i2c_port_t i2c_num, uint8_t slave_addr,uint8_t reg_add, uint8_t reg_data)
  {
  	i2c_cmd_handle_t cmd = i2c_cmd_link_create();
 

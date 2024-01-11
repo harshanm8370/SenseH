@@ -46,13 +46,13 @@ float API_ADC_Read_Battery_Voltage(void)
 			{
 				adc_raw_data = adc1_get_raw((adc1_channel_t)channel);
 
-				temp = (adc_raw_data*4.2)/1024;
+				temp = (adc_raw_data*3.2)/4095;
 				battery_vol += temp + 0.10;
 				for(int i=0;i<5000;i++){}// Software delay
 			}
 
 		//printf("\nBattery Voltage = %f",(battery_vol/3));
-	return (battery_vol/3);
+	return ((battery_vol/3)*4.2);
 }
 
 void Fuel_Guage_update_battery_status(float batVoltage)

@@ -352,7 +352,7 @@ bool QUICK_Test1(void)
 						  }*/
 
 
-#if 0
+#if 1
 						    if(API_Push_Btn_Get_Buttton_Press())
 						    {
 						    	Disable_Power_Supply();
@@ -378,7 +378,7 @@ bool QUICK_Test1(void)
 
 							Print_time("\nECG end");
 #endif
-#if 0
+#if 1
 							API_Disp_Quick_test_screen(DISP_QT_BP_TEST_IN_PROGRESS);
 							printf("\nCapturing BP................");
 							API_IO_Exp_Power_Control(EN_VLED,HIGH);

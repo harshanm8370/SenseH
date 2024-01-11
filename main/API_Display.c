@@ -8,7 +8,7 @@
 #include "esp_system.h"
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
-
+#include "API_IO_Exp.h"
 #include "freertos/task.h"
 #include "protofonts.h"
 #include "icons.h"
@@ -3235,8 +3235,8 @@ uint8_t left_offset = 0;
 //		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
 		gpio_set_level(ECG_CSn_VCS, 1);
 
- 		api_disp_display_char( " FW Version ", font19x10, BLUE, BLACK, 5, 80);
- 		api_disp_display_char(FIRMWARE_VERSION, font19x10, BLUE, BLACK, 5, 100);
+ 		api_disp_display_char( " V 1.0.1 ", font19x10, WHITE, BLACK, 20, 100);
+ 		//api_disp_display_char(FIRMWARE_VERSION, font19x10, BLUE, BLACK, 5, 120);
   }
 
 
@@ -3470,7 +3470,7 @@ void API_DISP_SenseSemi_Logo(SENSESEMI_LOGO_t moving_or_static)
 			 API_Clear_Display (DISP_BOTTOM_SEC,BLACK);
 
 			 api_disp_set_pointer_driver_side(col_start,DISP_MAX_COLS,row_start,DISP_MAX_ROWS);
-		 	 api_disp_display_icon (logo, 40, 30,BLUE, BLACK);
+		 	 api_disp_display_icon (SenseHlargelogo, 15, 50,BLUE, BLACK);
 
 			 //api_disp_tx_buffer(logo+2,buff_nbf_rows * buff_nbf_cols);
 		}
@@ -3562,11 +3562,11 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
   	struct DISPLAY_TEXT text1,text2,text3,text4,text5,text6,text7;
 
   	text4.color= BLUE;
-  	text4.text_starting_addr = " Enter PID  ";
+  	text4.text_starting_addr = " Enter  PID ";
   	text4.text_status = display;
 
   	text5.color = BLUE;
-  	text5.text_starting_addr = " --------- ";
+  	text5.text_starting_addr = " ---------- ";
   	text5.text_status = display;
 	//text2.text_status = display;
 
@@ -3598,7 +3598,7 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 //	api_disp_display_icon(star,left_offset,top_offset,RED,WHITE);
 
 	//api_disp_set_pointer_driver_side(col_start,DISP_MAX_COLS,row_start,DISP_MAX_ROWS);
-			 	 api_disp_display_icon (logo, 40, 30,BLUE, WHITE);
+			 	 api_disp_display_icon (SenseHlargelogo, 15, 42,BLUE, WHITE);
 
   	while(1)
   	{
