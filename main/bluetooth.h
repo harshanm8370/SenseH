@@ -15,6 +15,7 @@
 /*
  * BT Request/Response commands
  */
+#define Test_status_req					0x33
 #define BP1_data_req					0x10
 #define BP2_data_req					0x90
 #define BG_data_req						0x11

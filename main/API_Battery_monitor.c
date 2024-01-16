@@ -16,7 +16,7 @@
 #define NO_OF_SAMPLES   10          //Multisampling
 
 static const adc_channel_t channel = ADC_CHANNEL_7;     //GPIO35 if ADC1
-static const adc_atten_t atten = ADC_ATTEN_DB_11;//;ADC_ATTEN_DB_0;
+static const adc_atten_t atten = ADC_ATTEN_DB_0;//;ADC_ATTEN_DB_0;
 //static const adc_unit_t unit = ADC_UNIT_1;
 
 
@@ -42,17 +42,17 @@ float API_ADC_Read_Battery_Voltage(void)
 		float battery_vol  = 0.0;
 		float temp = 0;
 
-		for(int i=0;i<3;i++)
+		for(int i=0;i<10;i++)
 			{
 				adc_raw_data = adc1_get_raw((adc1_channel_t)channel);
-
-				temp = (adc_raw_data*3.2)/4095;
-				battery_vol += temp + 0.10;
+                 //printf("\n%d",adc_raw_data);
+				temp = (adc_raw_data*1.1)/4095;
+				battery_vol += temp;
 				for(int i=0;i<5000;i++){}// Software delay
 			}
 
 		//printf("\nBattery Voltage = %f",(battery_vol/3));
-	return ((battery_vol/3)*4.2);
+	return ((battery_vol/10)*4.2);
 }
 
 void Fuel_Guage_update_battery_status(float batVoltage)

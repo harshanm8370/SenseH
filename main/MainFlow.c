@@ -34,6 +34,8 @@
 #include "freertos/task.h"
 #include "ECG_12_Lead.h"
 
+extern uint8_t Device_stat;
+
 static void Interfaces_init(void);
 void POR_Init(void);
 void Manage_Device_Sleep(void);
@@ -54,6 +56,7 @@ TaskHandle_t myTaskHandle = NULL;
 
  void Application_Run(void)
 {
+	 Device_stat = 0;
 	 ota_flag = 0;
 	// flag = 1;
 	static SELECTED_TEST_t state;
@@ -90,7 +93,6 @@ TaskHandle_t myTaskHandle = NULL;
     gpio_set_level(ECG_CSn_VCS, 1);
 
 
-
 	API_TIMER_Run_1MS_Timer();
 
 	API_IO_Exp_init();
@@ -98,6 +100,7 @@ TaskHandle_t myTaskHandle = NULL;
     //API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
 
     Interfaces_init();
+    API_IO_Exp1_P0_write_pin(HIBERNATE,HIGH);
 
    // API_RUN_TEMPERATURE_TEST();
 
@@ -156,6 +159,7 @@ TaskHandle_t myTaskHandle = NULL;
 			    	 state = VIEW_SCREEN;
 #else
 			    	 state = API_Disp_Select_PID_Screen();
+			    	 Device_stat = 1;
 #endif
 			    	    if(state == VIEW_SCREEN)
 			    	    {
@@ -201,7 +205,8 @@ TaskHandle_t myTaskHandle = NULL;
 						{
 							case QUICK_VITALS:{
                                 qv_flag = 1;
-								Is_Test_In_Progress = true;
+                                Device_stat = 2;
+							//	Is_Test_In_Progress = true;
 #if !test
 								if(Is_Device_Paired == DEFAULTD) // Paired condition
 								{
@@ -210,6 +215,7 @@ TaskHandle_t myTaskHandle = NULL;
 								}
 #endif
 								Run_Quick_Vital();
+								Device_stat  = 3;
 #if !test
 								if(Is_Device_Paired == DEFAULTD) // Paired condition
 								{
@@ -225,6 +231,7 @@ TaskHandle_t myTaskHandle = NULL;
 							case MULTI_VITALS:{
 								Is_Test_In_Progress = true;
 								mv_flag =1 ;
+								Device_stat = 2;
 								qv_flag = 0;
 #if !test
 								if(Is_Device_Paired == DEFAULTD) // Paired condition
@@ -233,6 +240,7 @@ TaskHandle_t myTaskHandle = NULL;
 							    }
 #endif
 								Run_Multi_Vital();
+								Device_stat = 3;
 #if !test
 								if(Is_Device_Paired == DEFAULTD) // Paired condition
 								{

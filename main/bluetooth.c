@@ -11,6 +11,8 @@
 #include "ProjectConfiguration.h"
 #include "API_Display.h"
 
+uint8_t Device_stat;
+
 /************************************************ MACROS *****************************************************************/
 #define BT_RAW_DATA_LENGTH			  	580	 //BT_PACKET_SIZE = BT_RAW_DATA_LENGTH + payload bytes, this should not cross MTU:600   
 #define OFFLINE_REC_SUMMARY_LEN			81  /*need to verify */
@@ -184,6 +186,22 @@ void BT_process_requests(void)
 				client_request_cmd = NO_CMD_REQ;
 				printf("\nBP2 Sync END");
 			}
+			break;
+
+
+		case Test_status_req:
+			//Data_sync_in_progress = TRUE;
+			printf("\nrequesting for test stat");
+
+			if(API_BLE_Transmit((uint8_t *)&Device_stat, sizeof(Device_stat)) == 3)
+				printf("\n response transmitted as : %d",Device_stat);
+			bt_session_complete = TRUE;
+
+			if (bt_session_complete){
+					BT_ongoing_session = false;
+					client_request_cmd = NO_CMD_REQ;
+				}
+
 			break;
 
 		case BG_data_req:
