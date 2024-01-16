@@ -24,6 +24,7 @@
 #include "OTA_Upgrade.h"
 #include "ProjectConfiguration.h"
 #include "bluetooth.h"
+#include "Battery_management.h"
 
 uint8_t hospital_pid[MAX_PID_RECORDS];
 
@@ -2453,8 +2454,12 @@ uint8_t left_offset = 0;
   	while(1)
   	{
 		//btn_press = API_Push_Btn_Get_hold_time();
+  		Detect_low_battery_display_notification();
 
-
+  		if(API_Check_USB_Charger_Connection_Display_Notification())
+  		 {
+  		    EnterSleepMode(SYSTEM_DEEP_SLEEP);
+  		 }
 
 
   		btn_press = API_Push_Btn_Get_Buttton_Press();
@@ -3303,11 +3308,17 @@ bool API_DISP_Memory_Full_Status(void)
   							break;
   						}
 
-  				case  DISP_THREE_STICK :
+  				case  DISP_CHARGE_STICK :
   						{
-  							api_disp_display_icon(batteryFull, DISP_TOP_SEC_BAT_COL_START_ADDR, DISP_TOP_SEC_BAT_ROW_START_ADDR, color, BLUE);
+  							api_disp_display_icon(batteryCharging, DISP_TOP_SEC_BAT_COL_START_ADDR, DISP_TOP_SEC_BAT_ROW_START_ADDR, color, BLUE);
   							break;
   						}
+
+  				case  DISP_THREE_STICK :
+  					{
+  						api_disp_display_icon(batteryFull, DISP_TOP_SEC_BAT_COL_START_ADDR, DISP_TOP_SEC_BAT_ROW_START_ADDR, color, BLUE);
+  						break;
+  					}
   			}
   	}
 
@@ -3602,9 +3613,14 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
   	while(1)
   	{
+  		Detect_low_battery_display_notification();
+  		if(API_Check_USB_Charger_Connection_Display_Notification())
+  		{
+  		   EnterSleepMode(SYSTEM_DEEP_SLEEP);
+  		}
+
 
   		btn_press = API_Push_Btn_Get_Buttton_Press();
-
 
 		if(btn_press == 3)
 		{

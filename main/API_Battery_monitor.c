@@ -7,6 +7,7 @@
 #include "driver/adc.h"
 #include "API_timer.h"
 #include "Error_Handling.h"
+#include "API_IO_Exp.h"
 
 #if CONFIG_IDF_TARGET_ESP32
 #include "esp_adc_cal.h"
@@ -42,7 +43,7 @@ float API_ADC_Read_Battery_Voltage(void)
 		float battery_vol  = 0.0;
 		float temp = 0;
 
-		for(int i=0;i<10;i++)
+		for(int i=0;i<100;i++)
 			{
 				adc_raw_data = adc1_get_raw((adc1_channel_t)channel);
                  //printf("\n%d",adc_raw_data);
@@ -52,7 +53,7 @@ float API_ADC_Read_Battery_Voltage(void)
 			}
 
 		//printf("\nBattery Voltage = %f",(battery_vol/3));
-	return ((battery_vol/10)*4.2);
+	return ((battery_vol/100)*4.1);
 }
 
 void Fuel_Guage_update_battery_status(float batVoltage)
@@ -63,14 +64,14 @@ void Fuel_Guage_update_battery_status(float batVoltage)
 			API_DISP_Update_Battery_Status(DISP_ONE_STICK,false,true,RED);
 		}
 
-		else if((batVoltage >= FUEL_GUAGE_10_PER_VOLTAGE) && (batVoltage <= FUEL_GUAGE_15_PER_VOLTAGE))
+		else if((batVoltage >= FUEL_GUAGE_10_PER_VOLTAGE) && (batVoltage <= FUEL_GUAGE_33_PER_VOLTAGE))
 		{
 			API_DISP_Update_Battery_Status(DISP_ONE_STICK,false,false,RED);
 		}
 
-		else if((batVoltage > FUEL_GUAGE_15_PER_VOLTAGE) && (batVoltage <= FUEL_GUAGE_33_PER_VOLTAGE))
+		else if(IsUSB_Charger_Connected())
 		{
-			API_DISP_Update_Battery_Status(DISP_ONE_STICK,false,false,WHITE);
+			API_DISP_Update_Battery_Status(DISP_CHARGE_STICK,false,false,WHITE);
 		}
 
 		else if((batVoltage > FUEL_GUAGE_33_PER_VOLTAGE) && (batVoltage <= FUEL_GUAGE_66_PER_VOLTAGE))

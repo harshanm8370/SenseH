@@ -147,6 +147,10 @@ TaskHandle_t myTaskHandle = NULL;
 	      {
 	      printf("\nDevice ID = 0x%2X.\n",readPartID(0xFF));
 	      }*/
+    	  if(API_Check_USB_Charger_Connection_Display_Notification())
+    	  {
+    		  EnterSleepMode(SYSTEM_DEEP_SLEEP);
+    	  }
 
 	while(1)
 	{
