@@ -19,6 +19,7 @@
 #include "driver/periph_ctrl.h"
 #include "Hardware.h"
 #include "bluetooth.h"
+#include "Battery_management.h"
 
 // MACROS REQUIRED FOR WDOG SpO2
 
@@ -84,6 +85,7 @@ float FilterOutputBuffer4[TOTAL_SAMPLES];
 extern bool qv_flag,mv_flag;
 char date_info[50];
 uint8_t reg;
+extern uint32_t ppg_count;
 typedef struct __attribute__((__packed__))
 {
 	uint32_t  		record_len;
@@ -327,6 +329,12 @@ bool QUICK_Test1(void)
 						{
 						printf("\n\t%d",gpio_get_level(25));
 						  uint8_t ret;
+
+						  Detect_low_battery_display_notification();
+						  if(IsUSB_Charger_Connected())
+						  {
+							  return  0;
+						  }
 						 /* while(1)
 						  {
 						  printf("\nDevice ID = 0x%2X.\n",readPartID(0x04));
@@ -587,21 +595,44 @@ void Dummy_Capture(uint16_t total_samples)
 #endif
 		//uint8_t reg = 0xA5;
 #if 1
-		uint8_t ret ;
-		/*while(1)
-		{
-		ret = readRegister8(0x00,reg);
-		printf("\n %x",ret);
-		}*/
+		int cnt =-1,dly=0,Tcount=0;
+
+		 API_TIMER_Register_Timer(LOD_WAIT_TIME);
+		    	  //API_TIMER_Kill_Timer(DATA_SYNC_TIMEOUT);
+		 while(1)
+		 {
+			 dly++;
+			 if(dly == 25000)
+			 {
+			     cnt++;
+			     API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
+			     dly =0;
+			     printf("\n %ld",SPO2_PPG_RED_BUFF[cnt]);
+			 }
+			 if(API_TIMER_Get_Timeout_Flag(LOD_WAIT_TIME))
+			 {
+				 printf("\ntimer stopped");
+				 return 0;
+			 }
+			 if(SPO2_PPG_RED_BUFF[cnt] > 2000)
+			 {
+				 SPO2_PPG_RED_BUFF[cnt] = 0;
+				Tcount++;
+			 }
+			 if(Tcount == 40)
+			 {
+				 break;
+			 }
+		 }
 
 		API_Disp_Exit_Text();
 		if(enableDummyCapture)
 		{
 			ppg_count = 0;
 			do{
-				if(API_Push_Btn_Get_Buttton_Press())
+				if(IsUSB_Charger_Connected() || API_Push_Btn_Get_Buttton_Press())
 				{
-					return 0;
+					return  0;
 				}
 				status = API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,1);
 			}while(ppg_count < 200);
@@ -613,9 +644,9 @@ void Dummy_Capture(uint16_t total_samples)
 		ppg_count = 0;
 		Print_time("\nSPO2 start");
 		do{
-			if(API_Push_Btn_Get_Buttton_Press())
+			if(IsUSB_Charger_Connected() || API_Push_Btn_Get_Buttton_Press())
 			{
-				return 0;
+				return  0;
 			}
 			status = API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
 		}while(ppg_count < ((ECG_IN_SECONDS*SET_ODR)));
@@ -667,10 +698,14 @@ void Dummy_Capture(uint16_t total_samples)
 			{
 				for(raw_data_index=0; raw_data_index<ECG_DUMMY_CAPTURES; raw_data_index++)// ~3sec dummy capture
 				{
-					if(API_Push_Btn_Get_Buttton_Press())
+					if(IsUSB_Charger_Connected() || API_Push_Btn_Get_Buttton_Press())
+					{
+						return  0;
+					}
+				/*	if(API_Push_Btn_Get_Buttton_Press())
 					{
 						return 0;
-					}
+					}*/
 
 					status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
 				}
@@ -680,9 +715,9 @@ void Dummy_Capture(uint16_t total_samples)
 			MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
 			for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
 			{
-				if(API_Push_Btn_Get_Buttton_Press())
+				if(IsUSB_Charger_Connected() || API_Push_Btn_Get_Buttton_Press())
 				{
-					return 0;
+					return  0;
 				}
 				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
 			}
@@ -757,23 +792,47 @@ void Dummy_Capture(uint16_t total_samples)
 		uint8_t ppg_index_cnt =0;
 		API_ECG_Stop_Conversion();
 		API_ECG_Start_Conversion();
+		int cnt =-1,dly=0,Tcount=0;
+
+		API_TIMER_Register_Timer(LOD_WAIT_TIME);
+		//API_TIMER_Kill_Timer(DATA_SYNC_TIMEOUT);
+		while(1)
+		{
+			dly++;
+			if(dly == 25000)
+			{
+				cnt++;
+				API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
+				dly =0;
+				printf("\n %ld",SPO2_PPG_RED_BUFF[cnt]);
+			}
+			if(API_TIMER_Get_Timeout_Flag(LOD_WAIT_TIME))
+			{
+				printf("\ntimer stopped");
+				return 0;
+			}
+			if(SPO2_PPG_RED_BUFF[cnt] > 2000)
+			{
+				SPO2_PPG_RED_BUFF[cnt] = 0;
+				Tcount++;
+			}
+			if(Tcount == 40)
+			{
+				break;
+			}
+		}
 		API_Disp_Exit_Text();
 		if(enableDummyCapture)
 		{
 			ppg_count = 0;
 			for(raw_data_index=0; raw_data_index<ECG_DUMMY_CAPTURES; raw_data_index++)// ~3sec dummy capture
 			{
-				if(API_Push_Btn_Get_Buttton_Press())
+				if(IsUSB_Charger_Connected() || API_Push_Btn_Get_Buttton_Press())
 				{
-					return 0;
+					return  0;
 				}
 				status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_TEMP+raw_data_index);
-//				ppg_index_cnt++;
-//				if(ppg_index_cnt >=10)
-				{
-					status = API_MAX30101_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
-//					ppg_index_cnt = 0;
-				}
+				status = API_MAX30101_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
 			}
 		}
 
@@ -788,9 +847,9 @@ void Dummy_Capture(uint16_t total_samples)
 		Print_time("\nBP start");
 		for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
 		{
-			if(API_Push_Btn_Get_Buttton_Press())
+			if(IsUSB_Charger_Connected() || API_Push_Btn_Get_Buttton_Press())
 			{
-				return 0;
+				return  0;
 			}
 			status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_TEMP+raw_data_index);
 //			ppg_index_cnt++;

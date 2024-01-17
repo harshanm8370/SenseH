@@ -733,7 +733,7 @@ bool IsUSB_Charger_Connected(void)
 	 }
 	 else
 	 {
-		 printf("\nUSB Charger Disconnected");
+		// printf("\nUSB Charger Disconnected");
 	 }
 
 	return is_charger_connected;

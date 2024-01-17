@@ -172,9 +172,9 @@ bool Lead12_Data_Capture_new(uint32_t vlead)
 		API_Disp_Exit_Text();
 		for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
 		{
-			if(API_Push_Btn_Get_Buttton_Press())
+			if(IsUSB_Charger_Connected() || API_Push_Btn_Get_Buttton_Press())
 			{
-				return 0;
+				return  0;
 			}
 			API_ECG_Capture_Samples_3Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index, ECG_Lead3_buff+raw_data_index);
 

@@ -47,7 +47,7 @@ bool Detect_low_battery_display_notification()
 
 	  battery_voltage = API_ADC_Read_Battery_Voltage();
 
-	  printf("\nbattery_voltage = %f",battery_voltage);
+	  //printf("\nbattery_voltage = %f",battery_voltage);
 
 	  Fuel_Guage_update_battery_status(battery_voltage);
 

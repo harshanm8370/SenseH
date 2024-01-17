@@ -2455,7 +2455,6 @@ uint8_t left_offset = 0;
   	{
 		//btn_press = API_Push_Btn_Get_hold_time();
   		Detect_low_battery_display_notification();
-
   		if(API_Check_USB_Charger_Connection_Display_Notification())
   		 {
   		    EnterSleepMode(SYSTEM_DEEP_SLEEP);
