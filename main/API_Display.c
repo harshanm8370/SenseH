@@ -25,6 +25,7 @@
 #include "ProjectConfiguration.h"
 #include "bluetooth.h"
 #include "Battery_management.h"
+#include "MainFlow.h"
 
 uint8_t hospital_pid[MAX_PID_RECORDS];
 
@@ -2454,11 +2455,13 @@ uint8_t left_offset = 0;
   	while(1)
   	{
 		//btn_press = API_Push_Btn_Get_hold_time();
+#if !onep2
   		Detect_low_battery_display_notification();
   		if(API_Check_USB_Charger_Connection_Display_Notification())
   		 {
   		    EnterSleepMode(SYSTEM_DEEP_SLEEP);
   		 }
+#endif
 
 
   		btn_press = API_Push_Btn_Get_Buttton_Press();
@@ -2981,11 +2984,11 @@ uint8_t left_offset = 0;
   }
 
 
-  void API_Disp_Quick_Test_Result(uint16_t result[])
+  void API_Disp_Quick_Test_Result(void)
   {
   	struct DISPLAY_TEXT mid_text1,mid_text2,mid_text3,mid_text4,mid_text5,mid_text6,mid_text7,btm_text;
   	struct DISPLAY_ICON btm_icon;
-
+/*
   	char string1[12] = {0};
   	char string2[12] = {0};
   	char string3[12] = {0};
@@ -3103,11 +3106,11 @@ uint8_t left_offset = 0;
   	#else
   	mid_text1.color       = WHITE;
   	mid_text2.color       = WHITE;
-  	mid_text3.color       = WHITE;
+  	mid_text3.color       = WHITE;*/
 
 #ifndef MARKETING_REQUIREMENT
-  	mid_text1.text_starting_addr = " Test Done! ";
-	mid_text1.color       = BLUE;
+  //	mid_text1.text_starting_addr = " Test Done! ";
+//	mid_text1.color       = BLUE;
 #endif
   	mid_icon.icon_status        = ON;
   	mid_icon.icon_starting_addr = ThumbsUpIcon1;
@@ -3118,7 +3121,7 @@ uint8_t left_offset = 0;
   	API_Clear_Display(DISP_MIDDLE_SEC,WHITE);
 
 
-  	#endif
+  //	#endif
 
 
   }
@@ -3612,11 +3615,13 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
   	while(1)
   	{
+#if !onep2
   		Detect_low_battery_display_notification();
   		if(API_Check_USB_Charger_Connection_Display_Notification())
   		{
   		   EnterSleepMode(SYSTEM_DEEP_SLEEP);
   		}
+#endif
 
 
   		btn_press = API_Push_Btn_Get_Buttton_Press();

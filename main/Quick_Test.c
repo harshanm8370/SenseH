@@ -70,18 +70,18 @@
 /***************************************************/
 uint32_t SPO2_PPG_IR_BUFF[TOTAL_SAMPLES];
 uint32_t SPO2_PPG_RED_BUFF[TOTAL_SAMPLES];
-uint32_t SPO2_PPG_ECG_BUFF[TOTAL_SAMPLES];
+//uint32_t SPO2_PPG_ECG_BUFF[TOTAL_SAMPLES];
 float ECG_Lead1_buff[TOTAL_SAMPLES_VCS];
 float ECG_Lead2_buff[TOTAL_SAMPLES_VCS];
-float ECG_TEMP[TOTAL_SAMPLES_VCS];
+//float ECG_TEMP[TOTAL_SAMPLES_VCS];
 float ECG_Lead3_buff[TOTAL_SAMPLES_VCS];
 float BP_ECG_Lead1_buff[TOTAL_SAMPLES_VCS];
 uint32_t BP_PPG_RED_BUFF[TOTAL_SAMPLES];
 uint32_t BP_PPG_IR_BUFF[TOTAL_SAMPLES];
-float FilterOutputBuffer1[TOTAL_SAMPLES];
-float FilterOutputBuffer2[TOTAL_SAMPLES];
-float FilterOutputBuffer3[TOTAL_SAMPLES];
-float FilterOutputBuffer4[TOTAL_SAMPLES];
+//float FilterOutputBuffer1[TOTAL_SAMPLES];
+//float FilterOutputBuffer2[TOTAL_SAMPLES];
+//float FilterOutputBuffer3[TOTAL_SAMPLES];
+//float FilterOutputBuffer4[TOTAL_SAMPLES];
 extern bool qv_flag,mv_flag;
 char date_info[50];
 uint8_t reg;
@@ -175,9 +175,9 @@ bool Lead12_LeadOff_Detect(void);
 
 bool skip_quick_test = FALSE;
 
-bool QUICK_Test1(void);
+//bool QUICK_Test1(void);
 
-bool QUICK_Test1(void)
+/*bool QUICK_Test1(void)
 {
 	uint16_t result[4] = {0};
 
@@ -185,7 +185,7 @@ bool QUICK_Test1(void)
 
 	Enable_Power_Supply();
 
-	/*if(API_ECG_Init())
+	if(API_ECG_Init())
 	{
 		if(API_ECG_Lead_OFF_Detect(LEAD1))
 		{
@@ -196,7 +196,7 @@ bool QUICK_Test1(void)
 			return false;
 		}
 		API_ECG_Chip_Reset();
-	}*/
+	}
 
 	API_ECG_Chip_Reset();
 
@@ -225,7 +225,7 @@ bool QUICK_Test1(void)
 
                if(qv_flag)
                {
-			   API_Disp_Quick_Test_Result(result);
+			   API_Disp_Quick_Test_Result();
                }
 			   if(Selected_PID_type != GUEST_PID) Store_QuickTest1_Data_To_Flash();
 		   }
@@ -242,12 +242,12 @@ bool QUICK_Test1(void)
 
 	printf("\nTest completed.");
 	return true;
-}
+}*/
 
 
  bool Run_Quick_Vital(void)
 {
-	uint16_t result[4] = {0};
+	//uint16_t result[4] = {0};
 
 
 	printf("\nQuick Test2 Started");
@@ -320,7 +320,7 @@ bool QUICK_Test1(void)
 
 				//uint8_t ret;
 
-				printf("\n\t\t\t%d",gpio_get_level(25));
+				//printf("\n\t\t\t%d",gpio_get_level(25));
 
 
 				 if(API_MAX30101_Setup())
@@ -341,7 +341,7 @@ bool QUICK_Test1(void)
 						}*/
 
 						 // while(1)
-							  printf("\n\t%d",gpio_get_level(25));
+							//  printf("\n\t%d",gpio_get_level(25));
                               // uint8_t ret;
 
 							//  writeRegister8(MAX30101_ADDR,0x21,0x01);
@@ -403,13 +403,9 @@ bool QUICK_Test1(void)
 							Vital_result.SBP1 = 117; // Need to change later
 							Vital_result.DBP1 = 77; // Need to change later
 
-							result[0] = 98;
-							result[1] = 85;
-							result[2] = 115;
-							result[3] = 85;
                             if(qv_flag)
                             {
-							    API_Disp_Quick_Test_Result(result);
+							    API_Disp_Quick_Test_Result();
                             }
 							if(Selected_PID_type != GUEST_PID) Store_QuickTest1_Data_To_Flash();
 					   }
@@ -463,7 +459,7 @@ bool QUICK_Test1(void)
 }
 
 
-void Dummy_Capture(uint16_t total_samples)
+/*void Dummy_Capture(uint16_t total_samples)
 {
 
     uint16_t raw_data_index;
@@ -485,7 +481,7 @@ void Dummy_Capture(uint16_t total_samples)
 		if(status != ESP_OK) Catch_RunTime_Error(PPG_DATA_CAPTURE_FAIL);
 	}
 
-}
+}*/
 
  bool Capture_PPG_ECG_Data(DATA_CAPTURE_TYPE_t captureType, bool enableDummyCapture)
 {
@@ -605,7 +601,7 @@ void Dummy_Capture(uint16_t total_samples)
 			 if(dly == 25000)
 			 {
 			     cnt++;
-			     API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
+			     API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,0,0);
 			     dly =0;
 			     printf("\n %ld",SPO2_PPG_RED_BUFF[cnt]);
 			 }
@@ -634,7 +630,7 @@ void Dummy_Capture(uint16_t total_samples)
 				{
 					return  0;
 				}
-				status = API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,1);
+				status = API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,0,1);
 			}while(ppg_count < 200);
 		}
 
@@ -648,7 +644,7 @@ void Dummy_Capture(uint16_t total_samples)
 			{
 				return  0;
 			}
-			status = API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
+			status = API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,0,0);
 		}while(ppg_count < ((ECG_IN_SECONDS*SET_ODR)));
 		API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
 
@@ -680,7 +676,7 @@ void Dummy_Capture(uint16_t total_samples)
 		{
 		bool leadoffstatus_lead1 = 0, leadoffstatus_lead2 = 0;
 		//leadoffstatus_lead1 = API_ECG_Lead_OFF_Detect(LEAD1);
-		//leadoffstatus_lead2 = API_ECG_Lead_OFF_Detect(LEAD2);
+	    //leadoffstatus_lead2 = API_ECG_Lead_OFF_Detect(LEAD2);
 		//printf("leadoffstatus_lead1=%d,leadoffstatus_lead2=%d\n",leadoffstatus_lead1,leadoffstatus_lead2);
 		if(leadoffstatus_lead1&leadoffstatus_lead1)
 		{
@@ -791,6 +787,8 @@ void Dummy_Capture(uint16_t total_samples)
 		ECG_Drdy_count = 0;
 		uint8_t ppg_index_cnt =0;
 		API_ECG_Stop_Conversion();
+		float ECG_temp =0 ;
+		uint32_t  ECG=0;
 		API_ECG_Start_Conversion();
 		int cnt =-1,dly=0,Tcount=0;
 
@@ -802,7 +800,7 @@ void Dummy_Capture(uint16_t total_samples)
 			if(dly == 25000)
 			{
 				cnt++;
-				API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
+				API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,0,0);
 				dly =0;
 				printf("\n %ld",SPO2_PPG_RED_BUFF[cnt]);
 			}
@@ -831,8 +829,8 @@ void Dummy_Capture(uint16_t total_samples)
 				{
 					return  0;
 				}
-				status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_TEMP+raw_data_index);
-				status = API_MAX30101_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
+				status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, &ECG_temp);
+				status = API_MAX30101_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,0,0);
 			}
 		}
 
@@ -851,11 +849,11 @@ void Dummy_Capture(uint16_t total_samples)
 			{
 				return  0;
 			}
-			status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, ECG_TEMP+raw_data_index);
+			status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, &ECG_temp);
 //			ppg_index_cnt++;
 //			if(ppg_index_cnt >=10)
 			{
-				status = API_MAX30101_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,SPO2_PPG_ECG_BUFF,0,0);
+				status = API_MAX30101_Raw_Data_capture_new(BP_PPG_RED_BUFF,BP_PPG_IR_BUFF,0,0);
 //				ppg_index_cnt = 0;
 			}
 		}
@@ -902,7 +900,7 @@ void Dummy_Capture(uint16_t total_samples)
 		return true;
  }
 
-void Filter_Quicktest1_Data(void)
+/*void Filter_Quicktest1_Data(void)
 {
 	//filter(ECG_Lead1_buff,FilterOutputBuffer1,TOTAL_SAMPLES,100);
 	//filter(ECG_Lead2_buff,FilterOutputBuffer2,TOTAL_SAMPLES,100);
@@ -945,10 +943,10 @@ void Filter_Quicktest1_Data(void)
 //		}
 //	}
 
-}
+}*/
 
 
-void Filter_Quicktest2_Data(void)
+/*void Filter_Quicktest2_Data(void)
 {
 	filter(ECG_Lead1_buff,FilterOutputBuffer1,TOTAL_SAMPLES,100);
 	filter(ECG_Lead2_buff,FilterOutputBuffer2,TOTAL_SAMPLES,100);
@@ -985,7 +983,7 @@ void Filter_Quicktest2_Data(void)
 			printf("\n%f",FilterOutputBuffer4[i]);
 		}
 	}
-}
+}*/
 
 void Store_QuickTest1_Data_To_Flash(void)
 {
@@ -999,9 +997,9 @@ void Store_QuickTest1_Data_To_Flash(void)
 	MemCpy(BT_flash_buffer+offfset,&record_header,REC_HEADER_LEN);
 
 	offfset = REC_HEADER_LEN;
-	MemCpy(BT_flash_buffer+offfset,BP_PPG_RED_BUFF,(1200*4));
+	MemCpy(BT_flash_buffer+offfset,BP_PPG_IR_BUFF,(SPO2_RED_SAMPLES*4));
 	offfset += 1200*4;
-	MemCpy(BT_flash_buffer+offfset,BP_ECG_Lead1_buff,(1200*4));
+	MemCpy(BT_flash_buffer+offfset,BP_ECG_Lead1_buff,(SPO2_RED_SAMPLES*4));
     offfset += 1200*4;
 	status = API_Flash_Write_Record(BP1,(void*)BT_flash_buffer);
 

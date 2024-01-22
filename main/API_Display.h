@@ -289,7 +289,7 @@ bool API_DISP_Wait_Time(VITAL_TYPE_t test_type,uint8_t countdown_time);
 void API_Disp_Dsplay_Char_With_Offset(uint8_t row,uint8_t col,char *string,uint16_t color);
 void API_Disp_Quick_test_screen(DISP_QUICK_TEST_SCREENS_t disp_qt_screen);
 void API_Disp_Display_Time(uint8_t data);
-void API_Disp_Quick_Test_Result(uint16_t result[]);
+void API_Disp_Quick_Test_Result(void);
 void API_Disp_Reset_Screen(void);
 void API_DISP_Toggle_Date_Time(void);
 void API_DISP_Firmware_Version(void);

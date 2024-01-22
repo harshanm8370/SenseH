@@ -736,7 +736,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
   }
 
  uint32_t ppg_count = 0;
- bool API_MAX30101_Raw_Data_capture_new(uint32_t Red_data[],uint32_t IR_data[],uint32_t ecg_data[],uint16_t capture_number,bool is_dummy_capture)
+ bool API_MAX30101_Raw_Data_capture_new(uint32_t Red_data[],uint32_t IR_data[],uint16_t capture_number,bool is_dummy_capture)
    {
   		uint8_t sample_buff[20U];
   		bool done = false;
@@ -768,7 +768,6 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 						IR_data[ppg_count] = one_sample >> 2U;
 
 						one_sample = sample_buff[8U] | (sample_buff[4U] << 7U) | ((sample_buff[6U]  & 0x03) << 16U);
-						ecg_data[ppg_count] = one_sample >> 2U;
 					}
 					ppg_count++;
 					done = true;

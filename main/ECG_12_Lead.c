@@ -102,7 +102,7 @@ bool Lead12_Test(void)
 
 						IsValidRecordsInFlash = 1;
 
-						API_Disp_Quick_Test_Result(result);
+						API_Disp_Quick_Test_Result();
 						Delay_ms(2000);
 						// TODO; retry when raw data is not good
 						//Filter;

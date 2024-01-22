@@ -18,10 +18,10 @@ void Disable_Power_Supply(void);
 
  bool Run_Quick_Vital(void);
 bool Run_Multi_Vital(void);
-void Filter_Quicktest1_Data(void);
-void Filter_Quicktest2_Data(void);
+//void Filter_Quicktest1_Data(void);
+//void Filter_Quicktest2_Data(void);
 
-void Dummy_Capture(uint16_t total_samples);
+//void Dummy_Capture(uint16_t total_samples);
 
 bool Capture_PPG_ECG_Data(DATA_CAPTURE_TYPE_t captureType, bool enableDummyCapture);
 bool Capture_BP_Data(bool enableDummyCapture);
