@@ -99,7 +99,7 @@ typedef uint8_t byte;
   void Max86150_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledMode, int sampleRate, int pulseWidth, int adcRange);
   void Max30101_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledMode, int sampleRate, int pulseWidth, int adcRange);
 
-  esp_err_t API_max86150_Read_brust(uint8_t address, uint8_t reg_start_addr,uint8_t data_buff[],uint8_t nbf_bytes);
+  esp_err_t API_max30102_Read_brust(uint8_t address, uint8_t reg_start_addr,uint8_t data_buff[],uint8_t nbf_bytes);
 
   void API_max86150_drdy_handle(void);
   uint16_t API_MAX86150_Check_NewData(void);

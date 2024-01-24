@@ -336,133 +336,28 @@ void Max30101_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledM
 
 
 
-void Max86150_Configure_Registers_new(void)
+void API_MAX30101_I2C_Init(void)
 {
-	writeRegister8(MAX86150_ADDR,0x02,0x80);//0x80 for A_FULL_EN
-	writeRegister8(MAX86150_ADDR,MAX86150_SYSCONTROL,0x01); // Reset part
-	Delay_ms(200);
-	writeRegister8(MAX86150_ADDR,0x0D,0x04);// Enable FIFO
-	writeRegister8(MAX86150_ADDR,0x08,0x1F);//0x1F for FIFO_ROLLS_ON_FULL to 1 and lost old samples when FIFO is full, Read FIFO data when there are 17 samples
-	writeRegister8(MAX86150_ADDR,0x09,0x21); // LED1 in slot 1 and LED2 in slot 2
-	writeRegister8(MAX86150_ADDR,0x0A,0x9);// ECG in slot 3
-	writeRegister8(MAX86150_ADDR,0x11, 0x55);// LED1 current setting, optimal setting can vary depending on human physiology
-	writeRegister8(MAX86150_ADDR,0x12, 0x55); // LED2 current setting, optimal setting can vary depending on human physiology
-	writeRegister8(MAX86150_ADDR,0x0E, 0xD3); // 0xD3 for PPG_ADC_RGE= 32�A, PPG_SR = 100Hz, PPG_LED_PW = 400�s, actual sample rate can vary depending on the use case
-	writeRegister8(MAX86150_ADDR,0x0F, 0x02);// 0x18 for 20�s delay from the rising edge of the LED to the start of integration
+	 esp_err_t error;
+	 i2c_config_t conf;
+
+	 int i2c_master_port = MAX86150_I2C_PORT_NUMBER;
+	conf.mode = I2C_MODE_MASTER;
+	conf.sda_io_num = MAX86150_I2C_MASTER_SDA_PIN;
+	conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
+	conf.scl_io_num = MAX86150_I2C_MASTER_SCL_PIN;
+	conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
+	conf.master.clk_speed = MAX86150_I2C_MASTER_CLOCK_FREQ_HZ;
+	conf.clk_flags = 0;
+
+	error = i2c_param_config(i2c_master_port, &conf);
+	error |= i2c_driver_install(i2c_master_port, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
+
+	// i2c_filter_enable(i2c_master_port,1);
+
+	if(error != ESP_OK) Catch_RunTime_Error(MAX86150_INIT_FAIL);
 }
 
-//Setup the sensor
-//The MAX86150 has many settings. By default we select:
-// Sample Average = 4
-// Mode = MultiLED
-// ADC Range = 16384 (62.5pA per LSB)
-// Sample rate = 50
-//Use the default setup if you are just getting started with the MAX86150 sensor
-void Max86150_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledMode, int sampleRate, int pulseWidth, int adcRange)
-{
-	activeDevices=3;
-	writeRegister8(MAX86150_ADDR,MAX86150_SYSCONTROL,0x01);
-	Delay_ms(200);
-
-	writeRegister8(MAX86150_ADDR,MAX86150_FIFOCONFIG,0x7F);
-
-	//sampleAverage=32;
-	//FIFO Configuration
-	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	//The chip will average multiple samples of same type together if you wish
-	if (sampleAverage == 1) setFIFOAverage(MAX86150_SAMPLEAVG_1); //No averaging per FIFO record
-	else if (sampleAverage == 2) setFIFOAverage(MAX86150_SAMPLEAVG_2);
-	else if (sampleAverage == 4) setFIFOAverage(MAX86150_SAMPLEAVG_4);
-	else if (sampleAverage == 8) setFIFOAverage(MAX86150_SAMPLEAVG_8);
-	else if (sampleAverage == 16) setFIFOAverage(MAX86150_SAMPLEAVG_16);
-	else if (sampleAverage == 32) setFIFOAverage(MAX86150_SAMPLEAVG_32);
-	else setFIFOAverage(MAX86150_SAMPLEAVG_4);
-
-	uint16_t FIFOCode = 0x00;
-
-	FIFOCode = FIFOCode<<4 | 0x0009;// : FIFOCode;  //insert ECG front of ETI in FIFO
-	FIFOCode = FIFOCode<<8 | 0x0021;//) : FIFOCode; //insert Red(2) and IR (1) in front of ECG in FIFO
-
-	/********* CRITICAL FOR LED GLOW ************/
-	//FIFO Control 1 = FD2|FD1, FIFO Control 2 = FD4|FD3
-
-	writeRegister8(MAX86150_ADDR,MAX86150_FIFOCONTROL1,(0b00100001));
-	writeRegister8(MAX86150_ADDR,MAX86150_FIFOCONTROL2,(0b00001001));
-	//writeRegister8(MAX86150_ADDR,MAX86150_FIFOCONTROL1, (char)(FIFOCode & 0x00FF) );
-	//writeRegister8(MAX86150_ADDR,MAX86150_FIFOCONTROL2, (char)(FIFOCode >>8) );
-	/********* END CRITICAL FOR LED GLOW ************/
-
-	writeRegister8(MAX86150_ADDR,MAX86150_PPGCONFIG1,0b11011111);	//0b11 0111 11 //0b11 0100 11
-
-	writeRegister8(MAX86150_ADDR,MAX86150_PPGCONFIG2, 0x02);//Some catch is here 0x02 works
-	//Delay_ms(500);
-	 //printf("\nDevice ID = 0x%2X.\n",readPartID(0x02));
-	writeRegister8(MAX86150_ADDR,MAX86150_LED_RANGE, 0x00 ); // PPG_ADC_RGE: 32768nA
-
-	writeRegister8(MAX86150_ADDR,MAX86150_SYSCONTROL,0x04);//start FIFO
-
-	writeRegister8(MAX86150_ADDR,MAX86150_ECG_CONFIG1,0b00000011); // SR: 200 = MAX86150_ECG_CONFIG1,0b00000011
-
-//	writeRegister8(MAX86150_ADDR,MAX86150_ECG_CONFIG3,0b00001101); // IA Gain: 9.5 / PGA Gain: 8
-
-	//writeRegister8(MAX86150_ADDR,0xFF,0x00); //exit test mode
-	//debug.Write("Registers written");
-
-	//writeRegister8(MAX86150_ADDR,0x0E,0xDB);
-	//writeRegister8(MAX86150_ADDR,0x0E,0xDB);
-	//setRANGE(0x05);  //set range of vled 50ma to 100ma
-	setPulseAmplitudeRed(0x00); //90 ma
-	setPulseAmplitudeIR(0xFF); //90ma
-
-	setpilotPulseAmplitudeProximity(0xFF);
-	setProxythresh(0x01);
-
-	//setPulseAmplitudeGreen(powerLevel);
-	//setPulseAmplitudeProximity(powerLevel);
-	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-	//Multi-LED Mode Configuration, Enable the reading of the three LEDs
-	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-	enableSlot(1, SLOT_RED_LED);
-	printf("\n################################\n");
-	printf("\nledMode = %d\n", ledMode);
-	printf("\n################################\n");
-	if (ledMode > 1) enableSlot(2, SLOT_IR_LED);
-	if (ledMode > 2) enableSlot(3, SLOT_ECG);
-	//enableSlot(1, SLOT_RED_PILOT);
-	//enableSlot(2, SLOT_IR_PILOT);
-	//enableSlot(3, SLOT_GREEN_PILOT);
-	//-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-	Max86150_Clear_Fifo(); //Reset the FIFO before we begin checking the sensor
-}
-
-//Polls the sensor for new data
-//Call regularly
-//If new data is available, it updates the head and tail in the main struct
-//Returns number of new samples obtained
-uint16_t Max86150_CheckDataAvailibity(void)
-{
-  //Read register FIDO_DATA in (3-byte * number of active LED) chunks
-  //Until FIFO_RD_PTR = FIFO_WR_PTR
-
-  byte readPointer = getReadPointer();
-  byte writePointer = getWritePointer();
-  int bytesLeftToRead = 0;
-
-  int numberOfSamples = 0;
-
-  if (readPointer != writePointer)
-  {
-    numberOfSamples = writePointer - readPointer;
-    if (numberOfSamples < 0) numberOfSamples += 32; //Wrap condition
-
-     bytesLeftToRead = numberOfSamples * activeDevices * 3;
-  }
-
-//  printf("\nbytesLeftToRead = %d\n", bytesLeftToRead);
-    return bytesLeftToRead;
-}
 
 uint16_t Max30101_CheckDataAvailibity(void)
 {
@@ -528,33 +423,8 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 	}
 }
 
- void API_MAX30101_I2C_Init(void)
-{
-	 esp_err_t error;
-	 i2c_config_t conf;
-
-	 int i2c_master_port = MAX86150_I2C_PORT_NUMBER;
-	conf.mode = I2C_MODE_MASTER;
-	conf.sda_io_num = MAX86150_I2C_MASTER_SDA_PIN;
-	conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
-	conf.scl_io_num = MAX86150_I2C_MASTER_SCL_PIN;
-	conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
-	conf.master.clk_speed = MAX86150_I2C_MASTER_CLOCK_FREQ_HZ;
-	conf.clk_flags = 0;
-
-	error = i2c_param_config(i2c_master_port, &conf);
-	error |= i2c_driver_install(i2c_master_port, conf.mode, I2C_MASTER_RX_BUF_DISABLE, I2C_MASTER_TX_BUF_DISABLE, 0);
-
-	// i2c_filter_enable(i2c_master_port,1);
-
-	if(error != ESP_OK) Catch_RunTime_Error(MAX86150_INIT_FAIL);
-}
 
 
- void API_MAX86150_I2C_DeInit(void)
- {
-	  i2c_driver_delete(MAX86150_I2C_PORT_NUMBER);
- }
  static esp_err_t api_max30101_read_reg(i2c_port_t i2c_num, uint8_t slave_addr, uint8_t reg_addr, uint8_t *reg_data)
  {
 		i2c_cmd_handle_t cmd = i2c_cmd_link_create();
@@ -593,7 +463,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
  }
 
 
- esp_err_t API_max86150_Read_brust(uint8_t address, uint8_t reg_start_addr,uint8_t data_buff[],uint8_t nbf_bytes)
+ esp_err_t API_max30102_Read_brust(uint8_t address, uint8_t reg_start_addr,uint8_t data_buff[],uint8_t nbf_bytes)
  {
 	    esp_err_t error;
 
@@ -705,35 +575,6 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 
  }
 
- bool API_MAX86150_Raw_Data_capture(uint32_t Red_data[],uint32_t IR_data[],uint32_t ECG_Data[],uint32_t nbf_samples,bool is_dummy_capture,uint8_t red_or_ir_or_ecg)
-  {
- 		uint8_t sample_buff[20U];
-
- 		uint32_t one_sample, test = 0U;
-
- 	 	  for(uint8_t i=0U;i<nbf_samples;i++)
- 	 	   {
- 	 		   memset(sample_buff,0x00,sizeof(sample_buff));
-
- 	 		 test = Max86150_CheckDataAvailibity();
- 	 		   if(test>=9U)
- 	 		   {
- 	 				API_max86150_Read_brust(MAX86150_ADDR, 0x07U,sample_buff,6U);//9
-
- 	 				if(!is_dummy_capture)
- 	 				{
- 	 					one_sample  = sample_buff[2U] | (sample_buff[1U] << 8U) | (sample_buff[0U] << 16U);
- 	 					Red_data[i] = one_sample>>2U;
-
- 	 					one_sample = sample_buff[5U] | (sample_buff[4U] << 8U) | (sample_buff[3U] << 16U);
- 	 					IR_data[i] = one_sample;
- 	 				}
- 	 		   }
- 	 	   }
-
- 	 	  return ESP_OK;
-
-  }
 
  uint32_t ppg_count = 0;
  bool API_MAX30101_Raw_Data_capture_new(uint32_t Red_data[],uint32_t IR_data[],uint16_t capture_number,bool is_dummy_capture)
@@ -752,7 +593,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 				//printf("\nPPG count available %ld",PPG_Data_count);
 				if(PPG_Data_count>=9U)
 				{
-					API_max86150_Read_brust(MAX30101_ADDR, 0x07U,sample_buff,9U);//9
+					API_max30102_Read_brust(MAX30101_ADDR, 0x07U,sample_buff,9U);//9
 					/*printf("\nPPG red data");
 					for(int i=0;i<3;i++)
 					{
@@ -780,10 +621,10 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 			do{
 				memset(sample_buff,0x00,sizeof(sample_buff));
 
-				PPG_Data_count = Max86150_CheckDataAvailibity();
+				PPG_Data_count = Max30101_CheckDataAvailibity();
 				if(PPG_Data_count>=9U)
 				{
-					API_max86150_Read_brust(MAX30101_ADDR, 0x07U,sample_buff,6U);//9
+					API_max30102_Read_brust(MAX30101_ADDR, 0x07U,sample_buff,6U);//9
 					ppg_count++;
 					done = true;
 				}
