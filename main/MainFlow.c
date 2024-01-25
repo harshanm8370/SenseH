@@ -46,7 +46,7 @@ void HandleDataSync(void);
 void Led_Blink(void *pvParameters);
 extern BT_STATUS Is_Device_Paired;
 bool qv_flag,mv_flag;
-bool BLE_DS;
+bool BLE_DS,ecg1,ecg6;
 #define test 1
 
 
@@ -188,7 +188,7 @@ TaskHandle_t myTaskHandle = NULL;
 							state = VIEW_SCREEN;
 						}
 
-						 if((state == QUICK_VITALS) || (state == MULTI_VITALS))
+						 if((state == HEARTRATE) || (state == ECG12))
 						 {
 							   if(API_Check_USB_Charger_Connection_Display_Notification())
 								{
@@ -208,7 +208,7 @@ TaskHandle_t myTaskHandle = NULL;
 
 						switch(state)
 						{
-							case QUICK_VITALS:{
+							case ECG6:{
                                 qv_flag = 1;
                                 Device_stat = 2;
 							//	Is_Test_In_Progress = true;
@@ -233,7 +233,7 @@ TaskHandle_t myTaskHandle = NULL;
 								break;
 							}
 
-							case MULTI_VITALS:{
+							case ECG12:{
 								Is_Test_In_Progress = true;
 								mv_flag =1 ;
 								Device_stat = 2;

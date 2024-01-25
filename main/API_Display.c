@@ -1905,20 +1905,21 @@ uint8_t left_offset = 0;
   	text1.text_status = display;
 
   	text2.color = BLUE;
-  	text2.text_starting_addr = " Quick Vital"; /*!  { spo2, HR(ECG-L1), BP }  */
+  	text2.text_starting_addr = " Heart Rate"; /*!  { spo2, HR(ECG-L1), BP }  */
   	text2.text_status = display;
 
   	text3.color = BLUE;
-  	text3.text_starting_addr = " Multi Vital";/*!  { spo2, HR(ECG-L6), BP, Temp, BG }  */
+  	text3.text_starting_addr = "   ECG-6";/*!  { spo2, HR(ECG-L6), BP, Temp, BG }  */
   	text3.text_status = display;
 
   	text4.color = BLUE;
-  	text4.text_starting_addr = "    Sleep    ";
+  	text4.text_starting_addr = "   ECG-12    ";
   	text4.text_status = display;
 
-  	//text6.color = BLUE;
-  	//text6.text_starting_addr = "    Exit    ";
-	text5.text_status = 0;
+  	text5.color = BLUE;
+  	text5.text_starting_addr = "   Sleep    ";
+  	text5.text_status = display;
+	//text5.text_status = 0;
   	text6.text_status = 0;
   	text7.text_status = 0;
 
@@ -1965,14 +1966,17 @@ uint8_t left_offset = 0;
 				{
 					left_offset = 3;
 				}
-				 if(count == 4)
+				 if(count == 3)
 				 {
-					left_offset = 30;
+					left_offset = 20;
 				 }
-
+				/* if(count == 5)
+				 {
+					 left_offset = 20;
+				 }*/
 				 top_offset = top_offset + 20;
 
-				 if (count == 5)
+				 if (count == 6)
 				 {
 					count = 1;
 					left_offset = 20;
@@ -2033,9 +2037,10 @@ uint8_t left_offset = 0;
 
   	switch(count)
   	{
-		case 2 : ret_msg = QUICK_VITALS; break;
-		case 3 : ret_msg = MULTI_VITALS; break;
-		case 4 : ret_msg = TEST_EXIT; break;
+		case 2 : ret_msg = HEARTRATE; break;
+		case 3 : ret_msg = ECG6; break;
+		case 4 : ret_msg = ECG12; break;
+		case 5 : ret_msg = TEST_EXIT; break;
 		case 0xFF :ret_msg = DATA_SYNC; break;
 		default: ret_msg = NO_TEST; break;
   	}
