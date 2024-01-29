@@ -2593,11 +2593,13 @@ uint8_t left_offset = 0;
   	mid_text1.color       = WHITE;
   	mid_text2.color       = WHITE;
   	mid_text3.color       = WHITE;*/
-
+  	API_Clear_Display(DISP_MIDDLE_SEC,WHITE);
 #ifndef MARKETING_REQUIREMENT
-  //	mid_text1.text_starting_addr = " Test Done! ";
-//	mid_text1.color       = BLUE;
+  	mid_text1.text_starting_addr = " Test Done! ";
+	mid_text1.color       = BLUE;
+	mid_text1.text_status       = display;
 #endif
+
   	mid_icon.icon_status        = ON;
   	mid_icon.icon_starting_addr = ThumbsUpIcon1;
   	mid_icon.color              = BLUE;
@@ -2728,7 +2730,7 @@ uint8_t left_offset = 0;
 //		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
 		gpio_set_level(ECG_CSn_VCS, 1);
 
- 		api_disp_display_char( " V 1.0.1 ", font19x10, WHITE, BLACK, 20, 100);
+ 		api_disp_display_char( " SHE 0.1 ", font19x10, WHITE, BLACK, 20, 100);
  		//api_disp_display_char(FIRMWARE_VERSION, font19x10, BLUE, BLACK, 5, 120);
   }
 

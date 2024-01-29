@@ -251,6 +251,7 @@ typedef enum{
 	TEST_EXIT,
 	DATA_SYNC,
 	VIEW_SCREEN
+
 }SELECTED_TEST_t;
 
 
