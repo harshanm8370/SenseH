@@ -11,6 +11,8 @@
 #include "ProjectConfiguration.h"
 #include "API_Display.h"
 
+uint8_t Device_stat;
+
 /************************************************ MACROS *****************************************************************/
 #define BT_RAW_DATA_LENGTH			  	580	 //BT_PACKET_SIZE = BT_RAW_DATA_LENGTH + payload bytes, this should not cross MTU:600   
 #define OFFLINE_REC_SUMMARY_LEN			81  /*need to verify */
@@ -184,6 +186,22 @@ void BT_process_requests(void)
 				client_request_cmd = NO_CMD_REQ;
 				printf("\nBP2 Sync END");
 			}
+			break;
+
+
+		case Test_status_req:
+			//Data_sync_in_progress = TRUE;
+			printf("\nrequesting for test stat");
+
+			if(API_BLE_Transmit((uint8_t *)&Device_stat, sizeof(Device_stat)) == 3)
+				printf("\n response transmitted as : %d",Device_stat);
+			bt_session_complete = TRUE;
+
+			if (bt_session_complete){
+					BT_ongoing_session = false;
+					client_request_cmd = NO_CMD_REQ;
+				}
+
 			break;
 
 		case BG_data_req:
@@ -362,6 +380,11 @@ void BT_process_requests(void)
 				is_OTA_request_arrived = FALSE;
 				//BT_ongoing_session = FALSE;
 			} //ACK response will be sent after reading firmware data in case of recevied packet is good
+			else if(ret == BLUETOOTH_DISCONNECTED)
+			{
+				FW_complete_data_received = FALSE;
+				is_OTA_request_arrived = FALSE;
+			}
 			break;
 
 		default:
@@ -761,6 +784,13 @@ int BTL_validate_and_copy2buf(uint8_t * fw_buff)
 	FW_buff_index += bt_total_received_bytes - 7;
 	printf ("bt_total_received_bytes: %d\n", bt_total_received_bytes);
 	while (validation_completed != TRUE) { 
+
+		if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
+	    {
+			API_display_backlight_on();
+			API_DISP_Display_Screen(BLUETOOTH_DISCONNECTED);
+			return BLUETOOTH_DISCONNECTED;
+		}
 		if(fw_buff[index1] == 0){ // indicates that end the record arrived
 			FW_complete_data_received = true;
 			validation_completed = TRUE;

@@ -8,7 +8,7 @@
 #include "esp_system.h"
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
-
+#include "API_IO_Exp.h"
 #include "freertos/task.h"
 #include "protofonts.h"
 #include "icons.h"
@@ -24,6 +24,8 @@
 #include "OTA_Upgrade.h"
 #include "ProjectConfiguration.h"
 #include "bluetooth.h"
+#include "Battery_management.h"
+#include "MainFlow.h"
 
 uint8_t hospital_pid[MAX_PID_RECORDS];
 
@@ -1740,6 +1742,14 @@ return 1;
  				bottom_icon.icon_starting_addr 	= FALSE ;
  				break;
  		}
+ 		case BLUETOOTH_DISCONNECTED:
+		{
+ 			mid_text1.text_starting_addr = "  Bluetooth ";
+ 			mid_text2.text_starting_addr = "disconnected";
+ 			mid_text3.text_status = FALSE;
+ 			break;
+
+		}
 
 
  		default :break;
@@ -2422,7 +2432,7 @@ uint8_t left_offset = 0;
   	text3.text_status = display;
 
   	text4.color = BLUE;
-  	text4.text_starting_addr = "    Exit    ";
+  	text4.text_starting_addr = "    Sleep    ";
   	text4.text_status = display;
 
   	//text6.color = BLUE;
@@ -2445,6 +2455,14 @@ uint8_t left_offset = 0;
   	while(1)
   	{
 		//btn_press = API_Push_Btn_Get_hold_time();
+#if !onep2
+  		Detect_low_battery_display_notification();
+  		if(API_Check_USB_Charger_Connection_Display_Notification())
+  		 {
+  		    EnterSleepMode(SYSTEM_DEEP_SLEEP);
+  		 }
+#endif
+
 
   		btn_press = API_Push_Btn_Get_Buttton_Press();
 
@@ -2520,13 +2538,13 @@ uint8_t left_offset = 0;
   		if(Is_Device_Paired == BT_PAIRED) // Paired condition
   		{
   			API_Disp_BT_Icon(GREEN);
-  			Is_Device_Paired = DEFAULT;// to avoid Redisplaying the same thing again
+  			Is_Device_Paired = DEFAULTP;// to avoid Redisplaying the same thing again
   		}
 
   		else if(Is_Device_Paired == BT_DISCONNECTED) // disconnected condition
 		{
 			API_Disp_BT_Icon(WHITE);
-			Is_Device_Paired = DEFAULT;
+			Is_Device_Paired = DEFAULTD;
 		}
 
   		//printf("\nbtn_press=%d\n",btn_press);
@@ -2802,6 +2820,21 @@ uint8_t left_offset = 0;
 
   	  			break;
 
+  		case DISP_QT_ECG_TEST_IN_PROGRESS :
+
+  		  	  			mid_text4.text_starting_addr = " ECG Test  ";
+  		  	  			mid_text5.text_starting_addr = "In Progress ";
+  		  	  			mid_text6.text_starting_addr = "            ";
+  		  	  			bottom_icon.icon_status		 = FALSE;
+
+  		  	  			btm_icon.icon_status        = FALSE;
+  		  	  			btm_text.text_status        = display;
+  		  	  			btm_text.text_starting_addr = "    Exit    ";
+  		  	  			btm_text.color              = WHITE;
+
+  		  	  			break;
+
+
   		case DISP_QT_ECG_L2_TEST_IN_PROGRESS :
 
   		  	  			mid_text4.text_starting_addr = "ECG-L2 Test ";
@@ -2951,11 +2984,11 @@ uint8_t left_offset = 0;
   }
 
 
-  void API_Disp_Quick_Test_Result(uint16_t result[])
+  void API_Disp_Quick_Test_Result(void)
   {
   	struct DISPLAY_TEXT mid_text1,mid_text2,mid_text3,mid_text4,mid_text5,mid_text6,mid_text7,btm_text;
   	struct DISPLAY_ICON btm_icon;
-
+/*
   	char string1[12] = {0};
   	char string2[12] = {0};
   	char string3[12] = {0};
@@ -3073,19 +3106,22 @@ uint8_t left_offset = 0;
   	#else
   	mid_text1.color       = WHITE;
   	mid_text2.color       = WHITE;
-  	mid_text3.color       = WHITE;
+  	mid_text3.color       = WHITE;*/
 
 #ifndef MARKETING_REQUIREMENT
-  	mid_text1.text_starting_addr = " Test Done! ";
-	mid_text1.color       = BLUE;
+  //	mid_text1.text_starting_addr = " Test Done! ";
+//	mid_text1.color       = BLUE;
 #endif
   	mid_icon.icon_status        = ON;
   	mid_icon.icon_starting_addr = ThumbsUpIcon1;
   	mid_icon.color              = BLUE;
 
   	API_Display_Middle_Section(mid_icon,mid_text1,mid_text2,mid_text3);
+  	Delay_ms(500);
+  	API_Clear_Display(DISP_MIDDLE_SEC,WHITE);
 
-  	#endif
+
+  //	#endif
 
 
   }
@@ -3206,8 +3242,8 @@ uint8_t left_offset = 0;
 //		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
 		gpio_set_level(ECG_CSn_VCS, 1);
 
- 		api_disp_display_char( " FW Version ", font19x10, BLUE, BLACK, 5, 80);
- 		api_disp_display_char(FIRMWARE_VERSION, font19x10, BLUE, BLACK, 5, 100);
+ 		api_disp_display_char( " V 1.0.1 ", font19x10, WHITE, BLACK, 20, 100);
+ 		//api_disp_display_char(FIRMWARE_VERSION, font19x10, BLUE, BLACK, 5, 120);
   }
 
 
@@ -3274,11 +3310,17 @@ bool API_DISP_Memory_Full_Status(void)
   							break;
   						}
 
-  				case  DISP_THREE_STICK :
+  				case  DISP_CHARGE_STICK :
   						{
-  							api_disp_display_icon(batteryFull, DISP_TOP_SEC_BAT_COL_START_ADDR, DISP_TOP_SEC_BAT_ROW_START_ADDR, color, BLUE);
+  							api_disp_display_icon(batteryCharging, DISP_TOP_SEC_BAT_COL_START_ADDR, DISP_TOP_SEC_BAT_ROW_START_ADDR, color, BLUE);
   							break;
   						}
+
+  				case  DISP_THREE_STICK :
+  					{
+  						api_disp_display_icon(batteryFull, DISP_TOP_SEC_BAT_COL_START_ADDR, DISP_TOP_SEC_BAT_ROW_START_ADDR, color, BLUE);
+  						break;
+  					}
   			}
   	}
 
@@ -3313,7 +3355,7 @@ bool API_DISP_Memory_Full_Status(void)
   {
 	  bool status = false;
 
-       if(IsUSB_Charger_Connected())
+       if((IsUSB_Charger_Connected()))
        {
 
    		struct DISPLAY_TEXT mid_sec_text1,mid_sec_text2,mid_sec_text3,mid_sec_text4,mid_sec_text5,mid_sec_text6,mid_sec_text7;
@@ -3441,7 +3483,7 @@ void API_DISP_SenseSemi_Logo(SENSESEMI_LOGO_t moving_or_static)
 			 API_Clear_Display (DISP_BOTTOM_SEC,BLACK);
 
 			 api_disp_set_pointer_driver_side(col_start,DISP_MAX_COLS,row_start,DISP_MAX_ROWS);
-		 	 api_disp_display_icon (logo, 40, 30,BLUE, BLACK);
+		 	 api_disp_display_icon (SenseHlargelogo, 15, 50,BLUE, BLACK);
 
 			 //api_disp_tx_buffer(logo+2,buff_nbf_rows * buff_nbf_cols);
 		}
@@ -3520,9 +3562,11 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
 	char pidArray[12]={'\0'};
 
+	API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
+
 	VITAL_TYPE_t ret_msg=0xFF;
-	uint8_t top_offset = 20;
-	uint8_t count = 1;
+	uint8_t top_offset = 80;
+	int count = -1;
 	uint8_t left_offset = 2;
 	uint8_t btn_press;
 
@@ -3530,27 +3574,27 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
   	struct DISPLAY_TEXT text1,text2,text3,text4,text5,text6,text7;
 
-  	text1.color= BLUE;
-  	text1.text_starting_addr = "  Register  ";
-  	text1.text_status = display;
+  	text4.color= BLUE;
+  	text4.text_starting_addr = " Enter  PID ";
+  	text4.text_status = display;
 
-  	text2.color = BLUE;
-  	text2.text_starting_addr = "    PID     ";
-
-	text2.text_status = display;
+  	text5.color = BLUE;
+  	text5.text_starting_addr = " ---------- ";
+  	text5.text_status = display;
+	//text2.text_status = display;
 
   	//text4.color = BLUE;
   	//text4.text_starting_addr = " Enter      ";
   	//text4.text_status = 0;
 
-	text5.color = BLUE;
-  	text5.text_starting_addr = " Exit       ";
-  	text5.text_status = display;
+	text6.color = BLUE;
+  	text6.text_starting_addr = "    Exit   ";
+  	text6.text_status = display;
 
-
+  	text2.text_status = 0;
 	text3.text_status = 0;
-	text4.text_status = 0;
-  	text6.text_status = 0;
+	text1.text_status = 0;
+  //	text5.text_status = 0;
   	text7.text_status = 0;
 	if(Selected_PID_type != VALID_PID)
 	{
@@ -3564,13 +3608,23 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
   	printf("\n\nIn View Screen\n");
 
 	btn_press = API_Push_Btn_Get_Buttton_Press(); // Dummy read
-	api_disp_display_icon(star,left_offset,top_offset,RED,WHITE);
+//	api_disp_display_icon(star,left_offset,top_offset,RED,WHITE);
+
+	//api_disp_set_pointer_driver_side(col_start,DISP_MAX_COLS,row_start,DISP_MAX_ROWS);
+			 	 api_disp_display_icon (SenseHlargelogo, 15, 42,BLUE, WHITE);
 
   	while(1)
   	{
+#if !onep2
+  		Detect_low_battery_display_notification();
+  		if(API_Check_USB_Charger_Connection_Display_Notification())
+  		{
+  		   EnterSleepMode(SYSTEM_DEEP_SLEEP);
+  		}
+#endif
+
 
   		btn_press = API_Push_Btn_Get_Buttton_Press();
-
 
 		if(btn_press == 3)
 		{
@@ -3591,13 +3645,15 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
 					if(count == 2)
 					{
-						top_offset = top_offset + 80;
+						top_offset = top_offset + 40 ;
+						left_offset += 30;
 					}
 
 					else
 					{
 						count=1;
-						top_offset=20;
+						top_offset=80;
+						left_offset = 2;
 						API_TIMER_Kill_Timer(TEST_ENTERY_TIMEOUT);
 					}
 				}
@@ -3612,13 +3668,13 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 					{
 						count = 1;
 						left_offset = 2;
-						top_offset = 20;
+						top_offset = 80;
 						API_TIMER_Kill_Timer(TEST_ENTERY_TIMEOUT);
 					}
 
 					else
 					{
-						top_offset = top_offset + 20;
+						top_offset = top_offset + 40;
 					}
 				}
 
@@ -3660,30 +3716,36 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
   		if(Is_Device_Paired == BT_PAIRED) // Paired condition
   		{
   			API_Disp_BT_Icon(GREEN);
-  			Is_Device_Paired = DEFAULT;// to avoid Redisplaying the same thing again
+  			Is_Device_Paired = DEFAULTP;// to avoid Redisplaying the same thing again
   		}
 
   		else if(Is_Device_Paired == BT_DISCONNECTED) // disconnected condition
 		{
 			API_Disp_BT_Icon(WHITE);
-			Is_Device_Paired = DEFAULT;
+			Is_Device_Paired = DEFAULTD;
 		}
 
   		if((Selected_PID_type == VALID_PID) && (!is_Pid_Displayed))
   		{
+  			API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
   			pidArray[0]=' ';
   			MemCpy(pidArray+1,(char*)(PatientID.pid+10),8);
   			pidArray[11]='\0';
 
-  		  	text1.text_starting_addr = "   Select   ";
-
-			text3.text_starting_addr =pidArray;
-			text3.text_status = display;
+  		  //	text1.text_starting_addr = "    PID    ";
+  		    text4.text_starting_addr = " PID is ";
+			text5.text_starting_addr =pidArray;
+			text3.text_status = 0;
+			text1.text_status = 0;
+			text2.text_status = 0;
+			text6.text_status = 0;
+			text7.text_status = 0;
 		  	text4.text_status = display;
 		  	text5.text_status = display;
-		  	API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+		  	//API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
 
-		  	API_Disp_Display_Text(text1, text2, text3, text4, text5, text6, text7);
+		  	API_Disp_Display_Text(text1,text2,text3,text4, text5,text6,text7);
+		  	api_disp_display_icon (logo, 40, 30,BLUE, WHITE);
 			api_disp_display_icon(star,left_offset,top_offset,RED,WHITE);
 
 			is_Pid_Displayed = true;

@@ -36,7 +36,7 @@
 
 #define DISP_RESULT_TIME		  		5
 #define DISP_QUICK_TEST_RESULT_TIME		12
-#define DISP_NOTIFICATION_TIME	  		3
+#define DISP_NOTIFICATION_TIME	  		3000
 #define DISP_TOTAL_CHARACTERS_PER_LINE 12
 
 
@@ -98,6 +98,8 @@ typedef enum
 	DISP_ONE_STICK = 1,
 	DISP_TWO_STICK,
 	DISP_THREE_STICK,
+	DISP_CHARGE_STICK
+
 
 } BATTERY_PONINTS_t;
 
@@ -217,6 +219,7 @@ typedef enum
 	DISP_TEST_START,
 	DISP_DATA_SYNC_FAIL,
 	DISP_DATA_SYNC_COMPLETED,
+	BLUETOOTH_DISCONNECTED,
 
 }DISP_SCREENS_t;
 typedef enum
@@ -231,6 +234,7 @@ typedef enum
 	DISP_QT_PLEASE_CARRYON_OTHER_VITALS,
 	DISP_12LEAD_CABLE_NOT_CONNECTED_PROPERLY,
 	DISP_QT_ECG_L1_TEST_IN_PROGRESS,
+	DISP_QT_ECG_TEST_IN_PROGRESS,
 	DISP_QT_ECG_L2_TEST_IN_PROGRESS,
 	DISP_QT_PPG_TEST_IN_PROGRESS,
 	DISP_QT_BP_TEST_IN_PROGRESS
@@ -285,7 +289,7 @@ bool API_DISP_Wait_Time(VITAL_TYPE_t test_type,uint8_t countdown_time);
 void API_Disp_Dsplay_Char_With_Offset(uint8_t row,uint8_t col,char *string,uint16_t color);
 void API_Disp_Quick_test_screen(DISP_QUICK_TEST_SCREENS_t disp_qt_screen);
 void API_Disp_Display_Time(uint8_t data);
-void API_Disp_Quick_Test_Result(uint16_t result[]);
+void API_Disp_Quick_Test_Result(void);
 void API_Disp_Reset_Screen(void);
 void API_DISP_Toggle_Date_Time(void);
 void API_DISP_Firmware_Version(void);

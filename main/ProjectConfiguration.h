@@ -14,6 +14,7 @@
 #define USER_INACTIVE_TIMEOUT        (TIMER_t)TIMER_3MIN
 #define DATE_TIME_FLIP_TIME          (TIMER_t)TIMER_5SEC
 #define DATA_SYNC_TIMEOUT			 (TIMER_t)TIMER_30SEC
+#define LOD_WAIT_TIME			     (TIMER_t)TIMER_10SEC
 #define LEAD_OFF_DETECTION           true
 
 

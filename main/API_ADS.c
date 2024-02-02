@@ -15,6 +15,7 @@
 #include "push_button.h"
 
 #define ECG_DRDY_PIN_SEL  ( 1ULL<<ESP32_MCU_DRDY_PIN )
+#define PPG_INTR_PIN_SEL  ( 1ULL<<MAX30101_DRDY_INTR_PIN )
 
 
 /*-------------------------------------MACROS-------------------------------------------------------------------*/
@@ -74,6 +75,37 @@ static void SetDcLeadOffCurrent_in_Steps_8nA(uint16_t currentIn_nA);
  *
  * \retval		ECG_STATUS,ECG_NO_ERROR on successful init
  */
+
+
+void api_PPG_drdy_input_config()
+{
+	esp_err_t error;
+
+    gpio_config_t io_conf;
+
+    MemSet(&io_conf,0,sizeof(io_conf));
+
+    //interrupt of rising edge
+    io_conf.intr_type = GPIO_INTR_POSEDGE;
+
+    io_conf.pin_bit_mask = PPG_INTR_PIN_SEL;
+    //set as input mode
+    io_conf.mode = GPIO_MODE_INPUT;
+    //enable pull-up mode
+    io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+
+    error = gpio_config(&io_conf);
+
+    //change gpio intrrupt type for one pin
+    error |= gpio_set_intr_type(MAX30101_DRDY_INTR_PIN, GPIO_INTR_POSEDGE);
+
+    error |= gpio_install_isr_service(0);
+    //hook isr handler for specific gpio pin
+    error |= gpio_isr_handler_add(MAX30101_DRDY_INTR_PIN, api_drdy_isr, (void*) MAX30101_DRDY_INTR_PIN);
+
+}
+
+
 ECG_STATUS API_ECG_Chip_Init(void)
 {
 	ECG_STATUS ecg_init = ECG_INIT_ERROR;
@@ -427,8 +459,8 @@ ECG_STATUS API_ECG_Reginit_2Lead()
 		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x80);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 50sps
 		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x80);//Configures the R3 decimation rate as 64 for channel 2.
 #elif ODR_100
-		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x40);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 100sps
-		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x40);//Configures the R3 decimation rate as 64 for channel 2.
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x40);//40Configures the R3 decimation rate as 64 for channel 1.// ODR = 100sps
+		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x40);//40Configures the R3 decimation rate as 64 for channel 2.
 #elif ODR_200
 		reg_config_status |= api_ecg_reg_write(R3_RATE_CH1_REG, 0x20);//Configures the R3 decimation rate as 64 for channel 1.// ODR = 200sps
 		reg_config_status |= api_ecg_reg_write(R3_RATE_CH2_REG, 0x20);//Configures the R3 decimation rate as 64 for channel 2.
@@ -1169,158 +1201,6 @@ static bool api_ecg_data_capture_pre_config(void)
 	return pre_config_status;
 }
 
-void API_RUN_ECG_LEAD2_TEST(void)
-{
-	bool ecg_setup = false;
-
-	uint32_t raw_data_index;
-
-	if(api_ecg_data_capture_pre_config())
-	{
-		printf("ECG Lead2 Data capture in progress\n");
-
-		printf("Please Place Fingers on Electrodes.\n");
-
-		 API_TIMER_Register_Timer(TIMER_1SEC);
-
-			for(raw_data_index=0; raw_data_index<600; raw_data_index++)
-			{
-				API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-
-			}
-
-				filter(ECG_Lead1_buff, FilterOutputBuffer1,600,100);
-
-				//printf("\nECG Lead 1 Data:\n");
-
-				for(raw_data_index=0; raw_data_index<600; raw_data_index++)
-				{
-					//printf("%f\n",ECG_Lead1_buff[raw_data_index]);
-					printf("%f\n",2*FilterOutputBuffer1[raw_data_index]);
-				}
-
-			//printf("\nECG Lead 2 Data:\n");
-
-				filter(ECG_Lead2_buff, FilterOutputBuffer2,600,100);
-				for(raw_data_index=0; raw_data_index<600; raw_data_index++)
-				{
-					//printf("%f\n",ECG_Lead2_buff[raw_data_index]);
-					printf("%f\n",2*FilterOutputBuffer2[raw_data_index]);
-				}
-	}
-
-}
-
-void API_RUN_ECG_LEAD6_TEST(void)
-{
-
-	bool ecg_setup = false;
-
-	uint32_t raw_data_index;
-	uint16_t nbd_samples = 600;
-
-	if(api_ecg_data_capture_pre_config())
-	{
-		printf("ECG Lead2 Data capture in progress\n");
-
-		printf("Please Place Fingers on Electrodes.\n");
-		//Delay_ms(3000);
-
-		 API_TIMER_Register_Timer(TIMER_1SEC);
-
-
-			for(raw_data_index=0; raw_data_index<nbd_samples; raw_data_index++)
-			{
-				API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
-
-			}
-
-
-
-				filter(ECG_Lead1_buff, FilterOutputBuffer1,600,100);
-
-				//printf("\nECG Lead 1 Data:\n");
-
-				for(raw_data_index=0; raw_data_index<nbd_samples; raw_data_index++)
-				{
-					//printf("%f\n",ECG_Lead1_buff[raw_data_index]);
-					printf("%f\n",2*FilterOutputBuffer1[raw_data_index]);
-				}
-
-				filter(ECG_Lead2_buff, FilterOutputBuffer2,600,100);
-				for(raw_data_index=0; raw_data_index<nbd_samples; raw_data_index++)
-				{
-					//printf("%f\n",ECG_Lead2_buff[raw_data_index]);
-					printf("%f\n",2*FilterOutputBuffer2[raw_data_index]);
-				}
-
-				filter(ECG_Lead1_buff, FilterOutputBuffer1,600,100);
-				filter(ECG_Lead2_buff, FilterOutputBuffer2,600,100);
-
-				//printf("\nECG Lead 3 Data:\n");
-
-				for(raw_data_index=0; raw_data_index<nbd_samples; raw_data_index++)
-				{
-					printf("%f\n",2*(FilterOutputBuffer2[raw_data_index] - FilterOutputBuffer1[raw_data_index])) ;
-				}
-
-				filter(ECG_Lead1_buff, FilterOutputBuffer1,600,100);
-				filter(ECG_Lead2_buff, FilterOutputBuffer2,600,100);
-
-				for(int i=0; i<nbd_samples; i++)
-				{
-					FilterOutputBuffer2[i] = FilterOutputBuffer2[i] -	FilterOutputBuffer1[i]; // Lead 3
-				}
-
-				for(int i=0; i<nbd_samples; i++)
-				{
-					FilterOutputBuffer2[i] = (FilterOutputBuffer1[i] -	FilterOutputBuffer2[i])/2; // Lead 4
-				}
-				//printf("\nECG Lead 4 Data:\n");
-
-				for(raw_data_index=0; raw_data_index<nbd_samples; raw_data_index++)
-				{
-					printf("%f\n",2*FilterOutputBuffer2[raw_data_index]);
-				}
-
-					filter(ECG_Lead1_buff, FilterOutputBuffer1,600,100);
-					filter(ECG_Lead2_buff, FilterOutputBuffer2,600,100);
-
-					for(int i=0; i<nbd_samples; i++)
-					{
-						FilterOutputBuffer2[i] = (FilterOutputBuffer1[i] + FilterOutputBuffer2[i])/2 ; // Lead 5
-					}
-
-					//printf("\nECG Lead 5 Data:\n");
-
-					for(raw_data_index=0; raw_data_index<nbd_samples; raw_data_index++)
-					{
-						printf("%f\n",2*FilterOutputBuffer2[raw_data_index]);
-					}
-
-
-					filter(ECG_Lead1_buff, FilterOutputBuffer1,600,100);
-					filter(ECG_Lead2_buff, FilterOutputBuffer2,600,100);
-
-					for(int i=0; i<nbd_samples; i++)
-					{
-						FilterOutputBuffer1[i] = (FilterOutputBuffer2[i]-FilterOutputBuffer1[i]); // Lead 3
-
-						FilterOutputBuffer2[i] =(FilterOutputBuffer2[i]+FilterOutputBuffer1[i])/2; // Lead 6
-
-					}
-
-					//printf("\nECG Lead 6 Data:\n");
-
-					for(raw_data_index=0; raw_data_index<nbd_samples; raw_data_index++)
-					{
-						printf("%f\n",2*FilterOutputBuffer2[raw_data_index]);
-					}
-
-
-	}
-
-}
 
 bool API_ECG_Init(void)
 {
@@ -1426,7 +1306,7 @@ bool API_ECG_Lead_OFF_Detect(ECG_LEADS_t lead)
 	write_read_status |= api_ecg_reg_write(LOD_CN_REG, 0x00);
 
 	// Setting Drive current in nA
-	SetDcLeadOffCurrent_in_Steps_8nA(8);
+	SetDcLeadOffCurrent_in_Steps_8nA(2047);
 
 	// Enable Lead OFF detection
 	write_read_status |= api_ecg_reg_write(LOD_EN_REG, 0x3F);

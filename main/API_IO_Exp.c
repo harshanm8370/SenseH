@@ -1,5 +1,5 @@
 
-#include "max86150.h"
+#include "max30101.h"
 #include "stdint.h"
 #include <stdio.h>
 #include "esp_log.h"
@@ -733,7 +733,7 @@ bool IsUSB_Charger_Connected(void)
 	 }
 	 else
 	 {
-		 printf("\nUSB Charger Disconnected");
+		// printf("\nUSB Charger Disconnected");
 	 }
 
 	return is_charger_connected;

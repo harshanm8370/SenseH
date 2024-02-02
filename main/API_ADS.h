@@ -50,8 +50,6 @@ void API_ECG_ADS_Capture_Data(uint32_t nbd_samples); // 600 samples L1, 600 samp
 
 uint8_t API_Test_ADS(void);
 
-void API_RUN_ECG_LEAD2_TEST(void);
-void API_RUN_ECG_LEAD6_TEST(void);
 
 void API_ECG_Enable_LeadOff_Detection(void);
 void API_ECG_Disable_LeadOff_Detection(void);
@@ -62,6 +60,7 @@ void API_ECG_Registers_Check_For_Corruption(void);
 void API_ECG_Start_Conversion(void);
 void API_ECG_Stop_Conversion(void);
 ECG_STATUS API_ECG_Chip_Init(void);
+void api_PPG_drdy_input_config(void);
 extern int ECG_Drdy_count;
 
 #define ODR_50 0

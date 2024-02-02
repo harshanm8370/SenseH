@@ -21,7 +21,7 @@
 #include "esp_sleep.h"
 #include "push_button.h"
 #include "esp_bt.h"
-#include "max86150.h"
+#include "max30101.h"
 #include "esp_bt_main.h"
 #include "driver/periph_ctrl.h"
 #include "soc/rtc_cntl_reg.h"
@@ -47,7 +47,7 @@ bool Detect_low_battery_display_notification()
 
 	  battery_voltage = API_ADC_Read_Battery_Voltage();
 
-	  printf("\nbattery_voltage = %f",battery_voltage);
+	  //printf("\nbattery_voltage = %f",battery_voltage);
 
 	  Fuel_Guage_update_battery_status(battery_voltage);
 
