@@ -2038,7 +2038,7 @@ uint8_t left_offset = 0;
 
   	switch(count)
   	{
-		case 2 : ret_msg = HEARTRATE; break;
+		case 2 : ret_msg = QV; break;
 		case 3 : ret_msg = ECG6; break;
 		case 4 : ret_msg = ECG12; break;
 		case 5 : ret_msg = TEST_EXIT; break;

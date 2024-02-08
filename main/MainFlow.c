@@ -196,7 +196,7 @@ TaskHandle_t myTaskHandle = NULL;
 							state = VIEW_SCREEN;
 						}
 
-						 if((state == HEARTRATE) || (state == ECG12) || (state == ECG6))
+						 if((state == QV) || (state == ECG12) || (state == ECG6))
 						 {
 							   if(API_Check_USB_Charger_Connection_Display_Notification())
 								{
@@ -205,7 +205,7 @@ TaskHandle_t myTaskHandle = NULL;
 						 }
 
 
-						if((state == HEARTRATE) || (state == ECG12) || (state == ECG6))
+						if((state == QV) || (state == ECG12) || (state == ECG6))
 						{
 							API_TIMER_Kill_Timer(USER_INACTIVE_TIMEOUT);
 						}
@@ -216,7 +216,7 @@ TaskHandle_t myTaskHandle = NULL;
 
 						switch(state)
 						{
-						case HEARTRATE:{
+						case QV:{
                             qv_flag = 11;
                             Device_stat = 2;
 						//	Is_Test_In_Progress = true;

@@ -243,7 +243,7 @@ typedef enum
 
 
 typedef enum{
-	HEARTRATE,
+    QV,
 	ECG6,
 	ECG12,
 	NO_TEST,
