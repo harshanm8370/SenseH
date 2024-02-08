@@ -81,6 +81,18 @@ TaskHandle_t myTaskHandle = NULL;
           EnterSleepMode(SYSTEM_DEEP_SLEEP);
         }
 	}*/
+#if !onep2
+    	  if(API_Check_USB_Charger_Connection_Display_Notification())
+    	  {
+    		  API_IO_Exp1_P0_write_pin(HIBERNATE,LOW);
+    		  EnterSleepMode(SYSTEM_DEEP_SLEEP);
+    	  }
+    	  else
+    	  {
+    		  API_IO_Exp1_P0_write_pin(HIBERNATE,HIGH);
+    	  }
+#endif
+
 
     PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[ECG_CSn_VCS], PIN_FUNC_GPIO);
 
@@ -144,12 +156,6 @@ TaskHandle_t myTaskHandle = NULL;
 	      {
 	      printf("\nDevice ID = 0x%2X.\n",readPartID(0xFF));
 	      }*/
-#if !onep2
-    	  if(API_Check_USB_Charger_Connection_Display_Notification())
-    	  {
-    		  EnterSleepMode(SYSTEM_DEEP_SLEEP);
-    	  }
-#endif
 
 
 
