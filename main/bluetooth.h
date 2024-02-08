@@ -15,8 +15,11 @@
 /*
  * BT Request/Response commands
  */
+#define WIFI_ENABLE					0x19
+#define WIFI_DISABLE					0x20
 #define BP1_data_req					0x10
 #define BP2_data_req					0x90
+#define Test_status_req					0x33
 #define BG_data_req						0x11
 #define ECG_1_Lead_data_req				0x12
 #define ECG_6_Lead_data_req				0x13

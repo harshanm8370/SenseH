@@ -5,14 +5,16 @@
 #include "API_Flash.h"
 #include "crc_16.h"
 #include "rtc.h"
-
 #include "OTA_Upgrade.h"
 #include "Firmware_version.h"
 #include "ProjectConfiguration.h"
 #include "API_Display.h"
+#include "API_TCP_Server.h"
+
+uint8_t Device_stat;
 
 /************************************************ MACROS *****************************************************************/
-#define BT_RAW_DATA_LENGTH			  	580	 //BT_PACKET_SIZE = BT_RAW_DATA_LENGTH + payload bytes, this should not cross MTU:600   
+#define BT_RAW_DATA_LENGTH			  	580	 //BT_PACKET_SIZE = BT_RAW_DATA_LENGTH + payload bytes, this should not cross MTU:600
 #define OFFLINE_REC_SUMMARY_LEN			81  /*need to verify */
 #define TOTAL_HEADER_LENGTH_OFFLINE		(OFFLINE_REC_SUMMARY_LEN + BT_PACKET_FIELD_LENGTH)//81 BYTES HEADER AND(PID 6 VITAL PARAMETERS RESULTS)+7 BYTES BT
 #define NACK_CRC_FRAME_LENGTH			6
@@ -50,7 +52,8 @@ static void store_device_configuration(void);
 static void bt_firmware_request_response(void);
 
 static uint8_t  FW_buffer[BUFFER_SIZE];
-
+extern int variouble;
+extern int clientSock;
 /*
 static void bt_send_device_self_diagnosis_response(void);
 static void bt_send_device_full_diagnosis_response(void);
@@ -67,7 +70,7 @@ bool bt_send_offline_rec();
 void bt_load_transmite_record_header_offline(SYNC_HEADER_STRUCT_OFFLINE_CONFIG * test );
 static void send_record_snapshot_responce_offline_config(void);
 void Load_Raw_Data_To_Buffer_Offline_Config(uint8_t command);
-*/
+ */
 
 /********************************************* ENUM DEFINITIONS ********************************************************/
 
@@ -78,7 +81,7 @@ static VITALS_RESPONSE_STATE bt_response_state = INIT_STATE;
 static uint32_t total_length_to_send = 0;
 static uint8_t bt_tx_buff[600] = {0};
 static uint8_t bt_rx_buff[600] = {0};
-static uint8_t client_request_cmd = 0; 
+static uint8_t client_request_cmd = 0;
 static uint16_t bt_total_received_bytes = 0;
 static uint16_t count = 0;
 static uint16_t skip_count = 0;
@@ -98,10 +101,10 @@ bool BT_ongoing_session;
 //#define LOG_LOCAL_LEVEL ESP_LOG_ERROR
 
 /*void BT_receive(void)
-* \brief        blue-tooth receive function
-* \param[in]	void
-* \return		void
-*/
+ * \brief        blue-tooth receive function
+ * \param[in]	void
+ * \return		void
+ */
 
 static uint32_t countReq =0;
 
@@ -121,27 +124,27 @@ void BT_process_requests(void)
 	if (BUF_EMPTY == bt_total_received_bytes){
 		bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
 		printf("No command received from APP\n");
-		return; 
+		return;
 	}
-    //Condition for not to respond to any Junk data from bluetooth
+	//Condition for not to respond to any Junk data from bluetooth
 	if((bt_rx_buff[0] != SOS) && ((bt_rx_buff[bt_total_received_bytes-3]) != EOS)){
 		bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
-        printf("Not a valid command request string from BT/APP\n");
-        return;
-    }
-    if((bt_rx_buff[1] == REC_SNAPSHOT_REQ) || (bt_rx_buff[1] == TIME_SYNC_REQ)){
+		printf("Not a valid command request string from BT/APP\n");
+		return;
+	}
+	if((bt_rx_buff[1] == REC_SNAPSHOT_REQ) || (bt_rx_buff[1] == TIME_SYNC_REQ)){
 		BT_ongoing_session = FALSE;
 		bt_response_state = INIT_STATE;
 
 	}
 
-    if(Is_Test_In_Progress)
-    {
-    	bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
-    	printf("\nTest is in progress, So can not sync the data");
-    	return;
-    }
-	//New request from the BT client for record sync  	
+	if(Is_Test_In_Progress)
+	{
+		bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
+		printf("\nTest is in progress, So can not sync the data");
+		return;
+	}
+	//New request from the BT client for record sync
 	if(BT_ongoing_session == FALSE){
 		client_request_cmd = bt_rx_buff[1];
 		BT_ongoing_session = TRUE;
@@ -150,227 +153,260 @@ void BT_process_requests(void)
 		count = 0;
 		countReq=0;
 	}
-	//TODO: handle if we don't get ACK for on going sync process but there is new request for record sync 
+	//TODO: handle if we don't get ACK for on going sync process but there is new request for record sync
 
 	if(Data_sync_in_progress)
 	{
-		 API_TIMER_Register_Timer(DATA_SYNC_TIMEOUT);
+		API_TIMER_Register_Timer(DATA_SYNC_TIMEOUT);
 	}
+	/*	int8_t temp=1;
+	if(temp==1)
+	{
+		API_TCP_Server();
+		temp++;
+	} */
 
-
-//	printf("client_request_cmd: %x\n", client_request_cmd);
+	//	printf("client_request_cmd: %x\n", client_request_cmd);
 	switch (client_request_cmd){
-		case BP1_data_req:
-			printf("\nBP1 Sync started");
-			Data_sync_in_progress = TRUE;
-			bt_session_complete = bt_send_multi_response(BP1, BP1_ONE_REC_LEN);
-			printf("bt_session_complete is %d\n",bt_session_complete);
-			printf("\ncount=%ld",countReq++);
-			if (bt_session_complete){
-		    	BT_ongoing_session = false;
-				client_request_cmd = NO_CMD_REQ;
-				printf("\nBP1 Sync END");
-			}
-			break;
+	case WIFI_ENABLE:
+		printf("\n Wifi Enabling \n");
+		API_TCP_Server();
+		break;
+	case WIFI_DISABLE:
+		printf("\n Wifi EDisabling \n");
+		break;
+	case BP1_data_req:
+		printf("\nBP1 Sync started");
+		Data_sync_in_progress = TRUE;
+		bt_session_complete = bt_send_multi_response(BP1, BP1_ONE_REC_LEN);
+		printf("bt_session_complete is %d\n",bt_session_complete);
+		printf("\ncount=%ld",countReq++);
+		if (bt_session_complete){
+			BT_ongoing_session = false;
+			client_request_cmd = NO_CMD_REQ;
+			printf("\nBP1 Sync END");
+		}
+		break;
 
-		case BP2_data_req:
-			printf("\nBP2 Sync started");
-			Data_sync_in_progress = TRUE;
-			bt_session_complete = bt_send_multi_response(BP2, BP2_ONE_REC_LEN);
-			printf("bt_session_complete is %d\n",bt_session_complete);
-			printf("\ncount=%ld",countReq++);
-			if (bt_session_complete){
-				BT_ongoing_session = false;
-				client_request_cmd = NO_CMD_REQ;
-				printf("\nBP2 Sync END");
-			}
-			break;
+	case BP2_data_req:
+		printf("\nBP2 Sync started");
+		Data_sync_in_progress = TRUE;
+		bt_session_complete = bt_send_multi_response(BP2, BP2_ONE_REC_LEN);
+		printf("bt_session_complete is %d\n",bt_session_complete);
+		printf("\ncount=%ld",countReq++);
+		if (bt_session_complete){
+			BT_ongoing_session = false;
+			client_request_cmd = NO_CMD_REQ;
+			printf("\nBP2 Sync END");
+		}
+		break;
 
-		case BG_data_req:
-			Data_sync_in_progress = TRUE;
-			bt_session_complete = bt_send_single_response(BG, BG_ONE_REC_LEN);
-			if (bt_session_complete){
-				BT_ongoing_session = false;
-				client_request_cmd = NO_CMD_REQ; 
-			}
-			break;
 
-		case SENSETEMP_data_req:
-			Data_sync_in_progress  = TRUE;
-			bt_session_complete = bt_send_single_response(SENSE_TEMP, TEMP_ONE_REC_LEN);
-			if (bt_session_complete){
-				BT_ongoing_session = false;
-				client_request_cmd = NO_CMD_REQ; 
-			}
-			break;
+	case Test_status_req:
+		//Data_sync_in_progress = TRUE;
+		printf("\nrequesting for test stat");
 
-		case ECG_1_Lead_data_req:
-				    //send ecg response over bluetooth
+		if(API_BLE_Transmit((uint8_t *)&Device_stat, sizeof(Device_stat)) == 3)
+			printf("\n response transmitted as : %d",Device_stat);
+		bt_session_complete = TRUE;
 
-			printf("\nECG L1 test starter");
-					Data_sync_in_progress = TRUE;
-					bt_session_complete = bt_send_multi_response(ECG_1_Lead, ECG_1_LEAD_REC_LEN);
-					if (bt_session_complete){
-						BT_ongoing_session = false;
-						client_request_cmd = NO_CMD_REQ;
-						printf("ECG Record sync completed\n");
-					}
-					break;
+		if (bt_session_complete){
+			BT_ongoing_session = false;
+			client_request_cmd = NO_CMD_REQ;
+		}
 
-		case ECG_6_Lead_data_req:
-		    //send ecg response over bluetooth
-			Data_sync_in_progress = TRUE;
-			bt_session_complete = bt_send_multi_response(ECG_6_Lead, ECG_3_LEAD_REC_LEN);
-			if (bt_session_complete){
-				BT_ongoing_session = false;
-				client_request_cmd = NO_CMD_REQ; 
-			}
-			break;
+		break;
 
-		case ECG_12_Lead_data_req:
-			Data_sync_in_progress = TRUE;
-			bt_session_complete = bt_send_multi_response(ECG_12_LEAD, ECG_12_LEAD_ONE_REC_LEN);
-			if (bt_session_complete){
-				BT_ongoing_session = 0x00;
-				client_request_cmd = NO_CMD_REQ; 
-			}
-			break;
+	case BG_data_req:
+		Data_sync_in_progress = TRUE;
+		bt_session_complete = bt_send_single_response(BG, BG_ONE_REC_LEN);
+		if (bt_session_complete){
+			BT_ongoing_session = false;
+			client_request_cmd = NO_CMD_REQ;
+		}
+		break;
 
-		case SPO2_data_req:
-			Data_sync_in_progress = TRUE;
-			printf("\nSPO2 Sync started");
+	case SENSETEMP_data_req:
+		Data_sync_in_progress  = TRUE;
+		bt_session_complete = bt_send_single_response(SENSE_TEMP, TEMP_ONE_REC_LEN);
+		if (bt_session_complete){
+			BT_ongoing_session = false;
+			client_request_cmd = NO_CMD_REQ;
+		}
+		break;
 
-			bt_session_complete = bt_send_multi_response(SPO2, SPO2_ONE_REC_LEN);
-			printf("\ncount=%ld",countReq++);
+	case ECG_1_Lead_data_req:
+		//send ecg response over bluetooth
 
-			if (bt_session_complete){
-				BT_ongoing_session = false;
-				client_request_cmd = NO_CMD_REQ; 
-				printf("\nSPO2 Sync End");
-			}
+		printf("\nECG L1 test starter");
+		Data_sync_in_progress = TRUE;
+		bt_session_complete = bt_send_multi_response(ECG_1_Lead, ECG_1_LEAD_REC_LEN);
+		if (bt_session_complete){
+			BT_ongoing_session = false;
+			client_request_cmd = NO_CMD_REQ;
+			printf("ECG Record sync completed\n");
+		}
+		break;
 
-			break;
-		case TIME_SYNC_REQ:  //date format ddmmyyhhmmss in decimal, if passed value in hex then need to convert to decimal
+	case ECG_6_Lead_data_req:
+		//send ecg response over bluetooth
+		Data_sync_in_progress = TRUE;
+		bt_session_complete = bt_send_multi_response(ECG_6_Lead, ECG_3_LEAD_REC_LEN);
+		if (bt_session_complete){
+			BT_ongoing_session = false;
+			client_request_cmd = NO_CMD_REQ;
+		}
+		break;
 
-			API_RTC_Update_Date_Time(bt_rx_buff[4], bt_rx_buff[5], bt_rx_buff[6] + 2000, bt_rx_buff[7], bt_rx_buff[8], bt_rx_buff[9]);
+	case ECG_12_Lead_data_req:
+		Data_sync_in_progress = TRUE;
+		bt_session_complete = bt_send_multi_response(ECG_12_LEAD, ECG_12_LEAD_ONE_REC_LEN);
+		if (bt_session_complete){
+			BT_ongoing_session = 0x00;
+			client_request_cmd = NO_CMD_REQ;
+		}
+		break;
 
-			memset(date_info,'\0',sizeof(date_info));
-			API_RTC_Get_Date_Time(date_info,"%d/%m/%y %H:%M:%S");
-			printf("\nDate/Time Received: %s\n",date_info);
-			
-			bt_send_ack_or_nack_response(ACK);
-			BT_ongoing_session = FALSE;
-			is_arrived_timesynq_req = TRUE;
-			break;
+	case SPO2_data_req:
+		Data_sync_in_progress = TRUE;
+		printf("\nSPO2 Sync started");
+
+		bt_session_complete = bt_send_multi_response(SPO2, SPO2_ONE_REC_LEN);
+		printf("\ncount=%ld",countReq++);
+
+		if (bt_session_complete){
+			BT_ongoing_session = false;
+			client_request_cmd = NO_CMD_REQ;
+			printf("\nSPO2 Sync End");
+		}
+
+		break;
+	case TIME_SYNC_REQ:  //date format ddmmyyhhmmss in decimal, if passed value in hex then need to convert to decimal
+
+		API_RTC_Update_Date_Time(bt_rx_buff[4], bt_rx_buff[5], bt_rx_buff[6] + 2000, bt_rx_buff[7], bt_rx_buff[8], bt_rx_buff[9]);
+
+		memset(date_info,'\0',sizeof(date_info));
+		API_RTC_Get_Date_Time(date_info,"%d/%m/%y %H:%M:%S");
+		printf("\nDate/Time Received: %s\n",date_info);
+
+		bt_send_ack_or_nack_response(ACK);
+		BT_ongoing_session = FALSE;
+		is_arrived_timesynq_req = TRUE;
+		break;
 
 		//which gives information about  the number of records in the flash(for all vital parameters)
-		case REC_SNAPSHOT_REQ:
-			send_record_snapsot_response();
-			bt_session_complete = TRUE;
-			if (bt_session_complete){
-				BT_ongoing_session = 0;
-				client_request_cmd = NO_CMD_REQ; 
-			}
-			break;
+	case REC_SNAPSHOT_REQ:
+		send_record_snapsot_response();
+		bt_session_complete = TRUE;
+		if (bt_session_complete){
+			BT_ongoing_session = 0;
+			client_request_cmd = NO_CMD_REQ;
+		}
+		break;
 
-		case OFFLINE_DATA_REQ:
-			Data_sync_in_progress = TRUE;
-//			bt_session_complete = bt_send_offline_rec();
-			if (bt_session_complete){
-				BT_ongoing_session = 0x00;
-			}
-			break;
-
-		case REC_SNAPSHOT_REQ_OFFLINE_CONF:
-//			send_record_snapshot_responce_offline_config();
-			bt_session_complete = TRUE;
-			if (bt_session_complete){
-				BT_ongoing_session = 0x00;
-			}
-			break;
-			
-    	//this is to register the patient id
-		case Patient_Reg_req:
-
-			memcpy(PatientID.pid,bt_rx_buff+5,sizeof(PatientID.pid));
-			printf("\n");
-			printf("\nReceived pid  request.\n");
-
-			for(int i=0;i<18;i++)
-				{
-					 printf("%c",(char)PatientID.pid[i]);
-				}
-			bt_send_ack_or_nack_response(ACK);
-
-			BT_ongoing_session = FALSE;
-			Selected_PID_type = VALID_PID;
-
-			break;
-
-		case Device_Configuration:
-			store_device_configuration();//storing the device configuration into the flash field
-			bt_send_ack_or_nack_response(ACK);//send the ack after storing the device
+	case OFFLINE_DATA_REQ:
+		Data_sync_in_progress = TRUE;
+		//			bt_session_complete = bt_send_offline_rec();
+		if (bt_session_complete){
 			BT_ongoing_session = 0x00;
-			break;
+		}
+		break;
 
-		case FW_VER_REQ :
-			bt_firmware_request_response();
-			BT_ongoing_session = FALSE;
-			break;
-
-		case BT_MOBILE_NUM_SYNC_REQ:
-			MemCpy(mobile_number, (bt_rx_buff + 3) ,sizeof(mobile_number));
-			bt_send_ack_or_nack_response(ACK);
-			BT_ongoing_session = FALSE;
-		    break;
-
-		case BT_FULL_DIAGNOSTICS_REQ:
-			BT_ongoing_session  = FALSE;
-			break;
-
-		case BT_SELF_DIAGNOSTICS_REQ:
-//			bt_send_device_self_diagnosis_response();
-			BT_ongoing_session = FALSE;
-            break;
-
-		case OTA_FW_UPGRADE_REQ :
-			len  = bt_rx_buff[2] << 8; //computing length field 
-			len |= bt_rx_buff[3];
-			if (bt_total_received_bytes - 4 != len){ //comparing with received with payload len
-				printf("Incorrect length, received: %d, packet len: %d\n", bt_total_received_bytes - 4, len);
-				bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
-				break;
-			}
-			//TODO: Check CRC for the received packet
-
-			bt_send_ack_or_nack_response(NACK_DEVICE_BUSY); //Processing data
-			if(is_OTA_request_arrived == FALSE){
-				is_OTA_request_arrived = TRUE;
-				BT_ongoing_session     = TRUE;
-				Data_sync_in_progress  = TRUE;
-				FW_buff_index 	       = 0;
-				Application_len        = 0;
-				FW_complete_data_received = false;	
-//				Upgradation_progress = DISP_DEVICE_UPGRADING;
-			}
-			int ret = BTL_validate_and_copy2buf(bt_rx_buff + 4);	
-			if (ret == FW_PACKET_CURRUPTED) {
-				bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
-			}
-			else if (ret == END_OF_FILE_RECORD){
-				FW_complete_data_received = true;	
-				is_OTA_request_arrived = FALSE;
-				//BT_ongoing_session = FALSE;
-			} //ACK response will be sent after reading firmware data in case of recevied packet is good
-			break;
-
-		default:
-    		//If invalid request, default response is NACK_REQ_DATA_NOT_SUPPORTED
-			bt_send_ack_or_nack_response(NACK_REQ_DATA_NOT_SUPPORTED);
+	case REC_SNAPSHOT_REQ_OFFLINE_CONF:
+		//			send_record_snapshot_responce_offline_config();
+		bt_session_complete = TRUE;
+		if (bt_session_complete){
 			BT_ongoing_session = 0x00;
+		}
+		break;
+
+		//this is to register the patient id
+	case Patient_Reg_req:
+
+		memcpy(PatientID.pid,bt_rx_buff+5,sizeof(PatientID.pid));
+		printf("\n");
+		printf("\nReceived pid  request.\n");
+
+		for(int i=0;i<18;i++)
+		{
+			printf("%c",(char)PatientID.pid[i]);
+		}
+		bt_send_ack_or_nack_response(ACK);
+
+		BT_ongoing_session = FALSE;
+		Selected_PID_type = VALID_PID;
+
+		break;
+
+	case Device_Configuration:
+		store_device_configuration();//storing the device configuration into the flash field
+		bt_send_ack_or_nack_response(ACK);//send the ack after storing the device
+		BT_ongoing_session = 0x00;
+		break;
+
+	case FW_VER_REQ :
+		bt_firmware_request_response();
+		BT_ongoing_session = FALSE;
+		break;
+
+	case BT_MOBILE_NUM_SYNC_REQ:
+		MemCpy(mobile_number, (bt_rx_buff + 3) ,sizeof(mobile_number));
+		bt_send_ack_or_nack_response(ACK);
+		BT_ongoing_session = FALSE;
+		break;
+
+	case BT_FULL_DIAGNOSTICS_REQ:
+		BT_ongoing_session  = FALSE;
+		break;
+
+	case BT_SELF_DIAGNOSTICS_REQ:
+		//			bt_send_device_self_diagnosis_response();
+		BT_ongoing_session = FALSE;
+		break;
+
+	case OTA_FW_UPGRADE_REQ :
+		len  = bt_rx_buff[2] << 8; //computing length field
+		len |= bt_rx_buff[3];
+		if (bt_total_received_bytes - 4 != len){ //comparing with received with payload len
+			printf("Incorrect length, received: %d, packet len: %d\n", bt_total_received_bytes - 4, len);
+			bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
 			break;
+		}
+		//TODO: Check CRC for the received packet
+
+		bt_send_ack_or_nack_response(NACK_DEVICE_BUSY); //Processing data
+		if(is_OTA_request_arrived == FALSE){
+			is_OTA_request_arrived = TRUE;
+			BT_ongoing_session     = TRUE;
+			Data_sync_in_progress  = TRUE;
+			FW_buff_index 	       = 0;
+			Application_len        = 0;
+			FW_complete_data_received = false;
+			//				Upgradation_progress = DISP_DEVICE_UPGRADING;
+		}
+		int ret = BTL_validate_and_copy2buf(bt_rx_buff + 4);
+		if (ret == FW_PACKET_CURRUPTED) {
+			bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
+		}
+		else if (ret == END_OF_FILE_RECORD){
+			FW_complete_data_received = true;
+			is_OTA_request_arrived = FALSE;
+			//BT_ongoing_session = FALSE;
+		} //ACK response will be sent after reading firmware data in case of recevied packet is good
+		else if(ret == BT_DISCONNECTED)
+		{
+			FW_complete_data_received = FALSE;
+			is_OTA_request_arrived = FALSE;
+		}
+		break;
+
+	default:
+		//If invalid request, default response is NACK_REQ_DATA_NOT_SUPPORTED
+		bt_send_ack_or_nack_response(NACK_REQ_DATA_NOT_SUPPORTED);
+		BT_ongoing_session = 0x00;
+		break;
 	}
-    //Clear the BT receive buffer
+	//Clear the BT receive buffer
 	MemSet(bt_rx_buff, 0x00, sizeof(bt_rx_buff));
 }
 
@@ -381,6 +417,7 @@ void BT_process_requests(void)
  */
 bool bt_send_single_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 {
+	printf("\n %s",__func__);
 	uint16_t crc_value = 0;
 	uint8_t status = FALSE;
 	uint16_t total_length = (one_record_len + EOS_SIZE + CHKSUM_SIZE);
@@ -407,40 +444,42 @@ bool bt_send_single_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 	else{
 		total_length_to_send = (one_record_len + BT_PACKET_FIELD_LENGTH);
 		switch (bt_response_state) {
-			case INIT_STATE:
-				status = API_Flash_Read_Record(vital, BT_flash_buffer);
-				if(status == NO_RECORDS_IN_FLASH) {
-					bt_send_ack_or_nack_response(NACK_DATA_NOT_AVAILABLE);
-					bt_response_session_complete = TRUE;
-					break;
-				}
-				bt_tx_buff[0] = SOS;
-				bt_tx_buff[1] = EOR;
-				MemCpy(bt_tx_buff + SOS_SIZE + CMD_SIZE, &total_length, LENGTH_SIZE);
-				MemCpy((bt_tx_buff + SOS_SIZE + CMD_SIZE + LENGTH_SIZE), BT_flash_buffer, one_record_len);
-				bt_tx_buff[(SOS_SIZE + CMD_SIZE + LENGTH_SIZE + one_record_len)] = EOS;
-				crc_value = compute_crc_16(bt_tx_buff, total_length_to_send - CHKSUM_SIZE);
-				MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE + one_record_len + EOS_SIZE ), &crc_value,CHKSUM_SIZE);
-				API_BLE_Transmit(bt_tx_buff, total_length_to_send);
-				bt_response_state = WAIT_ACK_EOR_STATE;
-				break;
-
-			case WAIT_ACK_EOR_STATE:
-				erase_one_record(vital);
-				bt_response_state = INIT_STATE;
+		case INIT_STATE:
+			printf("\n single response 000000000000000000 INIT_STATE \n");
+			status = API_Flash_Read_Record(vital, BT_flash_buffer);
+			if(status == NO_RECORDS_IN_FLASH) {
+				bt_send_ack_or_nack_response(NACK_DATA_NOT_AVAILABLE);
 				bt_response_session_complete = TRUE;
-				Data_sync_in_progress = FALSE;
 				break;
-			
-			default:
-				break;
+			}
+			bt_tx_buff[0] = SOS;
+			bt_tx_buff[1] = EOR;
+			MemCpy(bt_tx_buff + SOS_SIZE + CMD_SIZE, &total_length, LENGTH_SIZE);
+			MemCpy((bt_tx_buff + SOS_SIZE + CMD_SIZE + LENGTH_SIZE), BT_flash_buffer, one_record_len);
+			bt_tx_buff[(SOS_SIZE + CMD_SIZE + LENGTH_SIZE + one_record_len)] = EOS;
+			crc_value = compute_crc_16(bt_tx_buff, total_length_to_send - CHKSUM_SIZE);
+			MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE + one_record_len + EOS_SIZE ), &crc_value,CHKSUM_SIZE);
+			API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+			bt_response_state = WAIT_ACK_EOR_STATE;
+			break;
+
+		case WAIT_ACK_EOR_STATE:
+			printf("\n  single response 33333333333333333 WAIT_ACK_EOR_STATE \n");
+			erase_one_record(vital);
+			bt_response_state = INIT_STATE;
+			bt_response_session_complete = TRUE;
+			Data_sync_in_progress = FALSE;
+			break;
+
+		default:
+			break;
 		}
 	}
 	return (bt_response_session_complete);
 }
 
 /*bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
- * \brief       Responce for record size requires multiple BT packets 
+ * \brief       Responce for record size requires multiple BT packets
  * \param[in]	void
  * \return		bool true response session completes
  */
@@ -450,6 +489,7 @@ TOTAL_RECORDS_STRUCT_t Total_Read_CurrentRecords;
 
 bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 {
+	printf("\n %s",__func__);
 	uint16_t crc_value = 0;
 	uint8_t status = FALSE;
 
@@ -464,7 +504,8 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 			}
 			else {
 				printf("1. %s --> Length: %ld\n", __func__, total_length_to_send);
-				API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+				//API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+				wifi_send_data(bt_tx_buff, total_length_to_send);
 			}
 			retry_count++;
 			return(bt_response_session_complete);
@@ -479,111 +520,144 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 	else {
 		retry_count = 0;
 		// this block is to serve the BP_RECORD REQUEST
-		switch (bt_response_state){
-			case INIT_STATE:
+		while(clientSock != -1 && clientSock > 0)
+		{
+			if(variouble == 1)
+			{
 
-				BP_Length_tx = 0;
-				total_length_to_send = (REC_HEADER_LEN + BT_PACKET_FIELD_LENGTH);
-				status = API_Flash_Read_Record(vital, BT_flash_buffer);
-				/*this block will send DATA_NOT_AVAILABLE nack if no record found */
-				if(status == NO_RECORDS_IN_FLASH){
-					bt_send_ack_or_nack_response(NACK_DATA_NOT_AVAILABLE);
-					bt_response_session_complete = TRUE;
+				switch (bt_response_state){
+				case INIT_STATE:
+					printf("\n 000000000000000000 INIT_STATE \n");
+					BP_Length_tx = 0;
+					total_length_to_send = (REC_HEADER_LEN + BT_PACKET_FIELD_LENGTH);
+					status = API_Flash_Read_Record(vital, BT_flash_buffer);
+					/*this block will send DATA_NOT_AVAILABLE nack if no record found */
+					if(status == NO_RECORDS_IN_FLASH){
+						bt_send_ack_or_nack_response(NACK_DATA_NOT_AVAILABLE);
+						bt_response_session_complete = TRUE;
+						break;
+					}
+					Load_record_header_to_buffer();
+					bt_response_state = WAIT_ACK_SOR_STATE;
+					skip_count = 0;
 					break;
-				}
-				Load_record_header_to_buffer();
-				bt_response_state = WAIT_ACK_SOR_STATE;
-				skip_count = 0;
-				break;
 
-				//to send the continuation of the record
-			case WAIT_ACK_SOR_STATE:
-				total_length_to_send = BT_PACKET_SIZE;
-				printf("total_length_to_send: %ld\n", total_length_to_send);
-				//here we are dividing the whole record into 580 bytes of packet and sending packet by packet (MTU: 600)
-				count = (one_record_len - REC_HEADER_LEN)/BT_RAW_DATA_LENGTH;
-				remainder = (one_record_len - REC_HEADER_LEN)%BT_RAW_DATA_LENGTH;
-				printf("count: %d, remainder: %ld\n", count, remainder);
-               if(count){
-					Load_Raw_Data_To_Buffer(SOR);	//load the raw data to the buffer
-					skip_count ++;					//increment the skip_counter to point to next 240 bytes
-					count --;						//after sending every packet we decrement the count
-					printf("2. %s --> Length: %ld\n", __func__, total_length_to_send);
-					API_BLE_Transmit(bt_tx_buff, total_length_to_send);
-					bt_response_state = WAIT_ACK_COR_STATE;
-				}
-				break;
-
-			case WAIT_ACK_COR_STATE:
-				MemSet(bt_tx_buff,0x00,sizeof(bt_tx_buff));
-				/*in this block we are sending remaining packets*/
-				printf("Packet count: %d\n", count);
-				if(count){
+					//to send the continuation of the record
+				case WAIT_ACK_SOR_STATE:
+					printf("\n 111111111111111111 WAIT_ACK_SOR_STATE \n");
 					total_length_to_send = BT_PACKET_SIZE;
 					printf("total_length_to_send: %ld\n", total_length_to_send);
-					if(count == 1 && remainder == 0){
-						Load_Raw_Data_To_Buffer(EOR);								//   IF No remainder then overwrite the COR by EOR
-						bt_response_state = WAIT_ACK_EOR_STATE;
-						printf("3. %s --> Length: %ld\n", __func__, total_length_to_send);
-						API_BLE_Transmit(bt_tx_buff, total_length_to_send);
-					}
-					else{
-						Load_Raw_Data_To_Buffer(COR);
-						API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+					//here we are dividing the whole record into 580 bytes of packet and sending packet by packet (MTU: 600)
+					count = (one_record_len - REC_HEADER_LEN)/BT_RAW_DATA_LENGTH;
+					remainder = (one_record_len - REC_HEADER_LEN)%BT_RAW_DATA_LENGTH;
+					printf("count: %d, remainder: %ld\n", count, remainder);
+					if(count){
+						Load_Raw_Data_To_Buffer(SOR);	//load the raw data to the buffer
+						skip_count ++;					//increment the skip_counter to point to next 240 bytes
+						count --;						//after sending every packet we decrement the count
+						printf("2. %s --> Length: %ld\n", __func__, total_length_to_send);
+						//API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+						wifi_send_data(bt_tx_buff, total_length_to_send);
 						bt_response_state = WAIT_ACK_COR_STATE;
 					}
-					++skip_count;
-					--count;
+					break;
+
+				case WAIT_ACK_COR_STATE:
+					printf("\n 2222222222222222222 WAIT_ACK_COR_STATE \n");
+					MemSet(bt_tx_buff,0x00,sizeof(bt_tx_buff));
+					/*in this block we are sending remaining packets*/
+					printf("Packet count: %d\n", count);
+					if(count){
+						total_length_to_send = BT_PACKET_SIZE;
+						printf("total_length_to_send: %ld\n", total_length_to_send);
+						if(count == 1 && remainder == 0){
+							Load_Raw_Data_To_Buffer(EOR);								//   IF No remainder then overwrite the COR by EOR
+							bt_response_state = WAIT_ACK_EOR_STATE;
+							printf("3. %s --> Length: %ld\n", __func__, total_length_to_send);
+							//API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+							// Send data over WiFi instead of Bluetooth
+							wifi_send_data(bt_tx_buff, total_length_to_send);
+							//Salman modified
+							/*uint8_t socket = 0;  // Replace with the actual WiFi socket or connection identifier
+									wifi_send_data(socket, bt_tx_buff, total_length_to_send);*/
+
+						}
+						else{
+							Load_Raw_Data_To_Buffer(COR);
+						//	API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+							wifi_send_data(bt_tx_buff, total_length_to_send);
+
+
+							//Salman modified
+							// Send data over WiFi instead of Bluetooth
+							/*	uint8_t socket = 0;  // Replace with the actual WiFi socket or connection identifier
+									wifi_send_data(socket, bt_tx_buff, total_length_to_send); */
+
+							bt_response_state = WAIT_ACK_COR_STATE;
+						}
+						++skip_count;
+						--count;
+						break;
+					}
+					/*in this block at last we send the remainder bytes which completes the whole record*/
+					else if(remainder){
+						uint8_t	bt_remainder_packet = (remainder + CHKSUM_SIZE + EOS_SIZE);
+						total_length_to_send = (remainder + BT_PACKET_FIELD_LENGTH);
+						MemSet(bt_tx_buff, 0x0, sizeof(bt_tx_buff));
+						bt_tx_buff[0] = SOS;
+						bt_tx_buff[1] = EOR;
+						MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE), &bt_remainder_packet, LENGTH_SIZE);
+						MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE), ((uint8_t*)BT_flash_buffer + REC_HEADER_LEN + (BT_RAW_DATA_LENGTH*skip_count)), remainder);
+						bt_tx_buff[remainder + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE)] = EOS;//fill eos after raw data(240)and 4 bytes sos,cor,length 2 bytes
+						crc_value = compute_crc_16(bt_tx_buff,(total_length_to_send-CHKSUM_SIZE));
+						MemCpy(bt_tx_buff + remainder + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE + EOS_SIZE),&crc_value,CHKSUM_SIZE);
+						printf("4. %s --> Length: %ld\n", __func__, total_length_to_send);
+						//API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+						wifi_send_data(bt_tx_buff, total_length_to_send);
+						//Salman modified
+						// Send data over WiFi instead of Bluetooth
+						/*	 uint8_t socket = 0;  // Replace with the actual WiFi socket or connection identifier
+								 wifi_send_data(socket, bt_tx_buff, total_length_to_send); */
+
+
+						bt_response_state = WAIT_ACK_EOR_STATE;
+						break;
+					}
+					else
+						bt_response_state = WAIT_ACK_EOR_STATE;
+					break;
+
+				case WAIT_ACK_EOR_STATE:
+					printf("\n 33333333333333333 WAIT_ACK_EOR_STATE \n");
+					erase_one_record(vital);
+					count =0;
+					skip_count = 0;
+					//send final set of data and set state as INIT_BP_REQ
+					bt_response_state = INIT_STATE;
+					bt_response_session_complete = TRUE;
+					Data_sync_in_progress = FALSE;
+
+					memset(&Total_Read_CurrentRecords,0,sizeof(Total_Read_CurrentRecords));
+
+					API_Get_Total_Record_Count(&Total_Read_CurrentRecords);
+
+					printf("ecg_1_records : %d\n", Total_Read_CurrentRecords.ecg_1_records);
+
 					break;
 				}
-				/*in this block at last we send the remainder bytes which completes the whole record*/
-				else if(remainder){
-					uint8_t	bt_remainder_packet = (remainder + CHKSUM_SIZE + EOS_SIZE);
-					total_length_to_send = (remainder + BT_PACKET_FIELD_LENGTH);
-					MemSet(bt_tx_buff, 0x0, sizeof(bt_tx_buff));
-					bt_tx_buff[0] = SOS;
-					bt_tx_buff[1] = EOR;
-					MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE), &bt_remainder_packet, LENGTH_SIZE);
-					MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE), ((uint8_t*)BT_flash_buffer + REC_HEADER_LEN + (BT_RAW_DATA_LENGTH*skip_count)), remainder);
-					bt_tx_buff[remainder + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE)] = EOS;//fill eos after raw data(240)and 4 bytes sos,cor,length 2 bytes
-					crc_value = compute_crc_16(bt_tx_buff,(total_length_to_send-CHKSUM_SIZE));
-					MemCpy(bt_tx_buff + remainder + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE + EOS_SIZE),&crc_value,CHKSUM_SIZE);
-					printf("4. %s --> Length: %ld\n", __func__, total_length_to_send);
-					API_BLE_Transmit(bt_tx_buff, total_length_to_send);
-
-					bt_response_state = WAIT_ACK_EOR_STATE;
-					break;
-				}
-				else
-					bt_response_state = WAIT_ACK_EOR_STATE;
-				break;
-
-			case WAIT_ACK_EOR_STATE:
-				erase_one_record(vital);
-				count =0;
-				skip_count = 0;
-				//send final set of data and set state as INIT_BP_REQ
-				bt_response_state = INIT_STATE;
-				bt_response_session_complete = TRUE;
-				Data_sync_in_progress = FALSE;
-
-				memset(&Total_Read_CurrentRecords,0,sizeof(Total_Read_CurrentRecords));
-
-				API_Get_Total_Record_Count(&Total_Read_CurrentRecords);
-
-				printf("ecg_1_records : %d\n", Total_Read_CurrentRecords.ecg_1_records);
-
-				break;
+			}
 		}
 	}
 
-	if(bt_response_state != WAIT_ACK_EOR_STATE){
-	BP_Length_tx += total_length_to_send-BT_PACKET_FIELD_LENGTH;
-	//printf("BP_Length_tx = %d\n",BP_Length_tx);
+	if(bt_response_state != WAIT_ACK_EOR_STATE)
+	{
+		BP_Length_tx += total_length_to_send-BT_PACKET_FIELD_LENGTH;
+		//printf("BP_Length_tx = %d\n",BP_Length_tx);
 
 	}
 
 	return(bt_response_session_complete);
+	printf("\n Iam in end bt_send_multi_response");
 }
 
 /*	static void bt_ack_or_nack_response(uint8_t command)
@@ -599,7 +673,7 @@ static void bt_send_ack_or_nack_response(uint8_t command)
 	response.length = EOS_SIZE + CHKSUM_SIZE;
 	response.eos = EOS;
 	response.chksum = compute_crc_16((uint8_t *)&response,(sizeof(response)-CHKSUM_SIZE));
-//	printf("%s: -- ACK/NACK: %x\n", __func__, command); 
+	//	printf("%s: -- ACK/NACK: %x\n", __func__, command);
 	API_BLE_Transmit((uint8_t *)&response, sizeof(response));
 }
 
@@ -618,7 +692,7 @@ void Load_record_header_to_buffer(void)
 	MemCpy(temp.data, BT_flash_buffer, REC_HEADER_LEN);
 	temp.eos = EOS;
 	temp.chksum = compute_crc_16((uint8_t *)&temp,(sizeof(temp) - CHKSUM_SIZE));
-	printf("%s --> Length: %d\n", __func__, sizeof(temp)); 
+	printf("%s --> Length: %d\n", __func__, sizeof(temp));
 	API_BLE_Transmit((uint8_t *)&temp, sizeof(temp));
 }
 
@@ -704,12 +778,12 @@ void store_device_configuration()
 	}
 
 	/*--------------off-line configuration support status-----------------------*/
-//	if(((config_status.offline_support_status) & 0x01)== TRUE){
-//		flash_data.device_config.offline_support_status = 1;
-//	}
-//	else {
-//		flash_data.device_config.offline_support_status = 0;
-//	}
+	//	if(((config_status.offline_support_status) & 0x01)== TRUE){
+	//		flash_data.device_config.offline_support_status = 1;
+	//	}
+	//	else {
+	//		flash_data.device_config.offline_support_status = 0;
+	//	}
 
 	Flash_Pointers_Update();
 }
@@ -732,21 +806,21 @@ void bt_firmware_request_response(void)
 }
 
 
-/**********************************************************************************	
-*	.Hex file record is decoded as follows:	
-*	:10246200464C5549442050524F46494C4500464C33
-*	|||||||||||                              CC->Checksum
-*	|||||||||DD->Data
-*	|||||||TT->Record Type
-*	|||AAAA->Address
-*	|LL->Record Length
-*	:->Colon
-*
-*
-* TT --> 00 - data record
-* TT --> 01 - end-of-file record
-*
-***********************************************************************************/
+/**********************************************************************************
+ *	.Hex file record is decoded as follows:
+ *	:10246200464C5549442050524F46494C4500464C33
+ *	|||||||||||                              CC->Checksum
+ *	|||||||||DD->Data
+ *	|||||||TT->Record Type
+ *	|||AAAA->Address
+ *	|LL->Record Length
+ *	:->Colon
+ *
+ *
+ * TT --> 00 - data record
+ * TT --> 01 - end-of-file record
+ *
+ ***********************************************************************************/
 int BTL_validate_and_copy2buf(uint8_t * fw_buff)
 {
 	uint32_t index1 	 		   = 0;
@@ -754,24 +828,31 @@ int BTL_validate_and_copy2buf(uint8_t * fw_buff)
 	uint8_t  record_len   		   = 0;
 	uint16_t calculated_check_sum  = 0;
 	bool     validation_completed  = FALSE;
-	FIRMWARE_DATA_STATE_t fw_status = FW_PACKET_GOOD; 
+	FIRMWARE_DATA_STATE_t fw_status = FW_PACKET_GOOD;
 
 
 	FW_data_len = 0;
 	FW_buff_index += bt_total_received_bytes - 7;
 	printf ("bt_total_received_bytes: %d\n", bt_total_received_bytes);
-	while (validation_completed != TRUE) { 
+	while (validation_completed != TRUE) {
+
+		if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
+		{
+			API_display_backlight_on();
+			API_DISP_Display_Screen(BT_DISCONNECTED);
+			return BT_DISCONNECTED;
+		}
 		if(fw_buff[index1] == 0){ // indicates that end the record arrived
 			FW_complete_data_received = true;
 			validation_completed = TRUE;
 			break;
 		}
-		if(fw_buff[index1 + OFFSET_TO_RECORD_TYPE] == FIRMWARE_RECORD_TYPE1){ //End-of-File record  
+		if(fw_buff[index1 + OFFSET_TO_RECORD_TYPE] == FIRMWARE_RECORD_TYPE1){ //End-of-File record
 			fw_status = END_OF_FILE_RECORD;
 			FW_complete_data_received = true;
 			validation_completed = TRUE;
 			break;
-    	} 
+		}
 
 		if(fw_buff[index1 + OFFSET_TO_RECORD_TYPE] == FIRMWARE_RECORD_TYPE0) {
 			record_len  = fw_buff[index1] + 5; //5 is the header and crc length
@@ -782,19 +863,19 @@ int BTL_validate_and_copy2buf(uint8_t * fw_buff)
 			calculated_check_sum  = ~calculated_check_sum ;
 			calculated_check_sum += 1;
 			calculated_check_sum = (uint8_t)calculated_check_sum;
-			//Verify Calculated checksum with the checksum appended in the record 
+			//Verify Calculated checksum with the checksum appended in the record
 			if(calculated_check_sum != fw_buff[index1 + record_len-1]) {
 				fw_status = FW_PACKET_CURRUPTED;
 				validation_completed = TRUE;
 			}
 			calculated_check_sum = 0x00;
 			memcpy((FW_buffer + index2), (fw_buff + index1+4), (record_len-5));
-//			esp_log_buffer_hex("BLE packet", FW_buffer+index2, 16);
+			//			esp_log_buffer_hex("BLE packet", FW_buffer+index2, 16);
 			index2 += record_len-5; // valid data length of the particular record
 			index1 += record_len;
-	 	}
+		}
 		// Indicates arrived the end of the partial firmware
-//		printf("Hex record: %d, FW data: %d\n", index1, index2);
+		//		printf("Hex record: %d, FW data: %d\n", index1, index2);
 		if(index1 >= (bt_total_received_bytes - 7)) {
 			validation_completed = TRUE;
 		}
@@ -802,8 +883,8 @@ int BTL_validate_and_copy2buf(uint8_t * fw_buff)
 	FW_data_len = index2;
 	Application_len += index2; //Total size of the application binary
 	printf("Application len: %lld\n", Application_len);
-//	esp_log_buffer_hex("FW ", FW_buffer, index2);
-//	FW_complete_data_received = true;
+	//	esp_log_buffer_hex("FW ", FW_buffer, index2);
+	//	FW_complete_data_received = true;
 	return fw_status;
 }
 
@@ -815,29 +896,29 @@ int read_firmware_data (uint8_t * ota_write_data, int BUFFSIZE)
 		printf("Firmware data is more than the buffer size\n");
 		return -1;
 	}
-	
+
 	data_len = FW_data_len;
-	if (data_len > 0){	
+	if (data_len > 0){
 		memcpy(ota_write_data, FW_buffer, data_len);
 		memset(FW_buffer, 0x00, data_len);
 		FW_data_len = 0;
 		//Send ACK response, ready to receive next data packet
 		bt_send_ack_or_nack_response(ACK);
 	}
-//	FW_complete_data_received = false;
+	//	FW_complete_data_received = false;
 	return data_len;
 }
 
 bool is_firmware_data_available (void)
 {
-    if (FW_data_len){
-        printf("Firwmare data avialable..\n");                         
-        return true;
-    }
-    else {
-        return false;
-    }
-}   
+	if (FW_data_len){
+		printf("Firwmare data avialable..\n");
+		return true;
+	}
+	else {
+		return false;
+	}
+}
 // -----------------------------------------------------------------------------
 /*******************************************************************************/
 /*******************************************************************************/
@@ -885,90 +966,90 @@ bool bt_send_offline_rec()
 		switch (bt_offline_req_response_state)
 		{
 
-			case OFFLINE_REC_REQ_INIT_STATE:
-				status = read_test_record_flash(BT_flash_buffer ,ECG_OFFLINE);
-				if(status == ZERO_OFFLINE_REC_IN_FLASH)
-				{
-					bt_send_ack_or_nack_response(NACK_DEVICE_BUSY);
-					bt_six_lead_ecg_response_session_complete = TRUE;
-					break;
-				}
-				total_length_to_send = OFFLINE_REC_SUMMARY_LEN+BT_PACKET_FIELD_LENGTH;
-
-				bt_load_transmite_record_header_offline(&offline_record_summary);
-
-				bt_offline_req_response_state = OFFLINE_REC__WAIT_ACK_SOR_STATE;
+		case OFFLINE_REC_REQ_INIT_STATE:
+			status = read_test_record_flash(BT_flash_buffer ,ECG_OFFLINE);
+			if(status == ZERO_OFFLINE_REC_IN_FLASH)
+			{
+				bt_send_ack_or_nack_response(NACK_DEVICE_BUSY);
+				bt_six_lead_ecg_response_session_complete = TRUE;
 				break;
+			}
+			total_length_to_send = OFFLINE_REC_SUMMARY_LEN+BT_PACKET_FIELD_LENGTH;
 
-			case OFFLINE_REC__WAIT_ACK_SOR_STATE :
+			bt_load_transmite_record_header_offline(&offline_record_summary);
+
+			bt_offline_req_response_state = OFFLINE_REC__WAIT_ACK_SOR_STATE;
+			break;
+
+		case OFFLINE_REC__WAIT_ACK_SOR_STATE :
+		{
+			count = (ONE_OFFLINE_RECORD_LENGTH - OFFLINE_REC_SUMMARY_LEN)/BT_RAW_DATA_LENGTH;
+			remainder = (ONE_OFFLINE_RECORD_LENGTH - OFFLINE_REC_SUMMARY_LEN)%BT_RAW_DATA_LENGTH;
+			MemSet(bt_tx_buff,0x00,sizeof(bt_tx_buff));
+			total_length_to_send = BT_PACKET_SIZE;
+			Load_Raw_Data_To_Buffer_Offline_Config(COR);
+			++skip_count;
+			--count;
+			API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+			bt_offline_req_response_state = OFFLINE_REC__WAIT_ACK_COR_STATE;
+			break;
+		}
+		case OFFLINE_REC__WAIT_ACK_COR_STATE :
+			MemSet(bt_tx_buff,0x00,sizeof(bt_tx_buff));
+			if(count)
+			{
+				total_length_to_send = BT_PACKET_SIZE;
+
+				if(count == 1 && remainder == 0)
 				{
-					count = (ONE_OFFLINE_RECORD_LENGTH - OFFLINE_REC_SUMMARY_LEN)/BT_RAW_DATA_LENGTH;
-					remainder = (ONE_OFFLINE_RECORD_LENGTH - OFFLINE_REC_SUMMARY_LEN)%BT_RAW_DATA_LENGTH;
-					MemSet(bt_tx_buff,0x00,sizeof(bt_tx_buff));
-					total_length_to_send = BT_PACKET_SIZE;
-					Load_Raw_Data_To_Buffer_Offline_Config(COR);
-					++skip_count;
-					--count;
+					Load_Raw_Data_To_Buffer_Offline_Config(EOR);
+					bt_offline_req_response_state = ECG_WAIT_ACK_EOR_STATE;
 					API_BLE_Transmit(bt_tx_buff, total_length_to_send);
-					bt_offline_req_response_state = OFFLINE_REC__WAIT_ACK_COR_STATE;
-					break;
-				}
-			case OFFLINE_REC__WAIT_ACK_COR_STATE :
-				MemSet(bt_tx_buff,0x00,sizeof(bt_tx_buff));
-				if(count)
-				{
-					total_length_to_send = BT_PACKET_SIZE;
-
-					if(count == 1 && remainder == 0)
-					{
-						Load_Raw_Data_To_Buffer_Offline_Config(EOR);
-						bt_offline_req_response_state = ECG_WAIT_ACK_EOR_STATE;
-						API_BLE_Transmit(bt_tx_buff, total_length_to_send);
-					}
-					else
-					{
-						Load_Raw_Data_To_Buffer_Offline_Config(COR);
-						API_BLE_Transmit(bt_tx_buff, total_length_to_send);
-						bt_offline_req_response_state = ECG_WAIT_ACK_COR_STATE;
-					}
-
-
-					++skip_count;
-					--count;
-					break;
-				}
-				else if(remainder)
-				{
-					//set_chunk_size(remainder);
-					//read_test_record_flash(bt_rx_buff ,SPO2);
-					uint8_t	bt_remainder_packet = remainder + EOS_SIZE + CHKSUM_SIZE;
-					total_length_to_send = remainder + BT_PACKET_FIELD_LENGTH;
-					bt_tx_buff[0] = SOS;
-					bt_tx_buff[1] = EOR;
-					MemCpy(bt_tx_buff + SOS_SIZE + CMD_SIZE,&bt_remainder_packet,LENGTH_SIZE);
-					MemCpy(bt_tx_buff + SOS_SIZE + CMD_SIZE + LENGTH_SIZE,((uint8_t*)BT_flash_buffer+ OFFLINE_REC_SUMMARY_LEN+(BT_RAW_DATA_LENGTH*skip_count)),remainder);
-					bt_tx_buff[remainder + SOS_SIZE + CMD_SIZE + LENGTH_SIZE] = EOS;//fill eos after raw data(240)and 4 bytes sos,cor,length 2 bytes
-					crc_value = compute_crc_16(bt_tx_buff,remainder + SOS_SIZE + CMD_SIZE + LENGTH_SIZE + EOS_SIZE);//calculate the crc
-					MemCpy(bt_tx_buff + remainder + SOS_SIZE + CMD_SIZE + LENGTH_SIZE + EOS_SIZE,&crc_value,CHKSUM_SIZE);
-					API_BLE_Transmit(bt_tx_buff, total_length_to_send);
-					bt_offline_req_response_state = OFFLINE_REC__WAIT_ACK_EOR_STATE;
-					break;
 				}
 				else
 				{
-					bt_offline_req_response_state = OFFLINE_REC__WAIT_ACK_EOR_STATE;//if there is no reminder change responce state
+					Load_Raw_Data_To_Buffer_Offline_Config(COR);
+					API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+					bt_offline_req_response_state = ECG_WAIT_ACK_COR_STATE;
 				}
-				break;
 
-			case OFFLINE_REC__WAIT_ACK_EOR_STATE:
-				erase_one_record(ECG_OFFLINE);			//after receiving last ack erase one record from flash
-				flash_offline_test_count_reset();
-				count = 0;
-				skip_count = 0;
-				bt_offline_req_response_state = OFFLINE_REC_REQ_INIT_STATE;
-				bt_six_lead_ecg_response_session_complete = TRUE;
-				Data_sync_in_progress = FALSE;
+
+				++skip_count;
+				--count;
 				break;
+			}
+			else if(remainder)
+			{
+				//set_chunk_size(remainder);
+				//read_test_record_flash(bt_rx_buff ,SPO2);
+				uint8_t	bt_remainder_packet = remainder + EOS_SIZE + CHKSUM_SIZE;
+				total_length_to_send = remainder + BT_PACKET_FIELD_LENGTH;
+				bt_tx_buff[0] = SOS;
+				bt_tx_buff[1] = EOR;
+				MemCpy(bt_tx_buff + SOS_SIZE + CMD_SIZE,&bt_remainder_packet,LENGTH_SIZE);
+				MemCpy(bt_tx_buff + SOS_SIZE + CMD_SIZE + LENGTH_SIZE,((uint8_t*)BT_flash_buffer+ OFFLINE_REC_SUMMARY_LEN+(BT_RAW_DATA_LENGTH*skip_count)),remainder);
+				bt_tx_buff[remainder + SOS_SIZE + CMD_SIZE + LENGTH_SIZE] = EOS;//fill eos after raw data(240)and 4 bytes sos,cor,length 2 bytes
+				crc_value = compute_crc_16(bt_tx_buff,remainder + SOS_SIZE + CMD_SIZE + LENGTH_SIZE + EOS_SIZE);//calculate the crc
+				MemCpy(bt_tx_buff + remainder + SOS_SIZE + CMD_SIZE + LENGTH_SIZE + EOS_SIZE,&crc_value,CHKSUM_SIZE);
+				API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+				bt_offline_req_response_state = OFFLINE_REC__WAIT_ACK_EOR_STATE;
+				break;
+			}
+			else
+			{
+				bt_offline_req_response_state = OFFLINE_REC__WAIT_ACK_EOR_STATE;//if there is no reminder change responce state
+			}
+			break;
+
+		case OFFLINE_REC__WAIT_ACK_EOR_STATE:
+			erase_one_record(ECG_OFFLINE);			//after receiving last ack erase one record from flash
+			flash_offline_test_count_reset();
+			count = 0;
+			skip_count = 0;
+			bt_offline_req_response_state = OFFLINE_REC_REQ_INIT_STATE;
+			bt_six_lead_ecg_response_session_complete = TRUE;
+			Data_sync_in_progress = FALSE;
+			break;
 		}
 	}
 	return (bt_six_lead_ecg_response_session_complete);
@@ -1254,36 +1335,36 @@ static bool bt_bp_multiplier_send_response(void)
 	{
 		switch (bt_bp_multiplier_response_state)
 		{
-			case BP_MULTIPLIER_REQ_INIT_STATE:
+		case BP_MULTIPLIER_REQ_INIT_STATE:
 
-				total_length_to_send = (BP_MULTIPLIERS_ONE_REC_LEN + BT_PACKET_FIELD_LENGTH);
-				status = read_test_record_flash(BT_flash_buffer ,BP_MULTIPLIERS);
-				if(status == ZERO_BP_MULTIPLIERS_REC_IN_FLASH)
-				{
-					bt_send_ack_or_nack_response(NACK_DATA_NOT_AVAILABLE);
-					bt_bp_multi_response_session_complete = TRUE;
-					break;
-				}
-				bt_tx_buff[0] = SOS;
-				bt_tx_buff[1] = EOR;
-				total_length = BP_MULTIPLIERS_ONE_REC_LEN + EOS_SIZE + CHKSUM_SIZE;
-				MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE),&total_length,LENGTH_SIZE);
-				MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE),BT_flash_buffer,BP_MULTIPLIERS_ONE_REC_LEN);
-				bt_tx_buff[(SOS_SIZE + CMD_SIZE + LENGTH_SIZE + BP_MULTIPLIERS_ONE_REC_LEN)] = EOS;
-				crc_value = compute_crc_16(bt_tx_buff,(total_length_to_send - CHKSUM_SIZE));
-				MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE + BP_MULTIPLIERS_ONE_REC_LEN + EOS_SIZE),&crc_value,CHKSUM_SIZE);
-				API_BLE_Transmit(bt_tx_buff,total_length_to_send);
-				bt_bp_multiplier_response_state = BP_MULTIPLIER_WAIT_ACK_EOR_STATE;
-				break;
-
-			case BP_MULTIPLIER_WAIT_ACK_EOR_STATE:
-
-				erase_one_record(BP_MULTIPLIERS);
-				bt_bp_multiplier_response_state = BP_MULTIPLIER_REQ_INIT_STATE;
+			total_length_to_send = (BP_MULTIPLIERS_ONE_REC_LEN + BT_PACKET_FIELD_LENGTH);
+			status = read_test_record_flash(BT_flash_buffer ,BP_MULTIPLIERS);
+			if(status == ZERO_BP_MULTIPLIERS_REC_IN_FLASH)
+			{
+				bt_send_ack_or_nack_response(NACK_DATA_NOT_AVAILABLE);
 				bt_bp_multi_response_session_complete = TRUE;
-				Data_sync_in_progress = FALSE;
-				total_length_to_send = 0;
 				break;
+			}
+			bt_tx_buff[0] = SOS;
+			bt_tx_buff[1] = EOR;
+			total_length = BP_MULTIPLIERS_ONE_REC_LEN + EOS_SIZE + CHKSUM_SIZE;
+			MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE),&total_length,LENGTH_SIZE);
+			MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE),BT_flash_buffer,BP_MULTIPLIERS_ONE_REC_LEN);
+			bt_tx_buff[(SOS_SIZE + CMD_SIZE + LENGTH_SIZE + BP_MULTIPLIERS_ONE_REC_LEN)] = EOS;
+			crc_value = compute_crc_16(bt_tx_buff,(total_length_to_send - CHKSUM_SIZE));
+			MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE + BP_MULTIPLIERS_ONE_REC_LEN + EOS_SIZE),&crc_value,CHKSUM_SIZE);
+			API_BLE_Transmit(bt_tx_buff,total_length_to_send);
+			bt_bp_multiplier_response_state = BP_MULTIPLIER_WAIT_ACK_EOR_STATE;
+			break;
+
+		case BP_MULTIPLIER_WAIT_ACK_EOR_STATE:
+
+			erase_one_record(BP_MULTIPLIERS);
+			bt_bp_multiplier_response_state = BP_MULTIPLIER_REQ_INIT_STATE;
+			bt_bp_multi_response_session_complete = TRUE;
+			Data_sync_in_progress = FALSE;
+			total_length_to_send = 0;
+			break;
 		}
 	}
 	return (bt_bp_multi_response_session_complete);
