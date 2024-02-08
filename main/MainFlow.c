@@ -81,17 +81,7 @@ TaskHandle_t myTaskHandle = NULL;
           EnterSleepMode(SYSTEM_DEEP_SLEEP);
         }
 	}*/
-#if !onep2
-    	  if(API_Check_USB_Charger_Connection_Display_Notification())
-    	  {
-    		  API_IO_Exp1_P0_write_pin(HIBERNATE,LOW);
-    		  EnterSleepMode(SYSTEM_DEEP_SLEEP);
-    	  }
-    	  else
-    	  {
-    		  API_IO_Exp1_P0_write_pin(HIBERNATE,HIGH);
-    	  }
-#endif
+
 
 
     PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[ECG_CSn_VCS], PIN_FUNC_GPIO);
@@ -109,9 +99,21 @@ TaskHandle_t myTaskHandle = NULL;
     //API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
 
     Interfaces_init();
-    API_IO_Exp1_P0_write_pin(HIBERNATE,LOW);
+    //API_IO_Exp1_P0_write_pin(HIBERNATE,LOW);
 
    // API_RUN_TEMPERATURE_TEST();
+
+#if !onep2
+    	  if(API_Check_USB_Charger_Connection_Display_Notification())
+    	  {
+    		  API_IO_Exp1_P0_write_pin(HIBERNATE,LOW);
+    		  EnterSleepMode(SYSTEM_DEEP_SLEEP);
+    	  }
+    	  else
+    	  {
+    		  API_IO_Exp1_P0_write_pin(HIBERNATE,HIGH);
+    	  }
+#endif
 
 	if(API_Flash_Initialize_Data_pointers() == RECORDS_UPDATE_FAILED)
 	   {

@@ -207,8 +207,8 @@ bool skip_quick_test = FALSE;
 				//printf("\n\t\t\t%d",gpio_get_level(25));
 
 
-			//	 if(API_MAX30101_Setup())
-			//	 {
+				 if(API_MAX30101_Setup())
+				 {
 					if((API_ECG_Init()))
 						{
 						printf("\n\t%d",gpio_get_level(25));
@@ -244,20 +244,23 @@ bool skip_quick_test = FALSE;
 						  }*/
 
 
-#if 0
+#if 1
 						    if(API_Push_Btn_Get_Buttton_Press())
 						    {
 						    	Disable_Power_Supply();
 						    	return 0;
 						    }
-							API_Disp_Quick_test_screen(DISP_QT_PPG_TEST_IN_PROGRESS);
-							if(!(Capture_PPG_ECG_Data(CAPTURE_PPG,TRUE)))
-							{
-								Disable_Power_Supply();
-								return 0;
-							}
-							API_IO_Exp_Power_Control(EN_VLED,LOW);
-							API_IO_Exp_Power_Control(EN_IR,LOW);
+						    if(qv_flag == 11)
+						    {
+						    	API_Disp_Quick_test_screen(DISP_QT_PPG_TEST_IN_PROGRESS);
+						    	if(!(Capture_PPG_ECG_Data(CAPTURE_PPG,TRUE)))
+						    	{
+						    		Disable_Power_Supply();
+						    		return 0;
+						    	}
+						    	API_IO_Exp_Power_Control(EN_VLED,LOW);
+						    	API_IO_Exp_Power_Control(EN_IR,LOW);
+						    }
 #endif
 #if 1
 							API_Disp_Quick_test_screen(DISP_QT_ECG_TEST_IN_PROGRESS);
@@ -279,25 +282,26 @@ bool skip_quick_test = FALSE;
 								}
 							}
 #endif
-#if 0
-							API_Disp_Quick_test_screen(DISP_QT_BP_TEST_IN_PROGRESS);
-							printf("\nCapturing BP................");
-							API_IO_Exp_Power_Control(EN_VLED,HIGH);
+#if 1
 							//API_IO_Exp_Power_Control(EN_IR,HIGH);
-							Print_time("\nBP START");
-							if(!(Capture_BP_Data(TRUE)))
+							if(qv_flag == 11)
 							{
-								   Disable_Power_Supply();
-								   return FALSE;
+								API_Disp_Quick_test_screen(DISP_QT_BP_TEST_IN_PROGRESS);
+								printf("\nCapturing BP................");
+								API_IO_Exp_Power_Control(EN_VLED,HIGH);
+								if(!(Capture_BP_Data(TRUE)))
+								{
+									Disable_Power_Supply();
+									return FALSE;
+								}
 							}
-							Print_time("\nBP END");
-							qv_flag == 0;
+							//qv_flag = 0;
 #endif
 
-							Vital_result.SBP1 = 117; // Need to change later
-							Vital_result.DBP1 = 77; // Need to change later
+							//Vital_result.SBP1 = 117; // Need to change later
+							//Vital_result.DBP1 = 77; // Need to change later
 
-                            if(qv_flag)
+                            if(!mv_flag)
                             {
 							    API_Disp_Quick_Test_Result();
                             }
@@ -307,11 +311,11 @@ bool skip_quick_test = FALSE;
 					{
 						 printf("\nECg init failed ....\n");
 					}
-				/* }
+				 }
 				 else
 				 {
 					 printf("\nMAx init failed ....\n");
-				 }*/
+				 }
 			}
 
 			else
@@ -815,25 +819,7 @@ void Store_QuickTest1_Data_To_Flash(void)
 	RECORD_OPS_STATUS status;
 
 	uint32_t offfset = 0;
-	if(qv_flag == 11 )
-	{
-		API_Update_Record_Header(ECG_1_Lead,&record_header);
-
-
-		MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
-
-		MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
-		offfset = REC_HEADER_LEN;
-
-		MemCpy(BT_flash_buffer+offfset,ECG_Lead1_buff,(600*4));
-		offfset += 600*4;
-
-
-		status = API_Flash_Write_Record(ECG_1_Lead,(void*)BT_flash_buffer);
-
-		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(ECG_DATA_STORE_TO_FLASH_FAIL);
-	}
-	else if(qv_flag == 12)
+    if(qv_flag == 12)
 	{
 		API_Update_Record_Header(ECG_6_Lead,&record_header);
 
@@ -870,7 +856,7 @@ void Store_QuickTest1_Data_To_Flash(void)
 
 
 		offfset = 0;
-		API_Update_Record_Header(ECG_6_Lead,&record_header);
+		API_Update_Record_Header(ECG_1_Lead,&record_header);
 
 
 		MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
@@ -881,11 +867,8 @@ void Store_QuickTest1_Data_To_Flash(void)
 		MemCpy(BT_flash_buffer+offfset,ECG_Lead1_buff,(600*4));
 		offfset += 600*4;
 
-		MemCpy(BT_flash_buffer+offfset,ECG_Lead2_buff,(600*4));
-		offfset += 600*4;
 
-
-		status = API_Flash_Write_Record(ECG_6_Lead,(void*)BT_flash_buffer);
+		status = API_Flash_Write_Record(ECG_1_Lead,(void*)BT_flash_buffer);
 
 		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(ECG_DATA_STORE_TO_FLASH_FAIL);
 

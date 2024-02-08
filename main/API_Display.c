@@ -1905,7 +1905,7 @@ uint8_t left_offset = 0;
   	text1.text_status = display;
 
   	text2.color = BLUE;
-  	text2.text_starting_addr = " Heart Rate"; /*!  { spo2, HR(ECG-L1), BP }  */
+  	text2.text_starting_addr = " Quick vital "; /*!  { spo2, HR(ECG-L1), BP }  */
   	text2.text_status = display;
 
   	text3.color = BLUE;
@@ -1941,6 +1941,7 @@ uint8_t left_offset = 0;
   		Detect_low_battery_display_notification();
   		if(API_Check_USB_Charger_Connection_Display_Notification())
   		 {
+  			API_IO_Exp1_P0_write_pin(HIBERNATE,LOW);
   		    EnterSleepMode(SYSTEM_DEEP_SLEEP);
   		 }
 #endif
