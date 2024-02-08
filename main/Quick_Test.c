@@ -861,9 +861,9 @@ void Store_QuickTest1_Data_To_Flash(void)
 
 		offfset = REC_HEADER_LEN;
 		MemCpy(BT_flash_buffer+offfset,BP_PPG_IR_BUFF,(SPO2_RED_SAMPLES*4));
-		offfset += 1200*4;
+		offfset += 600*4;
 		MemCpy(BT_flash_buffer+offfset,BP_ECG_Lead1_buff,(SPO2_RED_SAMPLES*4));
-		offfset += 1200*4;
+		offfset += 600*4;
 		status = API_Flash_Write_Record(BP1,(void*)BT_flash_buffer);
 
 		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(BP_DATA_STORE_TO_FLASH_FAIL);
@@ -908,10 +908,10 @@ void Store_QuickTest1_Data_To_Flash(void)
 	}
 	IsValidRecordsInFlash = true;
 
-	printf("\nTotal SPO2 Records = %ld", get_records_count(SPO2));
-	printf("\nTotal BP1 Records = %ld", get_records_count(BP1));
-	printf("\nTotal ECG L1 Records = %ld", get_records_count(ECG_1_Lead));
-	printf("\nTotal ECG6 Records = %ld", get_records_count(ECG_6_Lead));
+	printf("\nTotal SPO2 Records = %ld or %ld", get_records_count(SPO2),get_records_count(SPO2));
+	printf("\nTotal BP1 Records = %ld or %ld", get_records_count(BP1),get_records_count(BP1));
+	printf("\nTotal ECG L1 Records = %ld or %ld", get_records_count(ECG_1_Lead),get_records_count(ECG_1_Lead));
+	printf("\nTotal ECG6 Records = %ld or %ld", get_records_count(ECG_6_Lead),get_records_count(ECG_6_Lead));
 
 }
 

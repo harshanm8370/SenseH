@@ -41,8 +41,8 @@ uint8_t API_Flash_Initialize_Data_pointers(void)
 			flash_data.bp1_write_addr				= BP1_START_ADDR;
 			flash_data.bp1_read_addr				= BP1_START_ADDR;
 
-			flash_data.bp2_write_addr				= BP2_START_ADDR;
-			flash_data.bp2_read_addr				= BP2_START_ADDR;
+			//flash_data.bp2_write_addr				= BP2_START_ADDR;
+			//flash_data.bp2_read_addr				= BP2_START_ADDR;
 
 			flash_data.ecg_1_lead_write_addr		= ECG_1_LEAD_START_ADDR;
 		    flash_data.ecg_1_lead_read_addr			= ECG_1_LEAD_START_ADDR;
@@ -112,7 +112,7 @@ void get_record_pointer_details (VITAL_TYPE_t vital, RECORD_POINTER_t *record_po
 			record_pointer->end_addr = BP1_END_ADDR;
 			record_pointer->one_record_len = BP1_ONE_REC_LEN;
 			break;
-		case BP2:
+		/*case BP2:
 			record_pointer->write_addr = flash_data.bp2_write_addr;
 			record_pointer->read_addr = flash_data.bp2_read_addr;
 			record_pointer->new_write_addr = &flash_data.bp2_write_addr;
@@ -120,7 +120,7 @@ void get_record_pointer_details (VITAL_TYPE_t vital, RECORD_POINTER_t *record_po
 			record_pointer->start_addr = BP2_START_ADDR;
 			record_pointer->end_addr = BP2_END_ADDR;
 			record_pointer->one_record_len = BP2_ONE_REC_LEN;
-			break;
+			break;*/
 		case SPO2:
 			record_pointer->write_addr = flash_data.spo2_write_addr;
 			record_pointer->read_addr = flash_data.spo2_read_addr;
@@ -356,7 +356,7 @@ void  API_Get_Total_Record_Count (TOTAL_RECORDS_STRUCT_t *total_records)
 	//BP1
 	total_records->bp1_records = get_records_count(BP1);
 	//BP2
-	total_records->bp2_records = get_records_count(BP2);
+	//total_records->bp2_records = get_records_count(BP2);
 
 	total_records->ecg_1_records = get_records_count(ECG_1_Lead);
 	//3 lead ecg record count
@@ -808,8 +808,6 @@ bool API_Flash_Org_Check_For_Memory_Free(void)
 		{
 			if(nbf_records.bp1_records < MAX_RECORDS)
 				{
-				if(nbf_records.bp2_records < MAX_RECORDS)
-					{
 					if(nbf_records.ecg_12_lead_ecord < MAX_RECORDS)
 					{
 						if(nbf_records.ecg_1_records < MAX_RECORDS)
@@ -825,7 +823,6 @@ bool API_Flash_Org_Check_For_Memory_Free(void)
 									}
 								}
 						 }
-					}
 				}
 			}
 		}
@@ -840,16 +837,15 @@ void API_Flash_Check_Update_Valid_Record_Status(void)
 
 	API_Get_Total_Record_Count(&nbf_records);
 
-	printf("\n bg:%d\n bp1:%d\n bp2:%d\n ecg12:%d\n ecg1:%d\n ecg3:%d\n spo2:%d\n temp:%d\n\n",nbf_records.bg_records,
-				nbf_records.bp1_records,nbf_records.bp2_records,nbf_records.ecg_12_lead_ecord,nbf_records.ecg_1_records,nbf_records.ecg_3_records,
+	printf("\n bg:%d\n bp1:%d\n ecg12:%d\n ecg1:%d\n ecg3:%d\n spo2:%d\n temp:%d\n\n",nbf_records.bg_records,
+				nbf_records.bp1_records,nbf_records.ecg_12_lead_ecord,nbf_records.ecg_1_records,nbf_records.ecg_3_records,
 				nbf_records.spo2_records,nbf_records.temp_records);
 
 	if(nbf_records.bg_records == 0)
 		{
 			if(nbf_records.bp1_records  == 0)
 				{
-				if(nbf_records.bp2_records  == 0)
-				{
+
 				if(nbf_records.ecg_12_lead_ecord  == 0)
 					{
 						if(nbf_records.ecg_1_records  == 0)
@@ -867,7 +863,6 @@ void API_Flash_Check_Update_Valid_Record_Status(void)
 								}
 						 }
 					}
-				}
 			}
 		}
 

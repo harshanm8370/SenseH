@@ -97,7 +97,7 @@ TaskHandle_t myTaskHandle = NULL;
     //API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
 
     Interfaces_init();
-    API_IO_Exp1_P0_write_pin(HIBERNATE,HIGH);
+    API_IO_Exp1_P0_write_pin(HIBERNATE,LOW);
 
    // API_RUN_TEMPERATURE_TEST();
 
@@ -188,7 +188,7 @@ TaskHandle_t myTaskHandle = NULL;
 							state = VIEW_SCREEN;
 						}
 
-						 if((state == HEARTRATE) || (state == ECG12))
+						 if((state == HEARTRATE) || (state == ECG12) || (state == ECG6))
 						 {
 							   if(API_Check_USB_Charger_Connection_Display_Notification())
 								{
@@ -197,7 +197,7 @@ TaskHandle_t myTaskHandle = NULL;
 						 }
 
 
-						if(state)
+						if((state == HEARTRATE) || (state == ECG12) || (state == ECG6))
 						{
 							API_TIMER_Kill_Timer(USER_INACTIVE_TIMEOUT);
 						}

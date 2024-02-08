@@ -65,7 +65,7 @@
 #define ECG_2_LEAD_TOTAL_SECTORS			62
 #define SPO2_TOTAL_SECTORS					120    //(4854 * 100) / 4096 ~= 120
 #define ECG_3_LEAD_TOTAL_SECTORS			120    //(4854 * 100) / 4096 ~= 120
-#define BP1_TOTAL_SECTORS					245    //(9654 * 100) / 4096 ~= 245
+#define BP1_TOTAL_SECTORS					120    //(9654 * 100) / 4096 ~= 245
 #define BP2_TOTAL_SECTORS					245
 #define ECG_12_LEAD_TOTAL_SECTORS			235    //(19254*100/4096)
 
@@ -86,7 +86,7 @@
 #define SPO2_START_SECTOR    	 			(TEMP_START_SECTOR+TEMP_TOTAL_SECTORS)		//TEMP_START_SECTOR + TEMP_TOTAL_SECTORS
 #define ECG_1_LEAD_START_SECTOR    			(SPO2_START_SECTOR+SPO2_TOTAL_SECTORS)
 #define ECG_3_LEAD_START_SECTOR    			(ECG_1_LEAD_START_SECTOR+ECG_1_LEAD_TOTAL_SECTORS)
-#define BP1_START_SECTOR    	 			(ECG_3_LEAD_START_SECTOR+ECG_3_LEAD_TOTAL_SECTORS)
+#define BP1_START_SECTOR    	 			(ECG_3_LEAD_START_SECTOR + ECG_3_LEAD_TOTAL_SECTORS)
 #define ECG_12_LEAD_START_SECTOR   			(BP1_START_SECTOR+BP1_TOTAL_SECTORS)
 #define BP2_START_SECTOR					(ECG_12_LEAD_START_SECTOR + ECG_12_LEAD_TOTAL_SECTORS)
 
@@ -274,8 +274,8 @@ typedef struct __attribute__((__packed__))
 	uint32_t 		spo2_read_addr;
 	uint32_t 		bp1_write_addr;
 	uint32_t 		bp1_read_addr;
-	uint32_t 		bp2_write_addr;
-	uint32_t 		bp2_read_addr;
+	//uint32_t 		bp2_write_addr;
+	//uint32_t 		bp2_read_addr;
 	uint32_t 		ecg_1_lead_write_addr;
 	uint32_t 		ecg_1_lead_read_addr;
 	uint32_t 		ecg_3_lead_write_addr;
