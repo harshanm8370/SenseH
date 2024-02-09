@@ -45,7 +45,7 @@ void ExecuteComplianceSequence(void);
 void HandleDataSync(void);
 void Led_Blink(void *pvParameters);
 extern BT_STATUS Is_Device_Paired;
-bool qv_flag,mv_flag;
+uint8_t qv_flag,mv_flag;
 bool BLE_DS;
 #define test 1
 
@@ -209,7 +209,7 @@ TaskHandle_t myTaskHandle = NULL;
 						switch(state)
 						{
 							case QUICK_VITALS:{
-                                qv_flag = 1;
+                                qv_flag = 11;
                                 Device_stat = 2;
 							//	Is_Test_In_Progress = true;
 #if !test
@@ -228,6 +228,31 @@ TaskHandle_t myTaskHandle = NULL;
 								}
 #endif
 								 qv_flag = 0;
+								//ota_flag = 0;
+								Is_Test_In_Progress = false;
+								break;
+							}
+
+							case ECG6LEAD:{
+								qv_flag = 12;
+								Device_stat = 2;
+								//	Is_Test_In_Progress = true;
+#if !test
+								if(Is_Device_Paired == DEFAULTD) // Paired condition
+								{
+									//printf("\n\t%d",Is_Device_Paired);
+									Selected_PID_type = PID_NOT_SELECTED;
+								}
+#endif
+								Run_Quick_Vital();
+								Device_stat  = 3;
+#if !test
+								if(Is_Device_Paired == DEFAULTD) // Paired condition
+								{
+									Selected_PID_type = PID_NOT_SELECTED;
+								}
+#endif
+								qv_flag = 0;
 								//ota_flag = 0;
 								Is_Test_In_Progress = false;
 								break;

@@ -665,7 +665,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
  {
      bool status = false;
 
-     API_IO_Exp_Power_Control(EN_VLED,HIGH);
+    // API_IO_Exp_Power_Control(EN_VLED,HIGH);
 
      printf("\nDevice ID = 0x%2X.\n",readPartID(0xFF));
 
@@ -699,7 +699,7 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 
 	 if(!status)  Catch_RunTime_Error(MAX86150_INIT_FAIL);
 
-		API_IO_Exp_Power_Control(EN_VLED,HIGH);
+		//API_IO_Exp_Power_Control(EN_VLED,HIGH);
 
 	 return status;
 

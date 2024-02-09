@@ -244,6 +244,7 @@ typedef enum
 
 typedef enum{
 	QUICK_VITALS=1,
+	ECG6LEAD,
 	MULTI_VITALS,
 	NO_TEST,
 	TEST_ENTER,

@@ -2428,16 +2428,16 @@ uint8_t left_offset = 0;
   	text2.text_status = display;
 
   	text3.color = BLUE;
-  	text3.text_starting_addr = " Multi Vital";/*!  { spo2, HR(ECG-L6), BP, Temp, BG }  */
+  	text3.text_starting_addr = "  Ecg6Lead ";/*!  { spo2, HR(ECG-L6), BP, Temp, BG }  */
   	text3.text_status = display;
 
   	text4.color = BLUE;
-  	text4.text_starting_addr = "    Sleep    ";
+  	text4.text_starting_addr = " Multi Vital";
   	text4.text_status = display;
 
-  	//text6.color = BLUE;
-  	//text6.text_starting_addr = "    Exit    ";
-	text5.text_status = 0;
+  	text5.color = BLUE;
+  	text5.text_starting_addr = "    Sleep    ";
+	text5.text_status = display;
   	text6.text_status = 0;
   	text7.text_status = 0;
 
@@ -2480,18 +2480,22 @@ uint8_t left_offset = 0;
 				api_disp_display_icon(star,left_offset,top_offset,WHITE,WHITE);
 				count++;
 
-				if(count == 2)
+				if(count == 2 || count == 4)
 				{
 					left_offset = 3;
 				}
-				 if(count == 4)
+				if(count == 3)
+				{
+					left_offset = 10;
+				}
+				 if(count == 5)
 				 {
 					left_offset = 30;
 				 }
 
 				 top_offset = top_offset + 20;
 
-				 if (count == 5)
+				 if (count == 6)
 				 {
 					count = 1;
 					left_offset = 20;
@@ -2553,8 +2557,9 @@ uint8_t left_offset = 0;
   	switch(count)
   	{
 		case 2 : ret_msg = QUICK_VITALS; break;
-		case 3 : ret_msg = MULTI_VITALS; break;
-		case 4 : ret_msg = TEST_EXIT; break;
+		case 3 : ret_msg = ECG6LEAD; break;
+		case 4 : ret_msg = MULTI_VITALS; break;
+		case 5 : ret_msg = TEST_EXIT; break;
 		case 0xFF :ret_msg = DATA_SYNC; break;
 		default: ret_msg = NO_TEST; break;
   	}
@@ -3107,10 +3112,14 @@ uint8_t left_offset = 0;
   	mid_text1.color       = WHITE;
   	mid_text2.color       = WHITE;
   	mid_text3.color       = WHITE;*/
-
+  	API_Clear_Display(DISP_MIDDLE_SEC,WHITE);
 #ifndef MARKETING_REQUIREMENT
-  //	mid_text1.text_starting_addr = " Test Done! ";
-//	mid_text1.color       = BLUE;
+  	mid_text1.text_starting_addr = " Test Done! ";
+	mid_text1.color       = BLUE;
+	mid_text1.text_status = display;
+
+	mid_text2.text_status = 0;
+	mid_text3.text_status = 0;
 #endif
   	mid_icon.icon_status        = ON;
   	mid_icon.icon_starting_addr = ThumbsUpIcon1;
@@ -3242,7 +3251,7 @@ uint8_t left_offset = 0;
 //		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
 		gpio_set_level(ECG_CSn_VCS, 1);
 
- 		api_disp_display_char( " V 1.0.1 ", font19x10, WHITE, BLACK, 20, 100);
+ 		api_disp_display_char( " SHB 0.1 ", font19x10, WHITE, BLACK, 20, 100);
  		//api_disp_display_char(FIRMWARE_VERSION, font19x10, BLUE, BLACK, 5, 120);
   }
 
