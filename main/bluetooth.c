@@ -10,8 +10,9 @@
 #include "ProjectConfiguration.h"
 #include "API_Display.h"
 #include "API_TCP_Server.h"
-
+extern int terminate;
 uint8_t Device_stat;
+ int Empty_Record;
 
 /************************************************ MACROS *****************************************************************/
 #define BT_RAW_DATA_LENGTH			  	580	 //BT_PACKET_SIZE = BT_RAW_DATA_LENGTH + payload bytes, this should not cross MTU:600
@@ -54,6 +55,7 @@ static void bt_firmware_request_response(void);
 static uint8_t  FW_buffer[BUFFER_SIZE];
 extern int variouble;
 extern int clientSock;
+int Temp_socket=1;
 /*
 static void bt_send_device_self_diagnosis_response(void);
 static void bt_send_device_full_diagnosis_response(void);
@@ -80,6 +82,7 @@ static VITALS_RESPONSE_STATE bt_response_state = INIT_STATE;
 
 static uint32_t total_length_to_send = 0;
 static uint8_t bt_tx_buff[600] = {0};
+static uint8_t wf_tx_buff[2]={4,4};
 static uint8_t bt_rx_buff[600] = {0};
 static uint8_t client_request_cmd = 0;
 static uint16_t bt_total_received_bytes = 0;
@@ -174,6 +177,7 @@ void BT_process_requests(void)
 		break;
 	case WIFI_DISABLE:
 		printf("\n Wifi EDisabling \n");
+		disconnect_wifi();
 		break;
 	case BP1_data_req:
 		printf("\nBP1 Sync started");
@@ -524,8 +528,9 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 		{
 			if(variouble == 1)
 			{
-
-				switch (bt_response_state){
+				printf("\n waiting for the vital command");
+				switch (bt_response_state)
+				{
 				case INIT_STATE:
 					printf("\n 000000000000000000 INIT_STATE \n");
 					BP_Length_tx = 0;
@@ -642,12 +647,23 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 					API_Get_Total_Record_Count(&Total_Read_CurrentRecords);
 
 					printf("ecg_1_records : %d\n", Total_Read_CurrentRecords.ecg_1_records);
-
+					printf("\n Sending 44444444444444444444444444444444444444444444444444444444444 \n");
+					wifi_send_data(wf_tx_buff,2);
+					close(clientSock);
+					 clientSock = -1;
+					 variouble=0;
+					printf(" client sock %d",clientSock);
+					printf("\n client socket closed");
 					break;
-				}
-			}
-		}
-	}
+				}//switch
+			}//if
+		/*	printf("\n going to terminate");
+			if(terminate==1)
+			{
+				break;
+			} */
+		}//while
+	}//else
 
 	if(bt_response_state != WAIT_ACK_EOR_STATE)
 	{
@@ -684,6 +700,7 @@ static void bt_send_ack_or_nack_response(uint8_t command)
  */
 void Load_record_header_to_buffer(void)
 {
+	printf("%s",__func__);
 	SYNC_HEADER_STRUCT temp;
 	temp.sos = SOS;
 	temp.cmd = SOR;
@@ -693,7 +710,8 @@ void Load_record_header_to_buffer(void)
 	temp.eos = EOS;
 	temp.chksum = compute_crc_16((uint8_t *)&temp,(sizeof(temp) - CHKSUM_SIZE));
 	printf("%s --> Length: %d\n", __func__, sizeof(temp));
-	API_BLE_Transmit((uint8_t *)&temp, sizeof(temp));
+	//API_BLE_Transmit((uint8_t *)&temp, sizeof(temp));
+	wifi_send_data((uint8_t*)&temp, sizeof(temp));
 }
 
 /*	void Load_Raw_Data_To_Buffer()
@@ -740,7 +758,10 @@ static void send_record_snapsot_response(void)
 	record_snapshot_res.sensetemp_rec = total_records.temp_records;
 	record_snapshot_res.ecg_12lead_rec = total_records.ecg_12_lead_ecord;
 	record_snapshot_res.eos = EOS;
-
+	/*if(record_snapshot_res.bp1_rec==0 && record_snapshot_res.bp2_rec==0 && record_snapshot_res.bg_rec==0 && record_snapshot_res.ecg1_rec==0 && record_snapshot_res.ecg6_rec==0 && record_snapshot_res.spo2_rec==0 && record_snapshot_res.sensetemp_rec==0 && record_snapshot_res.ecg_12lead_rec==0)
+	{
+		Empty_Record=1;
+	}*/
 	printf("\n\nRecord Snap shot request::\n"
 			"record_snapshot_res.bp1_rec:%d\n"
 			"record_snapshot_res.bp2_rec:%d\n"
@@ -839,8 +860,8 @@ int BTL_validate_and_copy2buf(uint8_t * fw_buff)
 		if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
 		{
 			API_display_backlight_on();
-			API_DISP_Display_Screen(BT_DISCONNECTED);
-			return BT_DISCONNECTED;
+			API_DISP_Display_Screen(BLUETOOTH_DISCONNECTED);
+			return BLUETOOTH_DISCONNECTED;
 		}
 		if(fw_buff[index1] == 0){ // indicates that end the record arrived
 			FW_complete_data_received = true;

@@ -57,13 +57,13 @@ bool Detect_low_battery_display_notification()
 		if(battery_voltage < FUEL_GUAGE_10_PER_VOLTAGE)
 		{
 			   API_DISP_Display_Screen(DISP_VERY_LOW_VOLTAGE_PLEASE_CHARGE);// critically low voltage
-			   is_lowBattery = true;
+			   is_lowBattery = false;
 		}
 
 		else if(battery_voltage < FUEL_GUAGE_15_PER_VOLTAGE)
 		{
 			  API_DISP_Display_Screen(DISP_LOW_VOLTAGE_PLEASE_CHARGE); // low voltage
-			  is_lowBattery = true;
+			  is_lowBattery = false;
 		}
 
 		return  is_lowBattery;

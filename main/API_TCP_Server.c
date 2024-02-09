@@ -17,13 +17,23 @@ int variouble;
 #define FALSE 0
 #define PORT_NUMBER 5002
 static char tag[] = "socket_server";
-
+static int END_Var;
 int clientSock ;
 extern int globalFlag;
-
+int terminate;
+extern int 	Empty_Record;
+static int sock;
+void disconnect_wifi()
+{
+	printf("\n %s",__func__);
+	ESP_LOGW(tag, "End of socket_server_task");
+	close(sock);
+	esp_wifi_stop();
+	esp_wifi_deinit();
+	vTaskDelete(NULL);
+}
 void wifi_send_data(uint8_t* data, size_t length)
 {
-
 	if (clientSock != -1 && clientSock > 0 )
 	{
 		ESP_LOGI(tag, "Sending data...");
@@ -32,12 +42,11 @@ void wifi_send_data(uint8_t* data, size_t length)
 
 		for (size_t i = 0; i < length; i++)
 		{
-			printf("%02X ",data[i]);
+			printf("%02X ", data[i]);
 		}
 		printf("\n");
 
 		int bytes_sent = send(clientSock, (uint8_t*)data, length, 0);
-		vTaskDelay(pdMS_TO_TICKS(500));
 
 		if (bytes_sent < 0)
 		{
@@ -46,30 +55,36 @@ void wifi_send_data(uint8_t* data, size_t length)
 		else
 		{
 			ESP_LOGI(tag, "Sent %d bytes", bytes_sent);
-			if(data[1]== 0x03)
+			char endbuffer[10];
+
+			if (data[0] == 0x04)
 			{
-				close(clientSock);
-				printf("\n hahahahhahahahhaahahha iam closing client socket");
-				/*while (wait_for_ack(clientSock))
+				memset(endbuffer, 0, sizeof(endbuffer));
+				while(1)
 				{
-					//BT_process_requests();
-					break; // waiting till I get the ack
+					int len = recv(clientSock, endbuffer, sizeof(endbuffer) - 1, 0);
+					if (len > 0)
+					{
+						printf("\n Received String (Debug): %s", endbuffer);
+						if (strcmp(endbuffer, "END") == 0)
+						{
+							printf("\n Received String (Debug): %s", endbuffer);
+							terminate = 1;
+							break;
+						}
+					}
 				}
+				printf("\n haha iam closing client socket");
 
-				if (!wait_for_ack(clientSock))
-				{
-					ESP_LOGI(tag, "No acknowledgment received");
-				}*/
 			}
-
 		}
 	}
 	else
 	{
 		printf("\n clientSock == -1 \n");
 	}
+	printf("\n iam going out from send func \n");
 }
-
 bool wait_for_ack(int socket)
 {
 	char ack_buffer[10];
@@ -78,7 +93,7 @@ bool wait_for_ack(int socket)
 
 	int len = recv(socket, ack_buffer, sizeof(ack_buffer) - 1, 0);
 
-	// Print information about each received character
+
 	printf("\n ++++++++++++ Received String (Debug): ");
 	for (int i = 0; i < len; i++)
 	{
@@ -86,32 +101,25 @@ bool wait_for_ack(int socket)
 	}
 	printf("\n");
 
-	if (len < 0)
+	/*	if (len < 0)
 	{
 		ESP_LOGE(tag, "recv failed: errno %d", errno);
 		return false;
-	}
-	else if (len == 0)
+	}*/
+	if (len == 0)
 	{
 		ESP_LOGI(tag, "Connection closed");
 		return false;
 	}
 	else
 	{
-		ESP_LOGI(tag, "Received String: %s", ack_buffer);
 
 		// Check the content of the string for acknowledgment
 		if (strcmp(ack_buffer, "START") == 0)
 		{
 			variouble = 1;
+			terminate=0;
 			printf("\n variouble value is changed");
-			return true; // Break out of the loop
-		}
-		else if (strcmp(ack_buffer, "END") == 0)
-		{
-			ESP_LOGI(tag, "Received 'END'. Closing connection.");
-			//BT_process_requests();
-				//	close(clientSock);
 			return true; // Break out of the loop
 		}
 
@@ -158,81 +166,92 @@ void wifi_start_access_point() {
 
 void socket_server_task(void* pvParameters)
 {
-    struct sockaddr_in clientAddress;
-    struct sockaddr_in serverAddress;
-//IPv4 AF_INET
-    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);//socket system call
-    if (sock < 0)
-    {
-        ESP_LOGE(tag, "socket: %d %s", sock, strerror(errno));
-        goto END;
-    }
-////family as IPv4.
-    serverAddress.sin_family = AF_INET;
-    //Binds the server to all available network interfaces.
-    serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
-    // 	: Sets the port number for the server.
-    serverAddress.sin_port = htons(PORT_NUMBER);
+	struct sockaddr_in clientAddress;
+	struct sockaddr_in serverAddress;
+	//IPv4 AF_INET
+	 sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);//socket system call
+	if (sock < 0)
+	{
+		ESP_LOGE(tag, "socket: %d %s", sock, strerror(errno));
+		goto END;
+	}
+	////family as IPv4.
+	serverAddress.sin_family = AF_INET;
+	//Binds the server to all available network interfaces.
+	serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
+	// 	: Sets the port number for the server.
+	serverAddress.sin_port = htons(PORT_NUMBER);
 
-    int rc = bind(sock, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
-    if (rc < 0)
-    {
-        ESP_LOGE(tag, "bind: %d %s", rc, strerror(errno));
-        goto END;
-    }
-    else
-    {
-        printf("\n binded");
-    }
+	int rc = bind(sock, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
+	if (rc < 0)
+	{
+		ESP_LOGE(tag, "bind: %d %s", rc, strerror(errno));
+		goto END;
+	}
+	else
+	{
+		printf("\n binded");
+	}
 
-    rc = listen(sock, 5);
-    if (rc < 0)
-    {
-        ESP_LOGE(tag, "listen: %d %s", rc, strerror(errno));
-        goto END;
-    }
-    else
-    {
-        printf("\n listen");
-    }
+	rc = listen(sock, 5);
+	if (rc < 0)
+	{
+		ESP_LOGE(tag, "listen: %d %s", rc, strerror(errno));
+		goto END;
+	}
+	else
+	{
+		printf("\n listen");
+	}
 
-    while (1)
-    {
-        printf("\n while");
-        socklen_t clientAddressLength = sizeof(clientAddress);
-        clientSock = accept(sock, (struct sockaddr*)&clientAddress, &clientAddressLength);
+	while (1)
+	{
+		/*if(Empty_Record==1)
+		{
+			ESP_LOGW(tag, "End of socket_server_task");
+			close(socket);
+			// Stop the WiFi interface
+			esp_wifi_stop();
+			// Deinitialize the WiFi subsystem
+			esp_wifi_deinit();
+			// Delete the task
+			vTaskDelete(NULL);
+		}*/
+		printf("\n while iam sarching for new socet");
+		socklen_t clientAddressLength = sizeof(clientAddress);
+		clientSock = accept(sock, (struct sockaddr*)&clientAddress, &clientAddressLength);
 
-        if (clientSock < 0)
-        {
-            ESP_LOGE(tag, "accept: %d %s", clientSock, strerror(errno));
-            goto END;
-        }
-        else
-        {
-            printf("\n **************************client connected to wifi %d", clientSock);
+		if (clientSock < 0)
+		{
+			ESP_LOGE(tag, "accept: %d %s", clientSock, strerror(errno));
+			goto END;
+		}
+		else
+		{
+			printf("\n **************************client connected to wifi %d", clientSock);
 
-            // Wait for acknowledgment before proceeding
-            while (wait_for_ack(clientSock))
-            {
-                break; // Waiting till I get the ack
-            }
+			// Wait for acknowledgment before proceeding
+			while (wait_for_ack(clientSock))
+			{
+				break; // Waiting till I get the ack
+			}
 
-            if (!wait_for_ack(clientSock))
-            {
-            	 ESP_LOGI(tag, "No acknowledgment received");
-            }
-            else
-            {
-                printf("\n Acknowledgment received. Proceeding...");
+			if (!wait_for_ack(clientSock))
+			{
+				// ESP_LOGI(tag, "No acknowledgment received");
+			}
+			else
+			{
+				printf("\n Acknowledgment received. Proceeding...");
 
-            }
-        }
-    }
+			}
+		}
+	}
 
-END:
-    ESP_LOGW(tag, "end of socket_server_task");
-    close(sock);
-    vTaskDelete(NULL);
+	END:
+	ESP_LOGW(tag, "end of socket_server_task");
+	close(sock);
+	vTaskDelete(NULL);
 }
 
 void API_TCP_Server(void)

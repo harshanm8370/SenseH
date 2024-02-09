@@ -11,9 +11,10 @@
 //void wifi_driver(void);
  void wifi_start_access_point(void);
 void API_TCP_Server(void);
-
+void disconnect_wifi(void);
 void wifi_controller_jump(VITAL_TYPE_t vital, uint16_t one_record_len);
 void wifi_send_data(uint8_t* data, size_t length);
 void setHoldSocketTask(bool hold);
 void socket_close();
-
+bool wait_for_ack(int socket);
+bool wait_for_endack(int socket);

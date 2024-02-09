@@ -27,6 +27,7 @@
 //#include "bootloader.h"
 //#include "bluetooth_source.h"
 
+
 #define API_BLE_TAG  "API_BLE"
 
 #define BUF_SIZE           			600               
@@ -36,7 +37,7 @@
 #define SPP_PROFILE_NUM             1
 #define SPP_PROFILE_APP_IDX         0
 #define ESP_SPP_APP_ID              0x56
-#define SAMPLE_DEVICE_NAME          "SSH-22-024"    //The Device Name Characteristics in GAP
+#define SAMPLE_DEVICE_NAME          "SSH-22-019"    //The Device Name Characteristics in GAP
 #define SPP_SVC_INST_ID	            0
 
 /// SPP Service
@@ -54,7 +55,7 @@ static const uint8_t spp_adv_data[23] = {
     /* Complete List of 16-bit Service Class UUIDs */
     0x03,0x03,0xF0,0xAB,
     /* Complete device Name in advertising */
-    0x0F,0x09, 'S', 'S', 'H', '-', '2', '2', '-', '0', '2', '4'
+    0x0F,0x09, 'S', 'S', 'H', '-', '2', '2', '-', '0', '1', '9'
 };
 
 static uint16_t mtu_size = 23;
@@ -216,7 +217,8 @@ static const esp_gatts_attr_db_t spp_gatt_db[SPP_IDX_NB] =
 static void gap_event_handler(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
 {
     esp_err_t err;
-    ESP_LOGE(API_BLE_TAG, "GAP_EVT, event %d\n", event);
+    ESP_LOGI(API_BLE_TAG, "GAP_EVT, event %d\n", event);
+
 
     switch (event) {
     case ESP_GAP_BLE_ADV_DATA_RAW_SET_COMPLETE_EVT:
@@ -490,6 +492,11 @@ uint32_t API_BLE_Receive(uint8_t *data_buf)
 //	printf("Total data received: %d\n", rx_buf.len);
 	if (rx_buf.status == BUF_FULL){
 		memcpy(data_buf, rx_buf.buf, rx_buf.len);
+		printf("Received Bytes: ");
+		for (size_t i = 0; i < rx_buf.len; ++i) {
+			printf("%02X ", data_buf[i]);
+		}
+		printf("\n");
 		memset(rx_buf.buf, 0, sizeof(rx_buf.buf));
 		rx_buf.status = BUF_EMPTY;
 	}     
