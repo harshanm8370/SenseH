@@ -12,7 +12,7 @@
 #include "API_TCP_Server.h"
 extern int terminate;
 uint8_t Device_stat;
- int Empty_Record;
+int Empty_Record;
 
 /************************************************ MACROS *****************************************************************/
 #define BT_RAW_DATA_LENGTH			  	580	 //BT_PACKET_SIZE = BT_RAW_DATA_LENGTH + payload bytes, this should not cross MTU:600
@@ -523,9 +523,10 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 	}
 	else {
 		retry_count = 0;
-		// this block is to serve the BP_RECORD REQUEST
+		printf("\n this block is to serve the BP_RECORD REQUEST");
 		while(clientSock != -1 && clientSock > 0)
 		{
+			printf("iam in while");
 			if(variouble == 1)
 			{
 				printf("\n waiting for the vital command");
@@ -535,9 +536,12 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 					printf("\n 000000000000000000 INIT_STATE \n");
 					BP_Length_tx = 0;
 					total_length_to_send = (REC_HEADER_LEN + BT_PACKET_FIELD_LENGTH);
+					printf("\n total_length_to_send: %ld",total_length_to_send);
 					status = API_Flash_Read_Record(vital, BT_flash_buffer);
+					printf("\n status: %d",status);
 					/*this block will send DATA_NOT_AVAILABLE nack if no record found */
 					if(status == NO_RECORDS_IN_FLASH){
+						printf("\n NO_RECORDS_IN_FLASH");
 						bt_send_ack_or_nack_response(NACK_DATA_NOT_AVAILABLE);
 						bt_response_session_complete = TRUE;
 						break;
@@ -589,7 +593,7 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 						}
 						else{
 							Load_Raw_Data_To_Buffer(COR);
-						//	API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+							//	API_BLE_Transmit(bt_tx_buff, total_length_to_send);
 							wifi_send_data(bt_tx_buff, total_length_to_send);
 
 
@@ -648,21 +652,22 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 
 					printf("ecg_1_records : %d\n", Total_Read_CurrentRecords.ecg_1_records);
 					printf("\n Sending 44444444444444444444444444444444444444444444444444444444444 \n");
-					wifi_send_data(wf_tx_buff,2);
+					wifi_send_data(wf_tx_buff,sizeof(wf_tx_buff) / sizeof(wf_tx_buff[0]));
 					close(clientSock);
-					 clientSock = -1;
-					 variouble=0;
+					clientSock = -1;
+					variouble=0;
 					printf(" client sock %d",clientSock);
 					printf("\n client socket closed");
 					break;
 				}//switch
 			}//if
-		/*	printf("\n going to terminate");
+			/*	printf("\n going to terminate");
 			if(terminate==1)
 			{
 				break;
 			} */
 		}//while
+
 	}//else
 
 	if(bt_response_state != WAIT_ACK_EOR_STATE)

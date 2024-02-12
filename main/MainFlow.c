@@ -182,6 +182,7 @@ TaskHandle_t myTaskHandle = NULL;
 
 						if(state == DATA_SYNC)
 						{
+							printf("\n Data sync");
 							HandleDataSync();
 							state = NO_TEST;
 						}
@@ -275,8 +276,8 @@ TaskHandle_t myTaskHandle = NULL;
  }
  void API_display_backlight_off(void)
  {
- 	API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
- 	API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,LOW);
+ 	API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,HIGH);
+ 	API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
  }
 
 
@@ -454,6 +455,7 @@ void ExecuteComplianceSequence(void)
 
 void HandleDataSync(void)
 {
+	printf("\n %s",__func__);
 	uint8_t btn_press;
 	uint32_t flag=0,Dflag=20000;
 
@@ -462,6 +464,8 @@ void HandleDataSync(void)
 
 	if(Detect_low_battery_display_notification()==false)
 	{
+		printf("\n %s",__func__);
+
 		while(1)
 		{
 			if(Dflag-- <= 1)
@@ -511,10 +515,11 @@ void HandleDataSync(void)
 	}
 	else
 	{
+		printf("\n else if(Detect_low_battery_display_notification()==false) \n");
 		API_display_backlight_on();
 		API_DISP_Display_Screen(DISP_DATA_SYNC_FAIL);
 		Delay_ms(2000);
-		EnterSleepMode(SYSTEM_DEEP_SLEEP);
+		//EnterSleepMode(SYSTEM_DEEP_SLEEP);
 	}
 
 }

@@ -9,7 +9,6 @@
 #include "esp_event.h"
 #include "nvs_flash.h"
 #include "esp_netif.h"
-//#include "protocol_examples_common.h"
 #include "API_TCP_Server.h"
 #include "API_Flash_org.h"
 #include <stdbool.h>
@@ -47,7 +46,12 @@ void wifi_send_data(uint8_t* data, size_t length)
 		printf("\n");
 
 		int bytes_sent = send(clientSock, (uint8_t*)data, length, 0);
-
+		/*printf("\n After send");
+		for (size_t i = 0; i < length; i++)
+		{
+			printf("%02X ", data[i]);
+		}
+		printf("\n "); */
 		if (bytes_sent < 0)
 		{
 			ESP_LOGE(tag, "send failed: errno %d", errno);
@@ -65,11 +69,11 @@ void wifi_send_data(uint8_t* data, size_t length)
 					int len = recv(clientSock, endbuffer, sizeof(endbuffer) - 1, 0);
 					if (len > 0)
 					{
-						printf("\n Received String (Debug): %s", endbuffer);
+						//printf("\n Received String (Debug): %s", endbuffer);
 						if (strcmp(endbuffer, "END") == 0)
 						{
 							printf("\n Received String (Debug): %s", endbuffer);
-							terminate = 1;
+						//	terminate = 1;
 							break;
 						}
 					}
