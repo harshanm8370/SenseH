@@ -60,27 +60,28 @@ void wifi_send_data(uint8_t* data, size_t length)
 		{
 			ESP_LOGI(tag, "Sent %d bytes", bytes_sent);
 			char endbuffer[10];
-
-			if (data[0] == 0x04)
+			memset(endbuffer, 0, sizeof(endbuffer));
+			while(1)
 			{
-				memset(endbuffer, 0, sizeof(endbuffer));
-				while(1)
+				int len = recv(clientSock, endbuffer, sizeof(endbuffer) - 1, 0);
+				if (len > 0)
 				{
-					int len = recv(clientSock, endbuffer, sizeof(endbuffer) - 1, 0);
-					if (len > 0)
+					//printf("\n Received String (Debug): %s", endbuffer);
+					if (strcmp(endbuffer, "END") == 0)
 					{
-						//printf("\n Received String (Debug): %s", endbuffer);
-						if (strcmp(endbuffer, "END") == 0)
-						{
-							printf("\n Received String (Debug): %s", endbuffer);
+						printf("\n Received String (Debug): %s", endbuffer);
 						//	terminate = 1;
-							break;
-						}
+						break;
+					}
+					else if (strcmp(endbuffer, "ACK") == 0)
+					{
+						printf("\n Received String (Debug): %s", endbuffer);
+						break;
 					}
 				}
-				printf("\n haha iam closing client socket");
-
 			}
+			printf("\n haha iam closing client socket");
+
 		}
 	}
 	else
@@ -173,7 +174,7 @@ void socket_server_task(void* pvParameters)
 	struct sockaddr_in clientAddress;
 	struct sockaddr_in serverAddress;
 	//IPv4 AF_INET
-	 sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);//socket system call
+	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);//socket system call
 	if (sock < 0)
 	{
 		ESP_LOGE(tag, "socket: %d %s", sock, strerror(errno));
