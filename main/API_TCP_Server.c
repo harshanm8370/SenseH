@@ -12,6 +12,7 @@
 #include "API_TCP_Server.h"
 #include "API_Flash_org.h"
 #include <stdbool.h>
+#include "bluetooth.h"
 int variouble;
 #define FALSE 0
 #define PORT_NUMBER 5002
@@ -22,6 +23,49 @@ extern int globalFlag;
 int terminate;
 extern int 	Empty_Record;
 static int sock;
+#define BUF_SIZE      600
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
+#define BUF_SIZE 600
+
+enum {
+	Wifi_BUF_EMPTY,
+	Wifi_BUF_FULL,
+	wifi_TX_RX_FAILED,
+	wifi_TX_RX_SUCCESS,
+};
+
+typedef struct {
+	uint8_t wifi_status;
+	uint16_t wifi_len;
+	uint8_t wifi_buf[BUF_SIZE];
+} wifi_BUF_t;
+static wifi_BUF_t wifi_buf;
+
+uint32_t API_Wifi_Receive(uint8_t *data_buf)
+{
+	if (wifi_buf.wifi_status == Wifi_BUF_FULL) {
+		memcpy(data_buf, wifi_buf.wifi_buf, wifi_buf.wifi_len);
+
+		printf("copying the Received Bytes: ");
+		for (size_t i = 0; i < wifi_buf.wifi_len; ++i) {
+			printf("%02X ", data_buf[i]);
+		}
+		printf("\n");
+
+		memset(wifi_buf.wifi_buf, 0, sizeof(wifi_buf.wifi_buf));
+		wifi_buf.wifi_status = Wifi_BUF_EMPTY;
+
+		return wifi_buf.wifi_len;
+	} else {
+		return Wifi_BUF_EMPTY;
+	}
+}
+
+
+
 void disconnect_wifi()
 {
 	printf("\n %s",__func__);
@@ -46,12 +90,6 @@ void wifi_send_data(uint8_t* data, size_t length)
 		printf("\n");
 
 		int bytes_sent = send(clientSock, (uint8_t*)data, length, 0);
-		/*printf("\n After send");
-		for (size_t i = 0; i < length; i++)
-		{
-			printf("%02X ", data[i]);
-		}
-		printf("\n "); */
 		if (bytes_sent < 0)
 		{
 			ESP_LOGE(tag, "send failed: errno %d", errno);
@@ -80,8 +118,7 @@ void wifi_send_data(uint8_t* data, size_t length)
 					}
 				}
 			}
-			printf("\n haha iam closing client socket");
-
+			printf("\n iam closing client socket");
 		}
 	}
 	else
@@ -92,45 +129,32 @@ void wifi_send_data(uint8_t* data, size_t length)
 }
 bool wait_for_ack(int socket)
 {
-	char ack_buffer[10];
 
-	memset(ack_buffer, 0, sizeof(ack_buffer));
+	memset(&wifi_buf, 0, sizeof(wifi_buf));
+	// C0 10 03 C0 00 00
 
-	int len = recv(socket, ack_buffer, sizeof(ack_buffer) - 1, 0);
+	int len = recv(clientSock, wifi_buf.wifi_buf, sizeof(wifi_buf.wifi_buf) - 1, 0);
 
 
 	printf("\n ++++++++++++ Received String (Debug): ");
-	for (int i = 0; i < len; i++)
+	for (size_t i = 0; i < len; i++)
 	{
-		printf("%c ", ack_buffer[i]);
+		printf("%02X ",  wifi_buf.wifi_buf[i]);
 	}
 	printf("\n");
 
-	/*	if (len < 0)
-	{
-		ESP_LOGE(tag, "recv failed: errno %d", errno);
-		return false;
-	}*/
-	if (len == 0)
+	if (len == 0 && len < 0)
 	{
 		ESP_LOGI(tag, "Connection closed");
 		return false;
 	}
 	else
 	{
-
-		// Check the content of the string for acknowledgment
-		if (strcmp(ack_buffer, "START") == 0)
-		{
-			variouble = 1;
-			terminate=0;
-			printf("\n variouble value is changed");
-			return true; // Break out of the loop
-		}
-
+		BT_process_requests();
+	    return (wifi_buf.wifi_buf[1] == 20);
+		printf("\N one record sent");
 	}
 
-	// Return false if no specific condition matched
 	return false;
 }
 
@@ -211,17 +235,7 @@ void socket_server_task(void* pvParameters)
 
 	while (1)
 	{
-		/*if(Empty_Record==1)
-		{
-			ESP_LOGW(tag, "End of socket_server_task");
-			close(socket);
-			// Stop the WiFi interface
-			esp_wifi_stop();
-			// Deinitialize the WiFi subsystem
-			esp_wifi_deinit();
-			// Delete the task
-			vTaskDelete(NULL);
-		}*/
+
 		printf("\n while iam sarching for new socet");
 		socklen_t clientAddressLength = sizeof(clientAddress);
 		clientSock = accept(sock, (struct sockaddr*)&clientAddress, &clientAddressLength);
@@ -236,20 +250,14 @@ void socket_server_task(void* pvParameters)
 			printf("\n **************************client connected to wifi %d", clientSock);
 
 			// Wait for acknowledgment before proceeding
-			while (wait_for_ack(clientSock))
+			while (1)
 			{
-				break; // Waiting till I get the ack
+				if(wait_for_ack(clientSock))
+				{
+					disconnect_wifi();
+				}
 			}
 
-			if (!wait_for_ack(clientSock))
-			{
-				// ESP_LOGI(tag, "No acknowledgment received");
-			}
-			else
-			{
-				printf("\n Acknowledgment received. Proceeding...");
-
-			}
 		}
 	}
 
