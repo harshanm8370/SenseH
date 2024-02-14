@@ -402,6 +402,7 @@ bool skip_quick_test = FALSE;
 									Disable_Power_Supply();
 									return FALSE;
 								}
+								API_IO_Exp_Power_Control(EN_VLED,LOW);
 								Print_time("\nBP END");
 							}
 #endif
@@ -1011,6 +1012,7 @@ void Store_QuickTest1_Data_To_Flash(void)
 		offfset += 600*4;
 
 
+
 		MemCpy(BT_flash_buffer+offfset,ECG_Lead2_buff,(600*4));
 
 		status = API_Flash_Write_Record(ECG_6_Lead,(void*)BT_flash_buffer);
@@ -1026,9 +1028,9 @@ void Store_QuickTest1_Data_To_Flash(void)
 
 		offfset = REC_HEADER_LEN;
 		MemCpy(BT_flash_buffer+offfset,BP_PPG_IR_BUFF,(SPO2_RED_SAMPLES*4));
-		offfset += 600*4;
+		offfset += 1200*4;
 		MemCpy(BT_flash_buffer+offfset,BP_ECG_Lead1_buff,(SPO2_RED_SAMPLES*4));
-		offfset += 600*4;
+		offfset += 1200*4;
 		status = API_Flash_Write_Record(BP1,(void*)BT_flash_buffer);
 
 		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(BP_DATA_STORE_TO_FLASH_FAIL);

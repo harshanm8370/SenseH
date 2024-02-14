@@ -3754,7 +3754,7 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 		  	//API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
 
 		  	API_Disp_Display_Text(text1,text2,text3,text4, text5,text6,text7);
-		  	api_disp_display_icon (logo, 40, 30,BLUE, WHITE);
+		  	api_disp_display_icon (SenseHlargelogo, 15, 42,BLUE, WHITE);
 			api_disp_display_icon(star,left_offset,top_offset,RED,WHITE);
 
 			is_Pid_Displayed = true;

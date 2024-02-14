@@ -66,7 +66,7 @@ void Fuel_Guage_update_battery_status(float batVoltage)
 
 		else if((batVoltage >= FUEL_GUAGE_10_PER_VOLTAGE) && (batVoltage <= FUEL_GUAGE_33_PER_VOLTAGE))
 		{
-			API_DISP_Update_Battery_Status(DISP_ONE_STICK,false,false,RED);
+			API_DISP_Update_Battery_Status(DISP_ONE_STICK,false,false,WHITE);
 		}
 
 		else if(IsUSB_Charger_Connected())

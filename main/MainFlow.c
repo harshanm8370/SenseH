@@ -47,7 +47,7 @@ void Led_Blink(void *pvParameters);
 extern BT_STATUS Is_Device_Paired;
 uint8_t qv_flag,mv_flag;
 bool BLE_DS;
-#define test 1
+#define test 0
 
 
 TaskHandle_t myTaskHandle = NULL;
@@ -97,7 +97,7 @@ TaskHandle_t myTaskHandle = NULL;
     //API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
 
     Interfaces_init();
-    API_IO_Exp1_P0_write_pin(HIBERNATE,HIGH);
+    API_IO_Exp1_P0_write_pin(HIBERNATE,HIGH);//it should be high to  initialize the max30102
 
    // API_RUN_TEMPERATURE_TEST();
 
