@@ -489,7 +489,7 @@ uint32_t API_BLE_Transmit(uint8_t *buf, uint16_t numbytes)
 
 uint32_t API_BLE_Receive(uint8_t *data_buf)
 {
-//	printf("Total data received: %d\n", rx_buf.len);
+	printf("Total data received: %d\n", rx_buf.len);
 	if (rx_buf.status == BUF_FULL){
 		memcpy(data_buf, rx_buf.buf, rx_buf.len);
 		printf("Received Bytes: ");

@@ -119,6 +119,7 @@ static uint32_t FW_data_len;
 
 void BT_process_requests(void)
 {
+	printf("\n %s",__func__);
 	static bool bt_session_complete    = FALSE;
 	char date_info[50];
 	int len;
@@ -171,12 +172,7 @@ void BT_process_requests(void)
 	{
 		API_TIMER_Register_Timer(DATA_SYNC_TIMEOUT);
 	}
-	/*	int8_t temp=1;
-	if(temp==1)
-	{
-		API_TCP_Server();
-		temp++;
-	} */
+
 
 	printf("client_request_cmd: %x\n", client_request_cmd);
 	switch (client_request_cmd){

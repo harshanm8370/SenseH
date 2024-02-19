@@ -23,7 +23,6 @@ extern int globalFlag;
 int terminate;
 extern int 	Empty_Record;
 static int sock;
-#define BUF_SIZE      600
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -37,32 +36,41 @@ enum {
 	wifi_TX_RX_SUCCESS,
 };
 
+
 typedef struct {
 	uint8_t wifi_status;
 	uint16_t wifi_len;
-	uint8_t wifi_buf[BUF_SIZE];
+	uint32_t wifi_buf[BUF_SIZE];
 } wifi_BUF_t;
-static wifi_BUF_t wifi_buf;
+static wifi_BUF_t wifi_buf_rx;
+
 
 uint32_t API_Wifi_Receive(uint8_t *data_buf)
 {
-	if (wifi_buf.wifi_status == Wifi_BUF_FULL) {
-		memcpy(data_buf, wifi_buf.wifi_buf, wifi_buf.wifi_len);
-
+	if (wifi_buf_rx.wifi_status == Wifi_BUF_FULL)
+	{
+		for(int i=0;i<wifi_buf_rx.wifi_len;i++)
+		{
+			data_buf[i]=wifi_buf_rx.wifi_buf[i];
+		}
 		printf("copying the Received Bytes: ");
-		for (size_t i = 0; i < wifi_buf.wifi_len; ++i) {
+		for (size_t i = 0; i < wifi_buf_rx.wifi_len; ++i) {
 			printf("%02X ", data_buf[i]);
 		}
 		printf("\n");
 
-		memset(wifi_buf.wifi_buf, 0, sizeof(wifi_buf.wifi_buf));
-		wifi_buf.wifi_status = Wifi_BUF_EMPTY;
+		memset(wifi_buf_rx.wifi_buf, 0, sizeof(wifi_buf_rx.wifi_buf));
+		wifi_buf_rx.wifi_status = Wifi_BUF_EMPTY;
 
-		return wifi_buf.wifi_len;
-	} else {
+		return wifi_buf_rx.wifi_len;
+	}
+	else
+	{
 		return Wifi_BUF_EMPTY;
 	}
+	return Wifi_BUF_EMPTY;
 }
+
 
 
 
@@ -101,7 +109,7 @@ void wifi_send_data(uint8_t* data, size_t length)
 			memset(endbuffer, 0, sizeof(endbuffer));
 			while(1)
 			{
-				int len = recv(clientSock, endbuffer, sizeof(endbuffer) - 1, 0);
+			int len = recv(clientSock, endbuffer, sizeof(endbuffer) - 1, 0);
 				if (len > 0)
 				{
 					//printf("\n Received String (Debug): %s", endbuffer);
@@ -129,36 +137,31 @@ void wifi_send_data(uint8_t* data, size_t length)
 }
 bool wait_for_ack(int socket)
 {
+	memset(&wifi_buf_rx.wifi_buf, 0, sizeof(wifi_buf_rx.wifi_buf));
 
-	memset(&wifi_buf, 0, sizeof(wifi_buf));
-	// C0 10 03 C0 00 00
+	wifi_buf_rx.wifi_len = recv(socket, wifi_buf_rx.wifi_buf, sizeof(wifi_buf_rx.wifi_buf) - 1, 0);
 
-	int len = recv(clientSock, wifi_buf.wifi_buf, sizeof(wifi_buf.wifi_buf) - 1, 0);
-
-
-	printf("\n ++++++++++++ Received String (Debug): ");
-	for (size_t i = 0; i < len; i++)
-	{
-		printf("%02X ",  wifi_buf.wifi_buf[i]);
-	}
-	printf("\n");
-
-	if (len == 0 && len < 0)
+	if (wifi_buf_rx.wifi_len == 0 || wifi_buf_rx.wifi_len < 0)
 	{
 		ESP_LOGI(tag, "Connection closed");
 		return false;
 	}
 	else
 	{
+		printf("\n ++++++++++++ Received String (Debug): ");
+		for (size_t i = 0; i <  wifi_buf_rx.wifi_len ; i++)
+		{
+			printf("%0lX ", wifi_buf_rx.wifi_buf[i]);
+		}
+		printf("\n");
+		wifi_buf_rx.wifi_status = Wifi_BUF_FULL;
 		BT_process_requests();
-	    return (wifi_buf.wifi_buf[1] == 20);
-		printf("\N one record sent");
+		return (wifi_buf_rx.wifi_buf[1] == 20);
+		printf("\n one record sent");  // This line is unreachable, as it comes after the 'return' statement.
 	}
 
 	return false;
 }
-
-
 
 void wifi_start_access_point() {
 	wifi_config_t wifi_config = {
