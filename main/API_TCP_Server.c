@@ -90,7 +90,7 @@ bool wait_for_ack(int socket)
 	printf("%s",__func__);
 	int buff[60];
 	memset(&wifi_buf_rx.wifi_buf, 0, sizeof(wifi_buf_rx.wifi_buf));
-    printf("\n reciving the frame format");
+	printf("\n reciving the frame format");
 	wifi_buf_rx.wifi_len = recv(socket, buff, sizeof(buff) - 1, 0);
 	printf("\n recieved");
 	if (wifi_buf_rx.wifi_len == 0 || wifi_buf_rx.wifi_len < 0)
@@ -102,39 +102,39 @@ bool wait_for_ack(int socket)
 	else
 	{
 		printf("\n iam in else ");
-		    wifi_buf_rx.wifi_len=6;
-		    wifi_buf_rx.wifi_buf[0]=192;
-		     wifi_buf_rx.wifi_buf[2]=03;
-		     wifi_buf_rx.wifi_buf[3]=192;
-		     wifi_buf_rx.wifi_buf[4]=00;
-		     wifi_buf_rx.wifi_buf[5]=00;
-		     int recv=0x14;
-		      wifi_buf_rx.wifi_buf[1]=recv;
-		  	printf("\n ++++++++++++ Received String (Debug): ");
-		     for(int i=0;i< wifi_buf_rx.wifi_len;i++)
-		     {
-		         printf("%d ",wifi_buf_rx.wifi_buf[i]);
-		     }
+		wifi_buf_rx.wifi_len=6;
+		wifi_buf_rx.wifi_buf[0]=192;
+		wifi_buf_rx.wifi_buf[2]=03;
+		wifi_buf_rx.wifi_buf[3]=192;
+		wifi_buf_rx.wifi_buf[4]=00;
+		wifi_buf_rx.wifi_buf[5]=00;
+		int recv=0x14;
+		wifi_buf_rx.wifi_buf[1]=recv;
+		printf("\n ++++++++++++ Received String (Debug): ");
+		for(int i=0;i< wifi_buf_rx.wifi_len;i++)
+		{
+			printf("%d ",wifi_buf_rx.wifi_buf[i]);
+		}
 
-if(wifi_buf_rx.wifi_buf[1] == 0x20)
-{
-	temp=1;
-}
-else
-{
-	temp=0;
-}
+		if(wifi_buf_rx.wifi_buf[1] == 0x20)
+		{
+			temp=1;
+		}
+		else
+		{
+			temp=0;
+		}
 
 		wifi_buf_rx.wifi_status = Wifi_BUF_FULL;
 		int flag = BT_process_requests();
 		printf("\n temp:%d",temp);
-		  printf("\n %d ",wifi_buf_rx.wifi_buf[1]);
+		printf("\n %d ",wifi_buf_rx.wifi_buf[1]);
 		printf("\n 1 record sent");
-	  // return (wifi_buf_rx.wifi_buf[1] == 20);
+		// return (wifi_buf_rx.wifi_buf[1] == 20);
 		return temp;
 
 	}
-printf("\n no last return");
+	printf("\n no last return");
 	return false;
 }
 
@@ -229,7 +229,7 @@ void socket_server_task(void* pvParameters)
 			// Wait for acknowledgment before proceeding
 			while(1)
 			{
-			printf("\n iam in while tcp");
+				printf("\n iam in while tcp");
 				if(wait_for_ack(clientSock))
 				{
 					printf("\n iam disconnecting");
