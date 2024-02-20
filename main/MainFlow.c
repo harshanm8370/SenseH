@@ -491,7 +491,7 @@ void HandleDataSync(void)
 				API_display_backlight_on();
 				API_DISP_Display_Screen(DISP_DATA_SYNC_FAIL);
 				Delay_ms(2000);
-				 EnterSleepMode(SYSTEM_DEEP_SLEEP);
+				// EnterSleepMode(SYSTEM_DEEP_SLEEP);
 			}
 
 			if(IsValidRecordsInFlash == false)// No records in flash
@@ -519,7 +519,7 @@ void HandleDataSync(void)
 		API_display_backlight_on();
 		API_DISP_Display_Screen(DISP_DATA_SYNC_FAIL);
 		Delay_ms(2000);
-		//EnterSleepMode(SYSTEM_DEEP_SLEEP);
+		EnterSleepMode(SYSTEM_DEEP_SLEEP);
 	}
 
 }

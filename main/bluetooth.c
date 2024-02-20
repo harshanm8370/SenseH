@@ -10,10 +10,21 @@
 #include "ProjectConfiguration.h"
 #include "API_Display.h"
 #include "API_TCP_Server.h"
+#include <string.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/semphr.h>
+#include "esp_event.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
+
 extern int terminate;
 uint8_t Device_stat;
 int Empty_Record;
-
+extern char tag[];
 /************************************************ MACROS *****************************************************************/
 #define BT_RAW_DATA_LENGTH			  	580	 //BT_PACKET_SIZE = BT_RAW_DATA_LENGTH + payload bytes, this should not cross MTU:600
 #define OFFLINE_REC_SUMMARY_LEN			81  /*need to verify */
@@ -40,7 +51,7 @@ int Empty_Record;
 #define BT_EXTRA_PROCESSING_TIME        3 // 3 sec which is relatively large , kept by considering maximum delay encountering during the firmware upgrade
 #define VITAL_REC_LEN					2
 
-
+int last;
 /******************************static functions*******************************/
 
 static bool bt_send_single_response(VITAL_TYPE_t vital, uint16_t one_record_len);
@@ -117,7 +128,7 @@ static uint32_t FW_buff_index;
 static uint32_t FW_data_len;
 
 
-void BT_process_requests(void)
+bool BT_process_requests(void)
 {
 	printf("\n %s",__func__);
 	static bool bt_session_complete    = FALSE;
@@ -127,7 +138,9 @@ void BT_process_requests(void)
 	memset(bt_rx_buff, 0x00, sizeof(bt_rx_buff));
 	if(clientSock != -1 && clientSock > 1)
 	{
+		printf("\n clientSock != -1 && clientSock > 1");
 		bt_total_received_bytes = API_Wifi_Receive(bt_rx_buff);
+		printf("\n bt_total_received_bytes %d",bt_total_received_bytes);
 	}
 	else
 	{
@@ -137,13 +150,13 @@ void BT_process_requests(void)
 	{
 		bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
 		printf("No command received from APP\n");
-		return;
+		return false;
 	}
 	//Condition for not to respond to any Junk data from bluetooth
 	if((bt_rx_buff[0] != SOS) && ((bt_rx_buff[bt_total_received_bytes-3]) != EOS)){
 		bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
 		printf("Not a valid command request string from BT/APP\n");
-		return;
+		return false;
 	}
 	if((bt_rx_buff[1] == REC_SNAPSHOT_REQ) || (bt_rx_buff[1] == TIME_SYNC_REQ)){
 		BT_ongoing_session = FALSE;
@@ -155,7 +168,7 @@ void BT_process_requests(void)
 	{
 		bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
 		printf("\nTest is in progress, So can not sync the data");
-		return;
+		return false;
 	}
 	//New request from the BT client for record sync
 	if(BT_ongoing_session == FALSE){
@@ -175,6 +188,7 @@ void BT_process_requests(void)
 
 
 	printf("client_request_cmd: %x\n", client_request_cmd);
+
 	switch (client_request_cmd){
 	case WIFI_ENABLE:
 		printf("\n Wifi Enabling \n");
@@ -259,6 +273,7 @@ void BT_process_requests(void)
 
 	case ECG_6_Lead_data_req:
 		//send ecg response over bluetooth
+		printf ("\n ECG_6_Lead_data_req");
 		Data_sync_in_progress = TRUE;
 		bt_session_complete = bt_send_multi_response(ECG_6_Lead, ECG_3_LEAD_REC_LEN);
 		if (bt_session_complete){
@@ -268,9 +283,11 @@ void BT_process_requests(void)
 		break;
 
 	case ECG_12_Lead_data_req:
+		printf("\n iam in ecg12");
 		Data_sync_in_progress = TRUE;
 		bt_session_complete = bt_send_multi_response(ECG_12_LEAD, ECG_12_LEAD_ONE_REC_LEN);
 		if (bt_session_complete){
+			printf("\n bye");
 			BT_ongoing_session = 0x00;
 			client_request_cmd = NO_CMD_REQ;
 		}
@@ -417,6 +434,7 @@ void BT_process_requests(void)
 	}
 	//Clear the BT receive buffer
 	MemSet(bt_rx_buff, 0x00, sizeof(bt_rx_buff));
+	return true;
 }
 
 /*bool bt_send_single_response(VITAL_TYPE_t vital, uint16_t one_record_len)
@@ -529,9 +547,9 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 	else {
 		retry_count = 0;
 		printf("\n this block is to serve the BP_RECORD REQUEST");
-		if(clientSock != -1 && clientSock > 0)
-		{
-			printf("iam in while");
+			printf("iam in while blutooth");
+			while(1)
+			{
 			switch (bt_response_state)
 			{
 			case INIT_STATE:
@@ -655,14 +673,21 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 				printf("ecg_1_records : %d\n", Total_Read_CurrentRecords.ecg_1_records);
 				printf("\n Sending 44444444444444444444444444444444444444444444444444444444444 \n");
 				wifi_send_data(wf_tx_buff,sizeof(wf_tx_buff) / sizeof(wf_tx_buff[0]));
+				last=1;
 				/*close(clientSock);
 				clientSock = -1;
 				variouble=0;
 				printf(" client sock %d",clientSock);
 				printf("\n client socket closed"); */
 				break;
+				printf("\n Iam in the last of switch");
 			}//switch
-		}//if
+			if(last==1)
+			{
+				printf("\n breaking the last variouble;");
+				break;
+			}
+			}
 		/*	printf("\n going to terminate");
 			if(terminate==1)
 			{
@@ -680,6 +705,57 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 
 	return(bt_response_session_complete);
 	printf("\n Iam in end bt_send_multi_response");
+}
+void wifi_send_data(uint8_t* data, size_t length)
+{
+	printf("\n %s",__func__);
+	if (clientSock != -1 && clientSock > 0 )
+	{
+		printf("\nSending data...");
+
+		for (size_t i = 0; i < length; i++)
+		{
+			printf("%02X ", data[i]);
+		}
+		printf("\n");
+
+		int bytes_sent = send(clientSock, (uint8_t*)data, length, 0);
+		if (bytes_sent < 0)
+		{
+			printf("\n send failed: errnr ");
+		}
+		else
+		{
+			printf( "Sent  bytes %d", bytes_sent);
+			char endbuffer[10];
+			memset(endbuffer, 0, sizeof(endbuffer));
+			while(1)
+			{
+			int len = recv(clientSock, endbuffer, sizeof(endbuffer) - 1, 0);
+				if (len > 0)
+				{
+					//printf("\n Received String (Debug): %s", endbuffer);
+					if (strcmp(endbuffer, "END") == 0)
+					{
+						printf("\n Received String (Debug): %s", endbuffer);
+						//	terminate = 1;
+						break;
+					}
+					else if (strcmp(endbuffer, "ACK") == 0)
+					{
+						printf("\n Received String (Debug): %s", endbuffer);
+						break;
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		printf("\n clientSock == -1 \n");
+	}
+	printf("\n iam going out from wifi send func \n");
+	//return true;
 }
 
 /*	static void bt_ack_or_nack_response(uint8_t command)
@@ -717,7 +793,8 @@ void Load_record_header_to_buffer(void)
 	temp.chksum = compute_crc_16((uint8_t *)&temp,(sizeof(temp) - CHKSUM_SIZE));
 	printf("%s --> Length: %d\n", __func__, sizeof(temp));
 	//API_BLE_Transmit((uint8_t *)&temp, sizeof(temp));
-	wifi_send_data((uint8_t*)&temp, sizeof(temp));
+	 wifi_send_data((uint8_t*)&temp, sizeof(temp));
+	printf("i git return");
 }
 
 /*	void Load_Raw_Data_To_Buffer()

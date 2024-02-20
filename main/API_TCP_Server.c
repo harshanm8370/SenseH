@@ -36,17 +36,17 @@ enum {
 	wifi_TX_RX_SUCCESS,
 };
 
-
+int temp=0;
 typedef struct {
 	uint8_t wifi_status;
 	uint16_t wifi_len;
-	uint32_t wifi_buf[BUF_SIZE];
+	uint16_t wifi_buf[BUF_SIZE];
 } wifi_BUF_t;
 static wifi_BUF_t wifi_buf_rx;
 
-
 uint32_t API_Wifi_Receive(uint8_t *data_buf)
 {
+	printf("\n %s",__func__);
 	if (wifi_buf_rx.wifi_status == Wifi_BUF_FULL)
 	{
 		for(int i=0;i<wifi_buf_rx.wifi_len;i++)
@@ -83,83 +83,58 @@ void disconnect_wifi()
 	esp_wifi_deinit();
 	vTaskDelete(NULL);
 }
-void wifi_send_data(uint8_t* data, size_t length)
-{
-	if (clientSock != -1 && clientSock > 0 )
-	{
-		ESP_LOGI(tag, "Sending data...");
 
-		ESP_LOGI(tag, "Raw data:");
 
-		for (size_t i = 0; i < length; i++)
-		{
-			printf("%02X ", data[i]);
-		}
-		printf("\n");
-
-		int bytes_sent = send(clientSock, (uint8_t*)data, length, 0);
-		if (bytes_sent < 0)
-		{
-			ESP_LOGE(tag, "send failed: errno %d", errno);
-		}
-		else
-		{
-			ESP_LOGI(tag, "Sent %d bytes", bytes_sent);
-			char endbuffer[10];
-			memset(endbuffer, 0, sizeof(endbuffer));
-			while(1)
-			{
-			int len = recv(clientSock, endbuffer, sizeof(endbuffer) - 1, 0);
-				if (len > 0)
-				{
-					//printf("\n Received String (Debug): %s", endbuffer);
-					if (strcmp(endbuffer, "END") == 0)
-					{
-						printf("\n Received String (Debug): %s", endbuffer);
-						//	terminate = 1;
-						break;
-					}
-					else if (strcmp(endbuffer, "ACK") == 0)
-					{
-						printf("\n Received String (Debug): %s", endbuffer);
-						break;
-					}
-				}
-			}
-			printf("\n iam closing client socket");
-		}
-	}
-	else
-	{
-		printf("\n clientSock == -1 \n");
-	}
-	printf("\n iam going out from send func \n");
-}
 bool wait_for_ack(int socket)
 {
+	printf("%s",__func__);
+	int buff[60];
 	memset(&wifi_buf_rx.wifi_buf, 0, sizeof(wifi_buf_rx.wifi_buf));
-
-	wifi_buf_rx.wifi_len = recv(socket, wifi_buf_rx.wifi_buf, sizeof(wifi_buf_rx.wifi_buf) - 1, 0);
-
+    printf("\n reciving the frame format");
+	wifi_buf_rx.wifi_len = recv(socket, buff, sizeof(buff) - 1, 0);
+	printf("\n recieved");
 	if (wifi_buf_rx.wifi_len == 0 || wifi_buf_rx.wifi_len < 0)
 	{
+		printf("\n iam in if");
 		ESP_LOGI(tag, "Connection closed");
 		return false;
 	}
 	else
 	{
-		printf("\n ++++++++++++ Received String (Debug): ");
-		for (size_t i = 0; i <  wifi_buf_rx.wifi_len ; i++)
-		{
-			printf("%0lX ", wifi_buf_rx.wifi_buf[i]);
-		}
-		printf("\n");
-		wifi_buf_rx.wifi_status = Wifi_BUF_FULL;
-		BT_process_requests();
-		return (wifi_buf_rx.wifi_buf[1] == 20);
-		printf("\n one record sent");  // This line is unreachable, as it comes after the 'return' statement.
-	}
+		printf("\n iam in else ");
+		    wifi_buf_rx.wifi_len=6;
+		    wifi_buf_rx.wifi_buf[0]=192;
+		     wifi_buf_rx.wifi_buf[2]=03;
+		     wifi_buf_rx.wifi_buf[3]=192;
+		     wifi_buf_rx.wifi_buf[4]=00;
+		     wifi_buf_rx.wifi_buf[5]=00;
+		     int recv=0x14;
+		      wifi_buf_rx.wifi_buf[1]=recv;
+		  	printf("\n ++++++++++++ Received String (Debug): ");
+		     for(int i=0;i< wifi_buf_rx.wifi_len;i++)
+		     {
+		         printf("%d ",wifi_buf_rx.wifi_buf[i]);
+		     }
 
+if(wifi_buf_rx.wifi_buf[1] == 0x20)
+{
+	temp=1;
+}
+else
+{
+	temp=0;
+}
+
+		wifi_buf_rx.wifi_status = Wifi_BUF_FULL;
+		int flag = BT_process_requests();
+		printf("\n temp:%d",temp);
+		  printf("\n %d ",wifi_buf_rx.wifi_buf[1]);
+		printf("\n 1 record sent");
+	  // return (wifi_buf_rx.wifi_buf[1] == 20);
+		return temp;
+
+	}
+printf("\n no last return");
 	return false;
 }
 
@@ -238,7 +213,6 @@ void socket_server_task(void* pvParameters)
 
 	while (1)
 	{
-
 		printf("\n while iam sarching for new socet");
 		socklen_t clientAddressLength = sizeof(clientAddress);
 		clientSock = accept(sock, (struct sockaddr*)&clientAddress, &clientAddressLength);
@@ -253,11 +227,14 @@ void socket_server_task(void* pvParameters)
 			printf("\n **************************client connected to wifi %d", clientSock);
 
 			// Wait for acknowledgment before proceeding
-			while (1)
+			while(1)
 			{
+			printf("\n iam in while tcp");
 				if(wait_for_ack(clientSock))
 				{
+					printf("\n iam disconnecting");
 					disconnect_wifi();
+					break;
 				}
 			}
 

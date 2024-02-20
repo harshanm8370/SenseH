@@ -200,7 +200,7 @@ extern bool BT_ongoing_session;
 extern BT_STATUS Is_Device_Paired;
 
 uint8_t BT_Initialize(void);
-void BT_process_requests(void);
+bool BT_process_requests(void);
 char* BT_Get_mobile_number(void);
 bool BT_Get_timesynq_req_flag(void);
 int BTL_validate_and_copy2buf(uint8_t * fw_buff_ptr);
