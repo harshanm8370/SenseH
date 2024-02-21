@@ -456,7 +456,9 @@ bool bt_send_single_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 				Load_record_header_to_buffer();
 			}
 			else{
-				API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+				//API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+				wifi_send_data(bt_tx_buff, total_length_to_send);
+
 			}
 			retry_count++;
 			return (bt_response_session_complete);
@@ -486,7 +488,8 @@ bool bt_send_single_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 			bt_tx_buff[(SOS_SIZE + CMD_SIZE + LENGTH_SIZE + one_record_len)] = EOS;
 			crc_value = compute_crc_16(bt_tx_buff, total_length_to_send - CHKSUM_SIZE);
 			MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE + one_record_len + EOS_SIZE ), &crc_value,CHKSUM_SIZE);
-			API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+			//API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+			wifi_send_data(bt_tx_buff, total_length_to_send);
 			bt_response_state = WAIT_ACK_EOR_STATE;
 			break;
 
@@ -547,12 +550,13 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 	else {
 		retry_count = 0;
 		printf("\n this block is to serve the BP_RECORD REQUEST");
-			printf("iam in while blutooth");
-			while(1)
-			{
+		printf("iam in while blutooth");
+		while(clientSock != -1 && clientSock > 0)
+		{
 			switch (bt_response_state)
 			{
 			case INIT_STATE:
+				last = 0;
 				printf("\n 000000000000000000 INIT_STATE \n");
 				BP_Length_tx = 0;
 				total_length_to_send = (REC_HEADER_LEN + BT_PACKET_FIELD_LENGTH);
@@ -687,7 +691,7 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 				printf("\n breaking the last variouble;");
 				break;
 			}
-			}
+		}
 		/*	printf("\n going to terminate");
 			if(terminate==1)
 			{
@@ -731,7 +735,7 @@ void wifi_send_data(uint8_t* data, size_t length)
 			memset(endbuffer, 0, sizeof(endbuffer));
 			while(1)
 			{
-			int len = recv(clientSock, endbuffer, sizeof(endbuffer) - 1, 0);
+				int len = recv(clientSock, endbuffer, sizeof(endbuffer) - 1, 0);
 				if (len > 0)
 				{
 					//printf("\n Received String (Debug): %s", endbuffer);
@@ -793,7 +797,7 @@ void Load_record_header_to_buffer(void)
 	temp.chksum = compute_crc_16((uint8_t *)&temp,(sizeof(temp) - CHKSUM_SIZE));
 	printf("%s --> Length: %d\n", __func__, sizeof(temp));
 	//API_BLE_Transmit((uint8_t *)&temp, sizeof(temp));
-	 wifi_send_data((uint8_t*)&temp, sizeof(temp));
+	wifi_send_data((uint8_t*)&temp, sizeof(temp));
 	printf("i git return");
 }
 

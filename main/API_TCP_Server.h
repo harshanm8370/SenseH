@@ -9,7 +9,7 @@
 #define EXAMPLE_MAX_STA_CONN       ESP_MAX_STA_CONN
 
 //void wifi_driver(void);
- void wifi_start_access_point(void);
+void wifi_start_access_point(void);
 void API_TCP_Server(void);
 void disconnect_wifi(void);
 void wifi_controller_jump(VITAL_TYPE_t vital, uint16_t one_record_len);
