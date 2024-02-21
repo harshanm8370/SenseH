@@ -19,3 +19,5 @@ void socket_close();
 bool wait_for_ack(int socket);
 bool wait_for_endack(int socket);
 uint32_t API_Wifi_Receive(uint8_t *data_buff);
+void EVAL_REQ(int *recived, char *buff);
+

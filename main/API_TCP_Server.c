@@ -26,7 +26,7 @@ static int sock;
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
-
+int recived;
 #define BUF_SIZE 600
 
 enum {
@@ -84,21 +84,47 @@ void disconnect_wifi()
 	vTaskDelete(NULL);
 }
 
+void EVAL_REQ(int *recived, char *buff) {
+    if (!strcmp(buff, "BP")) {
+        printf("\nBP selected");
+        *recived = 0x10;
+    } else if (!strcmp(buff, "SPO2")) {
+        printf("\nSPO2 selected");
+        *recived = 0x14;
+    } else if (!strcmp(buff, "ECG6")) {
+        printf("\nECG6 selected");
+        *recived = 0x13;
+    } else if (!strcmp(buff, "ECG1")) {
+        printf("\nECG1 selected");
+        *recived = 0x12;
+    } else if (!strcmp(buff, "ECG12")) {
+        printf("\nECG12 selected");
+        *recived = 0x16;
+    } else if (!strcmp(buff, "OFF")) {
+        printf("\nOFF selected");
+        *recived = 0x20;
+    }
+}
+
 uint8_t skp;
 bool wait_for_ack(int socket)
 {
+
 	printf(" func : %s",__func__);
-	int buff[6];
+	char buff[10];
 	printf("\n reciving the frame format");
 	memset(&wifi_buf_rx.wifi_buf, 0, sizeof(wifi_buf_rx.wifi_buf));
+	memset(&buff, 0, sizeof(buff));
 	//if(!skp)
 	//{
-	//wifi_buf_rx.wifi_len = recv(socket, buff, sizeof(buff) - 1, 0);
+	wifi_buf_rx.wifi_len = recv(socket, buff, sizeof(buff) - 1, 0);
+	int len =wifi_buf_rx.wifi_len;
 	//skp++;
 	//}
 	printf("\n recieved");
-//if (wifi_buf_rx.wifi_len == 0 || wifi_buf_rx.wifi_len < 0)
-  if(0)
+		printf(" %s",buff);
+	//if (wifi_buf_rx.wifi_len == 0 || wifi_buf_rx.wifi_len < 0)
+	if(0)
 	{
 		printf("\n iam in if");
 		ESP_LOGI(tag, "Connection closed");
@@ -113,8 +139,9 @@ bool wait_for_ack(int socket)
 		wifi_buf_rx.wifi_buf[3]=0XC0;
 		wifi_buf_rx.wifi_buf[4]=00;
 		wifi_buf_rx.wifi_buf[5]=00;
-		int recv=0x14;
-		wifi_buf_rx.wifi_buf[1]=recv;
+		//int recv=0x14;
+		EVAL_REQ(&recived, buff);
+		wifi_buf_rx.wifi_buf[1]=recived;
 		printf("\n ++++++++++++ Received String (Debug): ");
 		for(int i=0;i< wifi_buf_rx.wifi_len;i++)
 		{
@@ -234,13 +261,13 @@ void socket_server_task(void* pvParameters)
 			// Wait for acknowledgment before proceeding
 			//while(1)
 			//{
-				printf("\n iam in while tcp");
-				if(wait_for_ack(clientSock))
-				{
-					printf("\n iam disconnecting");
-					disconnect_wifi();
-					break;
-				}
+			printf("\n iam in while tcp");
+			if(wait_for_ack(clientSock))
+			{
+				printf("\n iam disconnecting");
+				disconnect_wifi();
+				break;
+			}
 			//}
 
 
