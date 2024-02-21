@@ -689,6 +689,12 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 			if(last==1)
 			{
 				printf("\n breaking the last variouble;");
+				close(clientSock);
+				clientSock = -1;
+				variouble=0;
+				printf(" client sock %d",clientSock);
+				printf("\n client socket closed");
+				last = 0;
 				break;
 			}
 		}

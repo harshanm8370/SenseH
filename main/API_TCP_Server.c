@@ -90,10 +90,10 @@ bool wait_for_ack(int socket)
 	printf(" func : %s",__func__);
 	int buff[6];
 	printf("\n reciving the frame format");
-	//memset(&wifi_buf_rx.wifi_buf, 0, sizeof(wifi_buf_rx.wifi_buf));
+	memset(&wifi_buf_rx.wifi_buf, 0, sizeof(wifi_buf_rx.wifi_buf));
 	//if(!skp)
 	//{
-	wifi_buf_rx.wifi_len = recv(socket, buff, sizeof(buff) - 1, 0);
+	//wifi_buf_rx.wifi_len = recv(socket, buff, sizeof(buff) - 1, 0);
 	//skp++;
 	//}
 	printf("\n recieved");
@@ -113,7 +113,7 @@ bool wait_for_ack(int socket)
 		wifi_buf_rx.wifi_buf[3]=0XC0;
 		wifi_buf_rx.wifi_buf[4]=00;
 		wifi_buf_rx.wifi_buf[5]=00;
-		int recv=0x13;
+		int recv=0x14;
 		wifi_buf_rx.wifi_buf[1]=recv;
 		printf("\n ++++++++++++ Received String (Debug): ");
 		for(int i=0;i< wifi_buf_rx.wifi_len;i++)
@@ -232,8 +232,8 @@ void socket_server_task(void* pvParameters)
 			printf("\n **************************client connected to wifi %d", clientSock);
 
 			// Wait for acknowledgment before proceeding
-			while(1)
-			{
+			//while(1)
+			//{
 				printf("\n iam in while tcp");
 				if(wait_for_ack(clientSock))
 				{
@@ -241,7 +241,8 @@ void socket_server_task(void* pvParameters)
 					disconnect_wifi();
 					break;
 				}
-			}
+			//}
+
 
 		}
 	}
