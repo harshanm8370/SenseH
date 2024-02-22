@@ -47,7 +47,7 @@ void Led_Blink(void *pvParameters);
 extern BT_STATUS Is_Device_Paired;
 uint8_t qv_flag,mv_flag;
 bool BLE_DS;
-#define test 0
+#define test 1
 
 
 TaskHandle_t myTaskHandle = NULL;

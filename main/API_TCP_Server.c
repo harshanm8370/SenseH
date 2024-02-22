@@ -173,8 +173,8 @@ bool wait_for_ack(int socket)
 void wifi_start_access_point() {
 	wifi_config_t wifi_config = {
 			.ap = {
-					.ssid = "SALMAN_WIFI",
-					.password = "MYPASSWORD",
+					.ssid = "SenseSemi_Device",
+					.password = "SenseSemi",
 					.channel = 1,
 					.authmode = WIFI_AUTH_WPA2_PSK,
 					.ssid_hidden = 0,
