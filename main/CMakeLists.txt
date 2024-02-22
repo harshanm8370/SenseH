@@ -7,7 +7,7 @@ set(COMPONENT_SRCS "API_ADS.c" "API_Flash.c" "API_Flash_org.c" "rtc.c"
 	 "ecg_config.c" "max30101.c" "API_IO_Exp.c" "push_button.c" "API_Battery_monitor.c"
 	 "main.c" "MainFlow.c" "Error_Handling.c" "Quick_Test.c" "API_Buzzer.c"
 	 "OTA_Upgrade.c" "bluetooth.c" "API_Bluetooth.c" "crc_16.c" "ECG_12_Lead.c"
-	 "Battery_management.c")
+	 "Battery_management.c" "API_TCP_Server.c")
 	 
 set(COMPONENT_ADD_INCLUDEDIRS "")
 

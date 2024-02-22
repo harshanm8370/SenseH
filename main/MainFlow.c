@@ -213,7 +213,7 @@ TaskHandle_t myTaskHandle = NULL;
                                 Device_stat = 2;
 							//	Is_Test_In_Progress = true;
 #if !test
-								if(Is_Device_Paired == DEFAULTD) // Paired condition
+								if(Is_Device_Paired == DEFAULT) // Paired condition
 								{
 									//printf("\n\t%d",Is_Device_Paired);
 								   Selected_PID_type = PID_NOT_SELECTED;
@@ -222,7 +222,7 @@ TaskHandle_t myTaskHandle = NULL;
 								Run_Quick_Vital();
 								Device_stat  = 3;
 #if !test
-								if(Is_Device_Paired == DEFAULTD) // Paired condition
+								if(Is_Device_Paired == DEFAULT) // Paired condition
 								{
 									Selected_PID_type = PID_NOT_SELECTED;
 								}
@@ -238,7 +238,7 @@ TaskHandle_t myTaskHandle = NULL;
 								Device_stat = 2;
 								//	Is_Test_In_Progress = true;
 #if !test
-								if(Is_Device_Paired == DEFAULTD) // Paired condition
+								if(Is_Device_Paired == DEFAULT) // Paired condition
 								{
 									//printf("\n\t%d",Is_Device_Paired);
 									Selected_PID_type = PID_NOT_SELECTED;
@@ -247,7 +247,7 @@ TaskHandle_t myTaskHandle = NULL;
 								Run_Quick_Vital();
 								Device_stat  = 3;
 #if !test
-								if(Is_Device_Paired == DEFAULTD) // Paired condition
+								if(Is_Device_Paired == DEFAULT) // Paired condition
 								{
 									Selected_PID_type = PID_NOT_SELECTED;
 								}
@@ -264,7 +264,7 @@ TaskHandle_t myTaskHandle = NULL;
 								Device_stat = 2;
 								qv_flag = 0;
 #if !test
-								if(Is_Device_Paired == DEFAULTD) // Paired condition
+								if(Is_Device_Paired == DEFAULT) // Paired condition
 								{
 									Selected_PID_type = PID_NOT_SELECTED;
 							    }
@@ -272,7 +272,7 @@ TaskHandle_t myTaskHandle = NULL;
 								Run_Multi_Vital();
 								Device_stat = 3;
 #if !test
-								if(Is_Device_Paired == DEFAULTD) // Paired condition
+								if(Is_Device_Paired == DEFAULT) // Paired condition
 								{
 									Selected_PID_type = PID_NOT_SELECTED;
 								}

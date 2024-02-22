@@ -15,9 +15,11 @@
 /*
  * BT Request/Response commands
  */
-#define Test_status_req					0x33
+#define WIFI_ENABLE					0x19
+#define WIFI_DISABLE					0x20
 #define BP1_data_req					0x10
 #define BP2_data_req					0x90
+#define Test_status_req					0x33
 #define BG_data_req						0x11
 #define ECG_1_Lead_data_req				0x12
 #define ECG_6_Lead_data_req				0x13
@@ -190,8 +192,6 @@ typedef enum __attribute__((__packed__))
 	BT_DISCONNECTED=1,
 	BT_PAIRED,
 	DEFAULT,
-	DEFAULTP,
-	DEFAULTD,
 } BT_STATUS;
 
 extern bool Data_sync_in_progress;
@@ -200,7 +200,7 @@ extern bool BT_ongoing_session;
 extern BT_STATUS Is_Device_Paired;
 
 uint8_t BT_Initialize(void);
-void BT_process_requests(void);
+bool BT_process_requests(void);
 char* BT_Get_mobile_number(void);
 bool BT_Get_timesynq_req_flag(void);
 int BTL_validate_and_copy2buf(uint8_t * fw_buff_ptr);

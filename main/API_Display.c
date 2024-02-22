@@ -2542,13 +2542,13 @@ uint8_t left_offset = 0;
   		if(Is_Device_Paired == BT_PAIRED) // Paired condition
   		{
   			API_Disp_BT_Icon(GREEN);
-  			Is_Device_Paired = DEFAULTP;// to avoid Redisplaying the same thing again
+  			Is_Device_Paired = DEFAULT;// to avoid Redisplaying the same thing again
   		}
 
   		else if(Is_Device_Paired == BT_DISCONNECTED) // disconnected condition
 		{
 			API_Disp_BT_Icon(WHITE);
-			Is_Device_Paired = DEFAULTD;
+			Is_Device_Paired = DEFAULT;
 		}
 
   		//printf("\nbtn_press=%d\n",btn_press);
@@ -3725,13 +3725,13 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
   		if(Is_Device_Paired == BT_PAIRED) // Paired condition
   		{
   			API_Disp_BT_Icon(GREEN);
-  			Is_Device_Paired = DEFAULTP;// to avoid Redisplaying the same thing again
+  			Is_Device_Paired = DEFAULT;// to avoid Redisplaying the same thing again
   		}
 
   		else if(Is_Device_Paired == BT_DISCONNECTED) // disconnected condition
 		{
 			API_Disp_BT_Icon(WHITE);
-			Is_Device_Paired = DEFAULTD;
+			Is_Device_Paired = DEFAULT;
 		}
 
   		if((Selected_PID_type == VALID_PID) && (!is_Pid_Displayed))
