@@ -13,22 +13,25 @@
 #include "API_Flash_org.h"
 #include <stdbool.h>
 #include "bluetooth.h"
-int variouble;
-#define FALSE 0
-#define PORT_NUMBER 5002
-static char tag[] = "socket_server";
-static int END_Var;
-int clientSock ;
-extern int globalFlag;
-int terminate;
-extern int 	Empty_Record;
-static int sock;
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+
+
+//Global and Static varioubles
+#define FALSE 0
+#define PORT_NUMBER 5002
+static char tag[] = "socket_server";
+int clientSock ;
+static int sock;
 int recived;
+int temp_flag=0;
+
+//Macros
 #define BUF_SIZE 600
 
+
+//Structure and enums
 enum {
 	Wifi_BUF_EMPTY,
 	Wifi_BUF_FULL,
@@ -36,7 +39,7 @@ enum {
 	wifi_TX_RX_SUCCESS,
 };
 
-int temp=0;
+
 typedef struct {
 	uint8_t wifi_status;
 	uint16_t wifi_len;
@@ -44,24 +47,23 @@ typedef struct {
 } wifi_BUF_t;
 static wifi_BUF_t wifi_buf_rx;
 
+
 uint32_t API_Wifi_Receive(uint8_t *data_buf)
 {
-	printf("\n %s",__func__);
 	if (wifi_buf_rx.wifi_status == Wifi_BUF_FULL)
 	{
 		for(int i=0;i<wifi_buf_rx.wifi_len;i++)
 		{
 			data_buf[i]=wifi_buf_rx.wifi_buf[i];
 		}
-		printf("copying the Received Bytes: ");
+		/*printf("copying the Received Bytes: ");
 		for (size_t i = 0; i < wifi_buf_rx.wifi_len; ++i) {
 			printf("%02X ", data_buf[i]);
 		}
-		printf("\n");
+		printf("\n"); */
 
 		memset(wifi_buf_rx.wifi_buf, 0, sizeof(wifi_buf_rx.wifi_buf));
 		wifi_buf_rx.wifi_status = Wifi_BUF_EMPTY;
-
 		return wifi_buf_rx.wifi_len;
 	}
 	else
@@ -72,11 +74,8 @@ uint32_t API_Wifi_Receive(uint8_t *data_buf)
 }
 
 
-
-
 void disconnect_wifi()
 {
-	printf("\n %s",__func__);
 	ESP_LOGW(tag, "End of socket_server_task");
 	close(sock);
 	esp_wifi_stop();
@@ -84,7 +83,7 @@ void disconnect_wifi()
 	vTaskDelete(NULL);
 }
 
-void EVAL_REQ(int *recived, char *buff) {
+void EVAL_REQ_VITAL_CMD(int *recived, char *buff) {
     if (!strcmp(buff, "BP")) {
         printf("\nBP selected");
         *recived = 0x10;
@@ -106,27 +105,19 @@ void EVAL_REQ(int *recived, char *buff) {
     }
 }
 
-uint8_t skp;
+
 bool wait_for_ack(int socket)
 {
-
-	printf(" func : %s",__func__);
-	char buff[10];
-	printf("\n reciving the frame format");
+	char Vital_buff[10];
+//	printf("\n reciving the frame format");
 	memset(&wifi_buf_rx.wifi_buf, 0, sizeof(wifi_buf_rx.wifi_buf));
-	memset(&buff, 0, sizeof(buff));
-	//if(!skp)
-	//{
-	wifi_buf_rx.wifi_len = recv(socket, buff, sizeof(buff) - 1, 0);
+	memset(&Vital_buff, 0, sizeof(Vital_buff));
+
+	wifi_buf_rx.wifi_len = recv(socket, Vital_buff, sizeof(Vital_buff) - 1, 0);
 	int len =wifi_buf_rx.wifi_len;
-	//skp++;
-	//}
-	printf("\n recieved");
-		printf(" %s",buff);
-	//if (wifi_buf_rx.wifi_len == 0 || wifi_buf_rx.wifi_len < 0)
+
 	if(0)
 	{
-		printf("\n iam in if");
 		ESP_LOGI(tag, "Connection closed");
 		return false;
 	}
@@ -139,34 +130,34 @@ bool wait_for_ack(int socket)
 		wifi_buf_rx.wifi_buf[3]=0XC0;
 		wifi_buf_rx.wifi_buf[4]=00;
 		wifi_buf_rx.wifi_buf[5]=00;
-		//int recv=0x14;
-		EVAL_REQ(&recived, buff);
+
+		//the recived value based upon the client request vital commmand
+		EVAL_REQ_VITAL_CMD(&recived, Vital_buff);
 		wifi_buf_rx.wifi_buf[1]=recived;
-		printf("\n ++++++++++++ Received String (Debug): ");
+
+	/*	printf("\n ++++++++++++ Received String (Debug): ");
 		for(int i=0;i< wifi_buf_rx.wifi_len;i++)
 		{
 			printf("%d ",wifi_buf_rx.wifi_buf[i]);
-		}
+		} */
 
 		if(wifi_buf_rx.wifi_buf[1] == 0x20)
 		{
-			temp=1;
+			temp_flag=1;
 		}
 		else
 		{
-			temp=0;
+			temp_flag=0;
 		}
 
 		wifi_buf_rx.wifi_status = Wifi_BUF_FULL;
 		int flag = BT_process_requests();
-		printf("\n temp: %d",temp);
-		printf("\n %d ",wifi_buf_rx.wifi_buf[1]);
-		printf("\n 1 record sent");
+
 		// return (wifi_buf_rx.wifi_buf[1] == 20);
-		return temp;
+		return temp_flag;
 
 	}
-	printf("\n no last return");
+
 	return false;
 }
 
@@ -227,10 +218,7 @@ void socket_server_task(void* pvParameters)
 		ESP_LOGE(tag, "bind: %d %s", rc, strerror(errno));
 		goto END;
 	}
-	else
-	{
-		printf("\n binded");
-	}
+
 
 	rc = listen(sock, 5);
 	if (rc < 0)
@@ -238,14 +226,10 @@ void socket_server_task(void* pvParameters)
 		ESP_LOGE(tag, "listen: %d %s", rc, strerror(errno));
 		goto END;
 	}
-	else
-	{
-		printf("\n listen");
-	}
 
 	while (1)
 	{
-		printf("\n while iam sarching for new socet");
+
 		socklen_t clientAddressLength = sizeof(clientAddress);
 		clientSock = accept(sock, (struct sockaddr*)&clientAddress, &clientAddressLength);
 
@@ -256,32 +240,24 @@ void socket_server_task(void* pvParameters)
 		}
 		else
 		{
-			printf("\n **************************client connected to wifi %d", clientSock);
-			// Wait for acknowledgment before proceeding
-			//while(1)
-			//{
-			printf("\n iam in while tcp");
 			if(wait_for_ack(clientSock))
 			{
-				printf("\n iam disconnecting");
 				disconnect_wifi();
 				break;
 			}
-			//}
-
 
 		}
 	}
 
 	END:
-	ESP_LOGW(tag, "end of socket_server_task");
+	ESP_LOGW(tag, " Failed End of socket_server_task");
 	close(sock);
 	vTaskDelete(NULL);
 }
 
 void API_TCP_Server(void)
 {
-	printf("\n Wifi configarations initiated \n");
+
 	nvs_flash_init();
 	wifi_start_access_point();
 	xTaskCreate(socket_server_task, "socket_server_task", 8192, NULL, 5, NULL);

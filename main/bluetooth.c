@@ -22,10 +22,11 @@
 #include <stdio.h>
 #include <string.h>
 
-extern int terminate;
+
 uint8_t Device_stat;
-int Empty_Record;
 extern char tag[];
+extern int clientSock;
+int last_flag;
 /************************************************ MACROS *****************************************************************/
 #define BT_RAW_DATA_LENGTH			  	580	 //BT_PACKET_SIZE = BT_RAW_DATA_LENGTH + payload bytes, this should not cross MTU:600   
 #define OFFLINE_REC_SUMMARY_LEN			81  /*need to verify */
@@ -52,7 +53,7 @@ extern char tag[];
 #define BT_EXTRA_PROCESSING_TIME        3 // 3 sec which is relatively large , kept by considering maximum delay encountering during the firmware upgrade
 #define VITAL_REC_LEN					2
 
-int last;
+
 /******************************static functions*******************************/
 
 static bool bt_send_single_response(VITAL_TYPE_t vital, uint16_t one_record_len);
@@ -65,9 +66,8 @@ static void store_device_configuration(void);
 static void bt_firmware_request_response(void);
 
 static uint8_t  FW_buffer[BUFFER_SIZE];
-extern int variouble;
-extern int clientSock;
-int Temp_socket=1;
+
+
 /*
 static void bt_send_device_self_diagnosis_response(void);
 static void bt_send_device_full_diagnosis_response(void);
@@ -96,7 +96,7 @@ static uint32_t total_length_to_send = 0;
 static uint8_t bt_tx_buff[600] = {0};
 static uint8_t wf_tx_buff[2]={4,4};
 static uint8_t bt_rx_buff[600] = {0};
-static uint8_t wf_rx_buff[600] = {0};
+//static uint8_t wf_rx_buff[600] = {0};
 static uint8_t client_request_cmd = 0;
 static uint16_t bt_total_received_bytes = 0;
 static uint16_t count = 0;
@@ -131,7 +131,6 @@ static uint32_t FW_data_len;
 
 bool BT_process_requests(void)
 {
-	printf("\n %s",__func__);
 	static bool bt_session_complete    = FALSE;
 	char date_info[50];
 	int len;
@@ -139,9 +138,7 @@ bool BT_process_requests(void)
 	memset(bt_rx_buff, 0x00, sizeof(bt_rx_buff));
 	if(clientSock != -1 && clientSock > 1)
 	{
-		printf("\n clientSock != -1 && clientSock > 1");
 		bt_total_received_bytes = API_Wifi_Receive(bt_rx_buff);
-		printf("\n bt_total_received_bytes %d",bt_total_received_bytes);
 	}
 	else
 	{
@@ -273,8 +270,6 @@ bool BT_process_requests(void)
 					break;
 
 	case ECG_6_Lead_data_req:
-		//send ecg response over bluetooth
-		printf ("\n ECG_6_Lead_data_req");
 		Data_sync_in_progress = TRUE;
 		bt_session_complete = bt_send_multi_response(ECG_6_Lead, ECG_3_LEAD_REC_LEN);
 		if (bt_session_complete){
@@ -284,11 +279,9 @@ bool BT_process_requests(void)
 		break;
 
 	case ECG_12_Lead_data_req:
-		printf("\n iam in ecg12");
 		Data_sync_in_progress = TRUE;
 		bt_session_complete = bt_send_multi_response(ECG_12_LEAD, ECG_12_LEAD_ONE_REC_LEN);
 		if (bt_session_complete){
-			printf("\n bye");
 			BT_ongoing_session = 0x00;
 			client_request_cmd = NO_CMD_REQ;
 		}
@@ -457,7 +450,6 @@ bool bt_send_single_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 				Load_record_header_to_buffer();
 			}
 			else{
-				//API_BLE_Transmit(bt_tx_buff, total_length_to_send);
 				wifi_send_data(bt_tx_buff, total_length_to_send);
 
 			}
@@ -475,7 +467,6 @@ bool bt_send_single_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 		total_length_to_send = (one_record_len + BT_PACKET_FIELD_LENGTH);
 		switch (bt_response_state) {
 		case INIT_STATE:
-			printf("\n single response 000000000000000000 INIT_STATE \n");
 			status = API_Flash_Read_Record(vital, BT_flash_buffer);
 			if(status == NO_RECORDS_IN_FLASH) {
 				bt_send_ack_or_nack_response(NACK_DATA_NOT_AVAILABLE);
@@ -495,7 +486,6 @@ bool bt_send_single_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 			break;
 
 		case WAIT_ACK_EOR_STATE:
-			printf("\n  single response 33333333333333333 WAIT_ACK_EOR_STATE \n");
 			erase_one_record(vital);
 			bt_response_state = INIT_STATE;
 			bt_response_session_complete = TRUE;
@@ -520,7 +510,6 @@ TOTAL_RECORDS_STRUCT_t Total_Read_CurrentRecords;
 
 bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 {
-	printf("\n %s",__func__);
 	uint16_t crc_value = 0;
 	uint8_t status = FALSE;
 
@@ -534,8 +523,6 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 				Load_record_header_to_buffer();
 			}
 			else {
-				printf("1. %s --> Length: %ld\n", __func__, total_length_to_send);
-				//API_BLE_Transmit(bt_tx_buff, total_length_to_send);
 				wifi_send_data(bt_tx_buff, total_length_to_send);
 			}
 			retry_count++;
@@ -550,15 +537,13 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 	}
 	else {
 		retry_count = 0;
-		printf("\n this block is to serve the BP_RECORD REQUEST");
-		printf("iam in while blutooth");
+
 		while(clientSock != -1 && clientSock > 0)
 		{
 			switch (bt_response_state)
 			{
 			case INIT_STATE:
-				last = 0;
-				printf("\n 000000000000000000 INIT_STATE \n");
+				last_flag = 0;
 				BP_Length_tx = 0;
 				total_length_to_send = (REC_HEADER_LEN + BT_PACKET_FIELD_LENGTH);
 				printf("\n total_length_to_send: %ld",total_length_to_send);
@@ -578,7 +563,6 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 
 				//to send the continuation of the record
 			case WAIT_ACK_SOR_STATE:
-				printf("\n 111111111111111111 WAIT_ACK_SOR_STATE \n");
 				total_length_to_send = BT_PACKET_SIZE;
 				printf("total_length_to_send: %ld\n", total_length_to_send);
 				//here we are dividing the whole record into 580 bytes of packet and sending packet by packet (MTU: 600)
@@ -590,14 +574,13 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 					skip_count ++;					//increment the skip_counter to point to next 240 bytes
 					count --;						//after sending every packet we decrement the count
 					printf("2. %s --> Length: %ld\n", __func__, total_length_to_send);
-					//API_BLE_Transmit(bt_tx_buff, total_length_to_send);
 					wifi_send_data(bt_tx_buff, total_length_to_send);
 					bt_response_state = WAIT_ACK_COR_STATE;
 				}
 				break;
 
 			case WAIT_ACK_COR_STATE:
-				printf("\n 2222222222222222222 WAIT_ACK_COR_STATE \n");
+
 				MemSet(bt_tx_buff,0x00,sizeof(bt_tx_buff));
 				/*in this block we are sending remaining packets*/
 				printf("Packet count: %d\n", count);
@@ -608,24 +591,14 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 						Load_Raw_Data_To_Buffer(EOR);								//   IF No remainder then overwrite the COR by EOR
 						bt_response_state = WAIT_ACK_EOR_STATE;
 						printf("3. %s --> Length: %ld\n", __func__, total_length_to_send);
-						//API_BLE_Transmit(bt_tx_buff, total_length_to_send);
-						// Send data over WiFi instead of Bluetooth
 						wifi_send_data(bt_tx_buff, total_length_to_send);
-						//Salman modified
-						/*uint8_t socket = 0;  // Replace with the actual WiFi socket or connection identifier
-									wifi_send_data(socket, bt_tx_buff, total_length_to_send);*/
 
 					}
 					else{
 						Load_Raw_Data_To_Buffer(COR);
-						//	API_BLE_Transmit(bt_tx_buff, total_length_to_send);
 						wifi_send_data(bt_tx_buff, total_length_to_send);
 
 
-						//Salman modified
-						// Send data over WiFi instead of Bluetooth
-						/*	uint8_t socket = 0;  // Replace with the actual WiFi socket or connection identifier
-									wifi_send_data(socket, bt_tx_buff, total_length_to_send); */
 
 						bt_response_state = WAIT_ACK_COR_STATE;
 					}
@@ -648,11 +621,6 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 					printf("4. %s --> Length: %ld\n", __func__, total_length_to_send);
 					//API_BLE_Transmit(bt_tx_buff, total_length_to_send);
 					wifi_send_data(bt_tx_buff, total_length_to_send);
-					//Salman modified
-					// Send data over WiFi instead of Bluetooth
-					/*	 uint8_t socket = 0;  // Replace with the actual WiFi socket or connection identifier
-								 wifi_send_data(socket, bt_tx_buff, total_length_to_send); */
-
 					bt_response_state = WAIT_ACK_EOR_STATE;
 					break;
 				}
@@ -661,7 +629,6 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 				break;
 
 			case WAIT_ACK_EOR_STATE:
-				printf("\n 33333333333333333 WAIT_ACK_EOR_STATE \n");
 				erase_one_record(vital);
 				count =0;
 				skip_count = 0;
@@ -675,34 +642,22 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 				API_Get_Total_Record_Count(&Total_Read_CurrentRecords);
 
 				printf("ecg_1_records : %d\n", Total_Read_CurrentRecords.ecg_1_records);
-				printf("\n Sending 44444444444444444444444444444444444444444444444444444444444 \n");
+
 				wifi_send_data(wf_tx_buff,sizeof(wf_tx_buff) / sizeof(wf_tx_buff[0]));
-				last=1;
-				/*close(clientSock);
-				clientSock = -1;
-				variouble=0;
-				printf(" client sock %d",clientSock);
-				printf("\n client socket closed"); */
+				last_flag=1;
+
 				break;
-				printf("\n Iam in the last of switch");
+
 			}//switch
-			if(last==1)
+			if(last_flag==1)
 			{
-				printf("\n breaking the last variouble;");
 				close(clientSock);
 				clientSock = -1;
-				variouble=0;
-				printf(" client sock %d",clientSock);
-				printf("\n client socket closed");
-				last = 0;
+				last_flag = 0;
 				break;
 			}
 		}
-		/*	printf("\n going to terminate");
-			if(terminate==1)
-			{
-				break;
-			} */
+
 
 	}//else
 
@@ -714,11 +669,10 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 	}
 
 	return(bt_response_session_complete);
-	printf("\n Iam in end bt_send_multi_response");
+
 }
 void wifi_send_data(uint8_t* data, size_t length)
 {
-	printf("\n %s",__func__);
 	if (clientSock != -1 && clientSock > 0 )
 	{
 		printf("\nSending data...");
@@ -744,11 +698,10 @@ void wifi_send_data(uint8_t* data, size_t length)
 				int len = recv(clientSock, endbuffer, sizeof(endbuffer) - 1, 0);
 				if (len > 0)
 				{
-					//printf("\n Received String (Debug): %s", endbuffer);
 					if (strcmp(endbuffer, "END") == 0)
 					{
 						printf("\n Received String (Debug): %s", endbuffer);
-						//	terminate = 1;
+
 						break;
 					}
 					else if (strcmp(endbuffer, "ACK") == 0)
@@ -762,10 +715,8 @@ void wifi_send_data(uint8_t* data, size_t length)
 	}
 	else
 	{
-		printf("\n clientSock == -1 \n");
+		printf("\n TCP clientSock is not Connected \n");
 	}
-	printf("\n iam going out from wifi send func \n");
-	//return true;
 }
 
 /*	static void bt_ack_or_nack_response(uint8_t command)
@@ -792,7 +743,6 @@ static void bt_send_ack_or_nack_response(uint8_t command)
  */
 void Load_record_header_to_buffer(void)
 {
-	printf("%s",__func__);
 	SYNC_HEADER_STRUCT temp;
 	temp.sos = SOS;
 	temp.cmd = SOR;
@@ -804,7 +754,7 @@ void Load_record_header_to_buffer(void)
 	printf("%s --> Length: %d\n", __func__, sizeof(temp));
 	//API_BLE_Transmit((uint8_t *)&temp, sizeof(temp));
 	wifi_send_data((uint8_t*)&temp, sizeof(temp));
-	printf("i git return");
+
 }
 
 /*	void Load_Raw_Data_To_Buffer()
@@ -851,10 +801,7 @@ static void send_record_snapsot_response(void)
 	record_snapshot_res.sensetemp_rec = total_records.temp_records;
 	record_snapshot_res.ecg_12lead_rec = total_records.ecg_12_lead_ecord;
 	record_snapshot_res.eos = EOS;
-	/*if(record_snapshot_res.bp1_rec==0 && record_snapshot_res.bp2_rec==0 && record_snapshot_res.bg_rec==0 && record_snapshot_res.ecg1_rec==0 && record_snapshot_res.ecg6_rec==0 && record_snapshot_res.spo2_rec==0 && record_snapshot_res.sensetemp_rec==0 && record_snapshot_res.ecg_12lead_rec==0)
-	{
-		Empty_Record=1;
-	}*/
+
 	printf("\n\nRecord Snap shot request::\n"
 			"record_snapshot_res.bp1_rec:%d\n"
 			"record_snapshot_res.bp2_rec:%d\n"
