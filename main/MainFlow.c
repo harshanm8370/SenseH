@@ -92,7 +92,9 @@ TaskHandle_t myTaskHandle = NULL;
 
 	API_TIMER_Run_1MS_Timer();
 
+	printf("\n initializing IO EXP");
 	API_IO_Exp_init();
+	printf("\n IOEXP DONE!");
 	//API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
     //API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
 
@@ -113,7 +115,11 @@ TaskHandle_t myTaskHandle = NULL;
 
 	//	while(1){}
 		/**************************************************************/
-
+	 API_IO_Exp_Power_Control(EN_ANALOG,HIGH);
+    printf("\n initializing ADS1293");
+	API_ECG_Init();
+    printf("\n ADS1293 init");
+    API_IO_Exp_Power_Control(EN_ANALOG,LOW);
 
 	  API_DISP_SenseSemi_Logo(STATIC_IMAGE);
 	  API_DISP_Firmware_Version();
@@ -384,32 +390,47 @@ TaskHandle_t myTaskHandle = NULL;
 static void Interfaces_init(void)
 {
 	/**************** Flash init *********************************************/
+	printf("\n initializing FLASH");
     API_FLASH_init();
+    printf("\n FLASH init DONE!");
 
 	/*********** Display ********************************************************/
 	API_IO_Exp_Reset();
 
 	Power_Up_All_Modules();
+	printf("\n initializing FLASH");
 	API_Display_interface_init();
+	printf("\n Display init done!");
 	API_DISP_Clear_Full_Screen_3_Wire(WHITE);
 
 	/*********** MAX86150 ********************************************************/
+    API_IO_Exp_Power_Control(EN_VLED,HIGH);
+	printf("\n initializing MAX30101");
 	API_MAX30101_I2C_Init();
+	API_MAX30101_Setup();
+	API_IO_Exp_Power_Control(EN_VLED,LOW);
+	printf("\n MAX30101 init done!");
 
 	/*********** Battery Monitor  ***********************************************/
+	printf("\n initializing BAT monitor");
 	API_Battery_monitor_Init();
-
+    printf("\n BAT monitor init done");
 	/****************** RTC init  ***********************************************/
+    printf("\n RTC initializing");
 	API_RTC_Update_Date_Time(0,0,0,0,0,0);
-
+	  printf("\n RTC init done");
 	/*********** Push Button ****************************************************/
+	  printf("\npush button initialising");
 	API_Push_Btn_init();
-
+	  printf("\n push button init done");
 	/**************** IR ADC init ***********************************************/
+
 	API_IR_ADC_Init();
 
 	/**************** BLE init ***********************************************/
+	printf("\n BLE initialising");
    API_BLE_Init();
+   printf("\n BLE init done");
 }
 
 
