@@ -15,7 +15,14 @@
 #include "push_button.h"
 
 #define ECG_DRDY_PIN_SEL  ( 1ULL<<ESP32_MCU_DRDY_PIN )
+
+#if MAX30101
 #define PPG_INTR_PIN_SEL  ( 1ULL<<MAX30101_DRDY_INTR_PIN )
+#endif
+
+#if MAX86150
+#define PPG_INTR_PIN_SEL  (1ULL << MAX86150_DRDY_INTR_PIN)
+#endif
 
 
 /*-------------------------------------MACROS-------------------------------------------------------------------*/
@@ -97,11 +104,24 @@ void api_PPG_drdy_input_config()
     error = gpio_config(&io_conf);
 
     //change gpio intrrupt type for one pin
+#if MAX30101
     error |= gpio_set_intr_type(MAX30101_DRDY_INTR_PIN, GPIO_INTR_POSEDGE);
+#endif
+
+#if MAX86150
+    error |= gpio_set_intr_type(MAX86150_DRDY_INTR_PIN, GPIO_INTR_POSEDGE);
+#endif
 
     error |= gpio_install_isr_service(0);
     //hook isr handler for specific gpio pin
+
+#if MAX30101
     error |= gpio_isr_handler_add(MAX30101_DRDY_INTR_PIN, api_drdy_isr, (void*) MAX30101_DRDY_INTR_PIN);
+#endif
+
+#if MAX86150
+    error |= gpio_isr_handler_add(MAX86150_DRDY_INTR_PIN, api_drdy_isr, (void*) MAX86150_DRDY_INTR_PIN);
+#endif
 
 }
 

@@ -85,8 +85,17 @@ TaskHandle_t myTaskHandle = NULL;
     PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[ECG_CSn_VCS], PIN_FUNC_GPIO);
 
     gpio_set_direction(ECG_CSn_VCS, GPIO_MODE_OUTPUT);
+
+#if MAX30101
     gpio_set_direction(MAX30101_DRDY_INTR_PIN,GPIO_MODE_INPUT);
     gpio_set_pull_mode(MAX30101_DRDY_INTR_PIN,GPIO_PULLUP_ONLY);
+#endif
+
+#if MAX86150
+    gpio_set_direction(MAX86150_DRDY_INTR_PIN,GPIO_MODE_INPUT);
+    gpio_set_pull_mode(MAX86150_DRDY_INTR_PIN,GPIO_PULLUP_ONLY);
+#endif
+
     gpio_set_level(ECG_CSn_VCS, 1);
 
 
@@ -144,6 +153,10 @@ TaskHandle_t myTaskHandle = NULL;
 	      {
 	      printf("\nDevice ID = 0x%2X.\n",readPartID(0xFF));
 	      }*/
+	      if(API_Check_USB_Charger_Connection_Display_Notification())
+	      {
+	    	  EnterSleepMode(SYSTEM_DEEP_SLEEP);
+	      }
 #if !onep2
     	  if(API_Check_USB_Charger_Connection_Display_Notification())
     	  {
@@ -155,13 +168,18 @@ TaskHandle_t myTaskHandle = NULL;
 
 	while(1)
 	{
+
 		//ota_flag = 1;
 		if(flash_data.sys_mode == DEVICE_ACTIVE_MODE)
 		{
-			    if(Detect_low_battery_display_notification()==false)
-				{
+			if(Detect_low_battery_display_notification()==false)
+			{
 #if test
-			    	 state = VIEW_SCREEN;
+				state = VIEW_SCREEN;
+				if(API_Check_USB_Charger_Connection_Display_Notification())
+				{
+					EnterSleepMode(SYSTEM_DEEP_SLEEP);
+				}
 #else
 			    	 state = API_Disp_Select_PID_Screen();
 			    	 Device_stat = 1;
@@ -394,7 +412,13 @@ static void Interfaces_init(void)
 	API_DISP_Clear_Full_Screen_3_Wire(WHITE);
 
 	/*********** MAX86150 ********************************************************/
+#if MAX30101
 	API_MAX30101_I2C_Init();
+#endif
+
+#if MAX86150
+	API_MAX86150_I2C_Init();
+#endif
 
 	/*********** Battery Monitor  ***********************************************/
 	API_Battery_monitor_Init();
@@ -508,7 +532,14 @@ void ExecuteComplianceSequence(void)
 {
 	uint8_t btn_press=0;
 	API_ECG_Init();
-	API_MAX30101_Setup();
+#if MAX30101
+		API_MAX30101_Setup();
+#endif
+
+#if MAX86150
+	API_MAX86150_Setup();
+#endif
+
 	API_ECG_Reginit_12Lead();
 	API_TIMER_Register_Timer(USER_INACTIVE_TIMEOUT);
 

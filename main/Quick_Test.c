@@ -20,6 +20,7 @@
 #include "Hardware.h"
 #include "bluetooth.h"
 #include "Battery_management.h"
+#include "MainFlow.h"
 
 // MACROS REQUIRED FOR WDOG SpO2
 
@@ -323,7 +324,12 @@ bool skip_quick_test = FALSE;
 				//printf("\n\t\t\t%d",gpio_get_level(25));
 
 
-				 if(API_MAX30101_Setup())
+#if MAX30101
+				if(API_MAX30101_Setup())
+#endif
+#if MAX86150
+				if(API_MAX86150_Setup())
+#endif
 				 {
 					if((API_ECG_Init()))
 						{
@@ -576,7 +582,12 @@ bool skip_quick_test = FALSE;
 	else if(captureType == CAPTURE_PPG)
 	{
 		printf("\nSPO2 PPG-RED DATA: Capture START");
+#if MAX86150
 		Max86150_Clear_Fifo();
+#endif
+#if MAX30101
+		Max30101_Clear_Fifo();
+#endif
 
 #if 0
 		if(enableDummyCapture)
@@ -608,7 +619,13 @@ bool skip_quick_test = FALSE;
 			 if(dly == 25000)
 			 {
 			     cnt++;
+#if MAX30101
 			     API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,0,0);
+#endif
+#if MAX86150
+			     API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,0,0);
+#endif
+
 			     dly =0;
 			     printf("\n %ld",SPO2_PPG_RED_BUFF[cnt]);
 			 }
@@ -637,7 +654,12 @@ bool skip_quick_test = FALSE;
 				{
 					return  0;
 				}
+#if MAX30101
 				status = API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,0,1);
+#endif
+#if MAX86150
+				status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,0,1);
+#endif
 			}while(ppg_count < 200);
 		}
 
@@ -651,7 +673,13 @@ bool skip_quick_test = FALSE;
 			{
 				return  0;
 			}
+#if MAX3010
 			status = API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,0,0);
+#endif
+#if MAX86150
+			status = API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,0,0);
+#endif
+
 		}while(ppg_count < ((ECG_IN_SECONDS*SET_ODR)));
 		API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
 
@@ -807,12 +835,19 @@ bool skip_quick_test = FALSE;
 			if(dly == 25000)
 			{
 				cnt++;
+#if MAX30101
 				API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,0,0);
+#endif
+#if MAX86150
+				API_MAX86150_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,0,0);
+#endif
+
 				dly =0;
 				printf("\n %ld",SPO2_PPG_RED_BUFF[cnt]);
 			}
 			if(API_TIMER_Get_Timeout_Flag(LOD_WAIT_TIME))
 			{
+				API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER_PROPERLY);
 				printf("\ntimer stopped");
 				return 0;
 			}
@@ -837,7 +872,12 @@ bool skip_quick_test = FALSE;
 					return  0;
 				}
 				status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, &ECG_temp);
+#if MAX30101
 				status = API_MAX30101_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,0,0);
+#endif
+#if MAX86150
+				status = API_MAX86150_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,0,0);
+#endif
 			}
 		}
 
@@ -860,7 +900,13 @@ bool skip_quick_test = FALSE;
 //			ppg_index_cnt++;
 //			if(ppg_index_cnt >=10)
 			{
+#if MAX30101
 				status = API_MAX30101_Raw_Data_capture_new(BP_PPG_RED_BUFF,BP_PPG_IR_BUFF,0,0);
+#endif
+#if MAX86150
+				status = API_MAX86150_Raw_Data_capture_new(BP_PPG_RED_BUFF,BP_PPG_IR_BUFF,0,0);
+#endif
+
 //				ppg_index_cnt = 0;
 			}
 		}
