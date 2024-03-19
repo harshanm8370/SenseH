@@ -51,7 +51,7 @@ static void print_sha256 (const uint8_t *image_hash, const char *label)
     ESP_LOGI(TAG, "%s: %s", label, hash_print);
 }
 
-static bool ota_firmware_upgrade(void)
+static char ota_firmware_upgrade(void)
 {
 	int timer;
 	int data_read;
@@ -87,7 +87,12 @@ static bool ota_firmware_upgrade(void)
 	timer = TIME_OUT_DELAY * 2;
     while (1)
     {
-		int data_read = read_firmware_data (ota_write_data, BUFFSIZE);
+	    data_read = read_firmware_data (ota_write_data, BUFFSIZE);
+
+		if(data_read == 2)
+		{
+			return 2;
+		}
 
 		if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
 		{
@@ -127,6 +132,7 @@ static bool ota_firmware_upgrade(void)
 			}
         }
     }
+
 
 
 
@@ -179,9 +185,9 @@ static bool diagnostic(void)
 	  return 0;
 }
 
-bool start_firmware_Upgrade(void)
+char start_firmware_Upgrade(void)
 {
-	bool ret;
+	char ret;
 
     ESP_LOGI(TAG, "OTA example app_main start");
 
@@ -239,34 +245,35 @@ bool start_firmware_Upgrade(void)
 
 bool Firmware_upgrade (void)
 {
+	char ret;
 	API_DISP_Display_Screen(DISP_DEVICE_UPGRADING);
 	Delay_ms(5000);
 	API_display_backlight_off();
-
-	if(start_firmware_Upgrade())
+    ret = start_firmware_Upgrade();
+    if(ret == 2) // Paired condition
+    {
+        return 0;
+    }
+    else if(ret == true)
 	{
 		API_display_backlight_on();
 		API_DISP_Display_Screen(DISP_DEVICE_UPGRADED);
 		ota_flag = 0;
 		API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
+		Delay_ms(5000);
+		esp_restart();
 	}
-	/*else if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
-	 {
-		API_display_backlight_on();
-		API_DISP_Display_Screen(DISP_DEVICE_UPGRADATION_FAIL);
-		ota_flag = 0;
-		API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
-	 }*/
 	else
 	{
 		API_display_backlight_on();
 		API_DISP_Display_Screen(DISP_DEVICE_UPGRADATION_FAIL);
 		ota_flag = 0;
 		API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
+		Delay_ms(5000);
+		esp_restart();
 	}
 
-	Delay_ms(5000);
-	esp_restart();
+
 
 	return true;
 }

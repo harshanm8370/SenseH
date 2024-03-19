@@ -955,7 +955,8 @@ int read_firmware_data (uint8_t * ota_write_data, int BUFFSIZE)
 
 	if (FW_data_len > BUFFSIZE){
 		printf("Firmware data is more than the buffer size\n");
-		return -1;
+		FW_data_len = 0;
+		return 2;
 	}
 	
 	data_len = FW_data_len;

@@ -56,7 +56,7 @@ extern bool FW_complete_data_received;
 
 int read_firmware_data (uint8_t * ota_write_data, int BUFFSIZE);
 bool is_firmware_data_available (void);
-bool start_firmware_Upgrade(void);
+char start_firmware_Upgrade(void);
 bool Firmware_upgrade (void);
 
 
