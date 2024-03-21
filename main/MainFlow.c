@@ -47,7 +47,7 @@ void Led_Blink(void *pvParameters);
 extern BT_STATUS Is_Device_Paired;
 uint8_t qv_flag,mv_flag;
 bool BLE_DS;
-#define test 1
+#define test 0
 
 
 TaskHandle_t myTaskHandle = NULL;
@@ -213,7 +213,7 @@ TaskHandle_t myTaskHandle = NULL;
                                 Device_stat = 2;
 							//	Is_Test_In_Progress = true;
 #if !test
-								if(Is_Device_Paired == DEFAULT) // Paired condition
+								if(Is_Device_Paired == DC) // Paired condition
 								{
 									//printf("\n\t%d",Is_Device_Paired);
 								   Selected_PID_type = PID_NOT_SELECTED;
@@ -222,7 +222,7 @@ TaskHandle_t myTaskHandle = NULL;
 								Run_Quick_Vital();
 								Device_stat  = 3;
 #if !test
-								if(Is_Device_Paired == DEFAULT) // Paired condition
+								if(Is_Device_Paired == DC) // Paired condition
 								{
 									Selected_PID_type = PID_NOT_SELECTED;
 								}
@@ -238,7 +238,7 @@ TaskHandle_t myTaskHandle = NULL;
 								Device_stat = 2;
 								//	Is_Test_In_Progress = true;
 #if !test
-								if(Is_Device_Paired == DEFAULT) // Paired condition
+								if(Is_Device_Paired ==DC) // Paired condition
 								{
 									//printf("\n\t%d",Is_Device_Paired);
 									Selected_PID_type = PID_NOT_SELECTED;
@@ -247,9 +247,9 @@ TaskHandle_t myTaskHandle = NULL;
 								Run_Quick_Vital();
 								Device_stat  = 3;
 #if !test
-								if(Is_Device_Paired == DEFAULT) // Paired condition
+								if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
 								{
-									Selected_PID_type = PID_NOT_SELECTED;
+									Selected_PID_type = DC;
 								}
 #endif
 								qv_flag = 0;
@@ -264,7 +264,7 @@ TaskHandle_t myTaskHandle = NULL;
 								Device_stat = 2;
 								qv_flag = 0;
 #if !test
-								if(Is_Device_Paired == DEFAULT) // Paired condition
+								if(Is_Device_Paired == DC) // Paired condition
 								{
 									Selected_PID_type = PID_NOT_SELECTED;
 							    }
@@ -272,7 +272,7 @@ TaskHandle_t myTaskHandle = NULL;
 								Run_Multi_Vital();
 								Device_stat = 3;
 #if !test
-								if(Is_Device_Paired == DEFAULT) // Paired condition
+								if(Is_Device_Paired == DC) // Paired condition
 								{
 									Selected_PID_type = PID_NOT_SELECTED;
 								}

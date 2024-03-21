@@ -2548,7 +2548,7 @@ uint8_t left_offset = 0;
   		else if(Is_Device_Paired == BT_DISCONNECTED) // disconnected condition
 		{
 			API_Disp_BT_Icon(WHITE);
-			Is_Device_Paired = DEFAULT;
+			Is_Device_Paired = DC;
 		}
 
   		//printf("\nbtn_press=%d\n",btn_press);
@@ -3731,7 +3731,7 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
   		else if(Is_Device_Paired == BT_DISCONNECTED) // disconnected condition
 		{
 			API_Disp_BT_Icon(WHITE);
-			Is_Device_Paired = DEFAULT;
+			Is_Device_Paired = DC;
 		}
 
   		if((Selected_PID_type == VALID_PID) && (!is_Pid_Displayed))
