@@ -2455,13 +2455,15 @@ uint8_t left_offset = 0;
   	while(1)
   	{
 		//btn_press = API_Push_Btn_Get_hold_time();
-#if !onep2
+
   		Detect_low_battery_display_notification();
   		if(API_Check_USB_Charger_Connection_Display_Notification())
-  		 {
-  		    EnterSleepMode(SYSTEM_DEEP_SLEEP);
-  		 }
-#endif
+  		{
+  			API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+  			API_Disp_Display_Text(text1, text2, text3, text4, text5, text6, text7);
+  			API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
+  			api_disp_display_icon(star,left_offset,top_offset,RED,WHITE);
+  		}
 
 
   		btn_press = API_Push_Btn_Get_Buttton_Press();
@@ -3390,8 +3392,28 @@ bool API_DISP_Memory_Full_Status(void)
 
    		API_Disp_Display_Text(mid_sec_text1,mid_sec_text2, mid_sec_text3,mid_sec_text4, mid_sec_text5,mid_sec_text6,mid_sec_text7);
    		API_Clear_Display(DISP_BOTTOM_SEC , BLUE);
-   		Delay_ms(DISP_NOTIFICATION_TIME);
-   		status = true;
+   		API_TIMER_Register_Timer(DEEP_SLEEP_TIMEOUT);
+   		while(1)
+   		{
+   			if(API_TIMER_Get_Timeout_Flag(DEEP_SLEEP_TIMEOUT))
+   			{
+   				printf("\ntimer stopped");
+   				EnterSleepMode(SYSTEM_DEEP_SLEEP);
+   			}
+   			if(!IsUSB_Charger_Connected())
+   			{
+   				API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+   				printf("\n charger not connected");
+   				status = true;
+   				break;
+   			}
+   			else
+   			{
+   				printf("\n charger connected");
+   			}
+   		}
+   		//Delay_ms(DISP_NOTIFICATION_TIME);
+
        }
 
        return status;
@@ -3624,13 +3646,16 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
   	while(1)
   	{
-#if !onep2
+
   		Detect_low_battery_display_notification();
   		if(API_Check_USB_Charger_Connection_Display_Notification())
   		{
-  		   EnterSleepMode(SYSTEM_DEEP_SLEEP);
+  			api_disp_display_icon (SenseHlargelogo, 15, 42,BLUE, WHITE);
+  			//API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+  			API_Disp_Display_Text(text1, text2, text3, text4, text5, text6, text7);
+  			API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
   		}
-#endif
+
 
 
   		btn_press = API_Push_Btn_Get_Buttton_Press();
