@@ -136,6 +136,7 @@ bool BT_process_requests(void)
 	int len;
 
 	memset(bt_rx_buff, 0x00, sizeof(bt_rx_buff));
+	//printf("%d ")
 	if(clientSock != -1 && clientSock > 1)
 	{
 		bt_total_received_bytes = API_Wifi_Receive(bt_rx_buff);
@@ -195,6 +196,7 @@ bool BT_process_requests(void)
 	case WIFI_DISABLE:
 		printf("\n Wifi Disabling \n");
 		disconnect_wifi();
+		clientSock = -1;
 		break;
 	case BP1_data_req:
 		printf("\nBP1 Sync started");

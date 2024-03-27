@@ -32,6 +32,7 @@
 #include "API_utility.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "API_TCP_Server.h"
 #include "ECG_12_Lead.h"
 
 extern uint8_t Device_stat;
@@ -124,7 +125,20 @@ TaskHandle_t myTaskHandle = NULL;
 	/** Testing */
 	/***************************************************/
 
-
+//	API_TCP_Server();
+//while(1)
+//{
+//	//API_TCP_Server();
+//
+//
+//	Delay_ms(10000);
+//
+//    disconnect_wifi();
+//
+//	Delay_ms(10000);
+//	API_TCP_Server();
+//	//wifi_restart();
+//}
 #if test
 	Selected_PID_type = VALID_PID;
 #endif

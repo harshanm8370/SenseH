@@ -1266,7 +1266,7 @@ static void SetDcLeadOffCurrent_in_Steps_8nA(uint16_t currentIn_nA)
 
 	if(currentIn_nA<2048)
 	{
-		write_read_status |= api_ecg_reg_write(LOD_CURRENT_REG, (currentIn_nA/8));
+		write_read_status |= api_ecg_reg_write(LOD_CURRENT_REG, 0x7D/*(currentIn_nA/8)*/);
 	}
 
 	else
@@ -1310,8 +1310,12 @@ bool API_ECG_Lead_OFF_Detect(ECG_LEADS_t lead)
 
 	// Enable Lead OFF detection
 	write_read_status |= api_ecg_reg_write(LOD_EN_REG, 0x3F);
-
-	error_status=api_ecg_reg_read(ERROR_STATUS_REG,&lod);
+//	while(1)
+//	{
+//		Delay_ms(1000);
+//	    error_status=api_ecg_reg_read(ERROR_STATUS_REG,&lod);
+//		printf("error_status=0x%02X\n",lod);
+//	}
 
 	if(error_status != ECG_NO_ERROR ){
 		printf("\nLead off Detection.. Register read fail");

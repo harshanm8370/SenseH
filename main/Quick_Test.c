@@ -323,7 +323,7 @@ bool skip_quick_test = FALSE;
 				//printf("\n\t\t\t%d",gpio_get_level(25));
 
 
-				 if(!API_MAX30101_Setup())
+				 if(API_MAX30101_Setup())
 				 {
 					if((API_ECG_Init()))
 						{

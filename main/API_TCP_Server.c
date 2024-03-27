@@ -73,14 +73,22 @@ uint32_t API_Wifi_Receive(uint8_t *data_buf)
 	return Wifi_BUF_EMPTY;
 }
 
+void wifi_restart(void)
+{
+	esp_wifi_set_mode(WIFI_MODE_AP);
+	esp_wifi_start();
+
+}
+
 
 void disconnect_wifi()
 {
 	ESP_LOGW(tag, "End of socket_server_task");
-	close(sock);
-	esp_wifi_stop();
-	esp_wifi_deinit();
-	vTaskDelete(NULL);
+	//close(sock);
+	esp_wifi_set_mode(WIFI_MODE_NULL);
+	//esp_wifi_stop();
+	//esp_wifi_deinit();
+	//vTaskDelete(NULL);
 }
 
 void EVAL_REQ_VITAL_CMD(int *recived, char *buff) {
@@ -167,7 +175,7 @@ void wifi_start_access_point() {
 					.ssid = "SenseSemi_Device",
 					.password = "SenseSemi",
 					.channel = 1,
-					.authmode = WIFI_AUTH_WPA2_PSK,
+					.authmode = WIFI_AUTH_OPEN,
 					.ssid_hidden = 0,
 					.max_connection = 5,
 					.beacon_interval = 100
@@ -255,12 +263,20 @@ void socket_server_task(void* pvParameters)
 	vTaskDelete(NULL);
 }
 
+bool flag_init;
 void API_TCP_Server(void)
 {
-
-	nvs_flash_init();
-	wifi_start_access_point();
-	xTaskCreate(socket_server_task, "socket_server_task", 8192, NULL, 5, NULL);
+    if(flag_init)
+    {
+    	wifi_restart();
+    }
+    else
+    {
+	    nvs_flash_init();
+	    wifi_start_access_point();
+	    xTaskCreate(socket_server_task, "socket_server_task", 8192, NULL, 5, NULL);
+	    flag_init = 1;
+    }
 
 }
 
