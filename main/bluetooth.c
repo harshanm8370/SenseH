@@ -121,7 +121,7 @@ bool BT_ongoing_session;
 * \param[in]	void
 * \return		void
 */
-
+bool task_close,start;
 static uint32_t countReq =0;
 
 static uint64_t Application_len;
@@ -140,10 +140,12 @@ bool BT_process_requests(void)
 	if(clientSock != -1 && clientSock > 1)
 	{
 		bt_total_received_bytes = API_Wifi_Receive(bt_rx_buff);
+		printf("\nData received from wifi");
 	}
 	else
 	{
 		bt_total_received_bytes = API_BLE_Receive(bt_rx_buff);
+		printf("\nData received from BLE");
 	}
 	if (BUF_EMPTY == bt_total_received_bytes)
 	{
@@ -186,16 +188,26 @@ bool BT_process_requests(void)
 	}
 
 
-	printf("client_request_cmd: %x\n", client_request_cmd);
+	printf("client_request_cmd: %02X\n", client_request_cmd);
 
 	switch (client_request_cmd){
 	case WIFI_ENABLE:
 		printf("\n Wifi Enabling \n");
+		if(task_close == 1)
+		{
+			start =1;
+			task_close =0;
+		}
 		API_TCP_Server();
+		BT_ongoing_session = false;
+		Print_time("/SYNC start");
 		break;
 	case WIFI_DISABLE:
 		printf("\n Wifi Disabling \n");
 		disconnect_wifi();
+		task_close = 1;
+		BT_ongoing_session = false;
+		Print_time("/SYNC END");
 		clientSock = -1;
 		break;
 	case BP1_data_req:

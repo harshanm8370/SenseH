@@ -126,17 +126,21 @@ TaskHandle_t myTaskHandle = NULL;
 	/***************************************************/
 
 //	API_TCP_Server();
+//	Delay_ms(10000);
+//	disconnect_wifi();
+//	Delay_ms(10000);
+//	API_TCP_Server();
 //while(1)
 //{
 //	//API_TCP_Server();
 //
 //
-//	Delay_ms(10000);
+//	//Delay_ms(30000);
 //
-//    disconnect_wifi();
+//   // disconnect_wifi();
 //
-//	Delay_ms(10000);
-//	API_TCP_Server();
+//	//Delay_ms(30000);
+//
 //	//wifi_restart();
 //}
 #if test
@@ -277,7 +281,10 @@ TaskHandle_t myTaskHandle = NULL;
 									Selected_PID_type = PID_NOT_SELECTED;
 							    }
 #endif
+								for(int i=0;i<50;i++)
+								{
 								Run_Multi_Vital();
+								}
 								Device_stat = 3;
 #if !test
 								if(Is_Device_Paired == DC) // Paired condition

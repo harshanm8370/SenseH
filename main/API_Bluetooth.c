@@ -36,7 +36,7 @@
 #define SPP_PROFILE_NUM             1
 #define SPP_PROFILE_APP_IDX         0
 #define ESP_SPP_APP_ID              0x56
-#define SAMPLE_DEVICE_NAME          "SSH-22-019"    //The Device Name Characteristics in GAP
+#define SAMPLE_DEVICE_NAME          "SSH-22-014"    //The Device Name Characteristics in GAP
 #define SPP_SVC_INST_ID	            0
 
 /// SPP Service
@@ -54,7 +54,7 @@ static const uint8_t spp_adv_data[23] = {
     /* Complete List of 16-bit Service Class UUIDs */
     0x03,0x03,0xF0,0xAB,
     /* Complete device Name in advertising */
-    0x0F,0x09, 'S', 'S', 'H', '-', '2', '2', '-', '0', '1', '9'
+    0x0F,0x09, 'S', 'S', 'H', '-', '2', '2', '-', '0', '1', '4'
 };
 
 static uint16_t mtu_size = 23;

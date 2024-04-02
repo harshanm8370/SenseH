@@ -2159,11 +2159,11 @@ bool Run_Multi_Vital(void)
 	//if(Lead12_LeadOff_Detect() == FALSE)
 	if(1)
 	{
-		if(!(Run_Quick_Vital()))
-		{
-			Disable_Power_Supply();
-			return 0;
-		}
+//		if(!(Run_Quick_Vital()))
+//		{
+//			Disable_Power_Supply();
+//			return 0;
+//		}
 		//printf("lead off not detected\n");
 		if(!(Lead12_Test()))
 		{

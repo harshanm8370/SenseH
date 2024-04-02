@@ -14,6 +14,7 @@
 #include <stdbool.h>
 #include "bluetooth.h"
 #include <stdint.h>
+#include "API_timer.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -22,11 +23,12 @@
 #define FALSE 0
 #define PORT_NUMBER 5002
 static char tag[] = "socket_server";
+extern bool task_close,start;
 int clientSock ;
 static int sock;
 int recived;
 int temp_flag=0;
-
+TaskHandle_t Handle = NULL;
 //Macros
 #define BUF_SIZE 600
 
@@ -75,8 +77,10 @@ uint32_t API_Wifi_Receive(uint8_t *data_buf)
 
 void wifi_restart(void)
 {
-	esp_wifi_set_mode(WIFI_MODE_AP);
+	// esp_wifi_set_mode(WIFI_MODE_AP);
+	// wifi_start_access_point();
 	esp_wifi_start();
+	start = 1;
 
 }
 
@@ -85,8 +89,9 @@ void disconnect_wifi()
 {
 	ESP_LOGW(tag, "End of socket_server_task");
 	//close(sock);
-	esp_wifi_set_mode(WIFI_MODE_NULL);
-	//esp_wifi_stop();
+	//esp_wifi_set_mode(WIFI_MODE_NULL);
+	task_close = 1;
+	esp_wifi_stop();
 	//esp_wifi_deinit();
 	//vTaskDelete(NULL);
 }
@@ -202,17 +207,28 @@ void wifi_start_access_point() {
 }
 
 
-void socket_server_task(void* pvParameters)
+void socket_server_task(void *pvParametrs)
 {
 	struct sockaddr_in clientAddress;
 	struct sockaddr_in serverAddress;
+	goto START;
+
 	//IPv4 AF_INET
+	START:
+	close(sock);
+//	Delay_ms(1000);
+	printf("\n\tstarting socket........");
 	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);//socket system call
 	if (sock < 0)
 	{
 		ESP_LOGE(tag, "socket: %d %s", sock, strerror(errno));
 		goto END;
 	}
+	else
+	{
+		printf("\n socket created successfully with socket ID : %d",sock);
+	}
+//	Delay_ms(10000);
 	////family as IPv4.
 	serverAddress.sin_family = AF_INET;
 	//Binds the server to all available network interfaces.
@@ -226,28 +242,56 @@ void socket_server_task(void* pvParameters)
 		ESP_LOGE(tag, "bind: %d %s", rc, strerror(errno));
 		goto END;
 	}
+	else
+	{
+		printf("\nBinded succesfully with socket if %d" ,rc);
+	}
 
 
-	rc = listen(sock, 5);
+	rc = listen(sock, 100);
 	if (rc < 0)
 	{
 		ESP_LOGE(tag, "listen: %d %s", rc, strerror(errno));
 		goto END;
 	}
+	else
+	{
+		printf("\n Listen success rc : %d",sock);
+	}
 
 	while (1)
 	{
+		if(task_close == 1)
+		{
+			task_close = 0;
+			printf("\n\tsuspending the tassk");
+			goto END;
+		}
+		Delay_ms(1000);
 
 		socklen_t clientAddressLength = sizeof(clientAddress);
-		clientSock = accept(sock, (struct sockaddr*)&clientAddress, &clientAddressLength);
+//		API_TIMER_Register_Timer((TIMER_t)TIMER_30SEC);
+//		do
+//		{
+
+			clientSock = accept(sock, (struct sockaddr*)&clientAddress, &clientAddressLength);
+//			if(API_TIMER_Get_Timeout_Flag((TIMER_t)TIMER_30SEC)) // call get_time_out function
+//			{
+//				goto END;
+//			}
+//		}
+//		while(clientSock < 0);
+
 
 		if (clientSock < 0)
 		{
+			if(!task_close)
 			ESP_LOGE(tag, "accept: %d %s", clientSock, strerror(errno));
-			goto END;
+			//goto END;
 		}
 		else
 		{
+			printf("accepted client socket successfully with client socket id : %d",clientSock);
 			if(wait_for_ack(clientSock))
 			{
 				disconnect_wifi();
@@ -264,17 +308,22 @@ void socket_server_task(void* pvParameters)
 }
 
 bool flag_init;
+
 void API_TCP_Server(void)
 {
     if(flag_init)
     {
     	wifi_restart();
+    	//vTaskResume( Handle );
+    	task_close = 0;
+    	 xTaskCreate(socket_server_task, "socket_server_task", 8196, NULL, 5, NULL);
     }
     else
     {
 	    nvs_flash_init();
 	    wifi_start_access_point();
-	    xTaskCreate(socket_server_task, "socket_server_task", 8192, NULL, 5, NULL);
+	    xTaskCreate(socket_server_task, "socket_server_task", 8196, NULL, 5, &Handle);
+	    //socket_server_task();
 	    flag_init = 1;
     }
 
