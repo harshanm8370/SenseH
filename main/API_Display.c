@@ -2441,6 +2441,7 @@ uint8_t left_offset = 0;
   	text6.text_status = 0;
   	text7.text_status = 0;
 
+  	//API_Clear_Display(DISP_TOP_SEC,BLUE);
   	API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
   	API_Disp_Display_Text(text1, text2, text3, text4, text5, text6, text7);
   	API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
@@ -3629,6 +3630,8 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
   	text7.text_status = 0;
 	if(Selected_PID_type != VALID_PID)
 	{
+		API_Clear_Display(DISP_TOP_SEC,BLUE);
+		API_Disp_BT_Icon(WHITE);
 		API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
 		API_Disp_Display_Text(text1, text2, text3, text4, text5, text6, text7);
 	  	API_Clear_Display(DISP_BOTTOM_SEC,BLUE);

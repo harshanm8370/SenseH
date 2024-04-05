@@ -31,8 +31,6 @@ int temp_flag=0;
 TaskHandle_t Handle = NULL;
 //Macros
 #define BUF_SIZE 600
-
-
 //Structure and enums
 enum {
 	Wifi_BUF_EMPTY,
@@ -89,10 +87,11 @@ void disconnect_wifi()
 {
 	ESP_LOGW(tag, "End of socket_server_task");
 	//close(sock);
-	//esp_wifi_set_mode(WIFI_MODE_NULL);
+	esp_wifi_set_mode(WIFI_MODE_NULL);
 	task_close = 1;
-	esp_wifi_stop();
-	//esp_wifi_deinit();
+
+	//esp_wifi_stop();
+//	esp_wifi_deinit();
 	//vTaskDelete(NULL);
 }
 
@@ -177,7 +176,7 @@ bool wait_for_ack(int socket)
 void wifi_start_access_point() {
 	wifi_config_t wifi_config = {
 			.ap = {
-					.ssid = "SenseSemi_Device",
+					.ssid = "SenseH",
 					.password = "SenseSemi",
 					.channel = 1,
 					.authmode = WIFI_AUTH_OPEN,
@@ -210,15 +209,22 @@ void wifi_start_access_point() {
 void socket_server_task(void *pvParametrs)
 {
 	struct sockaddr_in clientAddress;
+	int ret=0;
 	struct sockaddr_in serverAddress;
 	goto START;
 
 	//IPv4 AF_INET
 	START:
-	close(sock);
+//	for(int i=0;i<4;i++)
+//	{
+//		ret = close(sock);
+//		printf("\n\t close-%d = %d",i+1,ret);
+//	}
+
 //	Delay_ms(1000);
 	printf("\n\tstarting socket........");
 	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);//socket system call
+
 	if (sock < 0)
 	{
 		ESP_LOGE(tag, "socket: %d %s", sock, strerror(errno));
@@ -235,12 +241,14 @@ void socket_server_task(void *pvParametrs)
 	serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
 	// 	: Sets the port number for the server.
 	serverAddress.sin_port = htons(PORT_NUMBER);
-
 	int rc = bind(sock, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
 	if (rc < 0)
 	{
 		ESP_LOGE(tag, "bind: %d %s", rc, strerror(errno));
-		goto END;
+//		if(ret < 4)
+//		goto BIND;
+
+		ret++;
 	}
 	else
 	{
@@ -303,6 +311,8 @@ void socket_server_task(void *pvParametrs)
 
 	END:
 	ESP_LOGW(tag, " Failed End of socket_server_task");
+	//shutdown(sock, 0);
+	        //close(listen_sock);
 	close(sock);
 	vTaskDelete(NULL);
 }
@@ -313,16 +323,59 @@ void API_TCP_Server(void)
 {
     if(flag_init)
     {
-    	wifi_restart();
+
+//    	wifi_config_t wifi_config = {
+//    				.ap = {
+//    						.ssid = "SenseSemi_Device",
+//    						.password = "SenseSemi",
+//    						.channel = 1,
+//    						.authmode = WIFI_AUTH_OPEN,
+//    						.ssid_hidden = 0,
+//    						.max_connection = 5,
+//    						.beacon_interval = 100
+//    				}
+//    		};
+//
+////    		esp_netif_init();//network interface
+//    		//ESP_ERROR_CHECK(esp_event_loop_create_default());//default event loop that will be used to handle WiFi-related events
+//    		//esp_netif_t* wifiAP = esp_netif_create_default_wifi_ap();//This line creates a default WiFi access point interface
+//    		//esp_netif_ip_info_t ip_info;//ip info
+//    		printf("\n line - 1");
+//    		//IP4_ADDR(&ip_info.ip, 192, 168, 1, 1);
+//    	//	IP4_ADDR(&ip_info.gw, 192, 168, 1, 1);
+//    		printf("\n line - 2");
+//    		//IP4_ADDR(&ip_info.netmask, 255, 255, 255, 0);
+//    		//esp_netif_dhcps_stop(wifiAP);//This line stops the DHCP server associated with the access point network interface
+//    		//printf("\n line - 3");
+//    		//esp_netif_set_ip_info(wifiAP, &ip_info);//This sets the previously configured IP information (IP address, gateway, and netmask) for the access point network interface.
+//    		printf("\n line - 4");
+//    		//esp_netif_dhcps_start(wifiAP);
+//    		printf("\n line - 5");
+//    		wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
+//    		printf("\n line - 6");
+//    		esp_wifi_init(&wifi_init_config);
+//    		printf("\n line - 7");
+//    		esp_wifi_set_storage(WIFI_STORAGE_RAM);
+//    		printf("\n line - 8");
+//    		esp_wifi_set_mode(WIFI_MODE_AP);
+//    		printf("\n line - 9");
+//    		esp_wifi_set_config(WIFI_IF_AP, &wifi_config);
+//    		printf("\n line - 10");
+    		//esp_wifi_start();
+    	esp_wifi_set_mode(WIFI_MODE_AP);
+
+
+    		//esp_wifi_start();
+    	//wifi_restart();
     	//vTaskResume( Handle );
     	task_close = 0;
-    	 xTaskCreate(socket_server_task, "socket_server_task", 8196, NULL, 5, NULL);
+    	 xTaskCreate(socket_server_task, "socket_server_task", 12288, NULL, 5, NULL);
     }
     else
     {
 	    nvs_flash_init();
 	    wifi_start_access_point();
-	    xTaskCreate(socket_server_task, "socket_server_task", 8196, NULL, 5, &Handle);
+	    xTaskCreate(socket_server_task, "socket_server_task", 12288, NULL, 5, &Handle);
 	    //socket_server_task();
 	    flag_init = 1;
     }

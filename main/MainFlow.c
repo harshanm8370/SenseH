@@ -119,17 +119,17 @@ TaskHandle_t myTaskHandle = NULL;
 	  API_DISP_SenseSemi_Logo(STATIC_IMAGE);
 	  API_DISP_Firmware_Version();
 
-	/* Delay Provided for the User to read the Firmware version */
-	Delay_ms(3000);
-	POR_Init();
-	/** Testing */
-	/***************************************************/
+//	/* Delay Provided for the User to read the Firmware version */
+//	Delay_ms(3000);
+//	POR_Init();
+//	/** Testing */
+//	/***************************************************/
 
 //	API_TCP_Server();
 //	Delay_ms(10000);
 //	disconnect_wifi();
-//	Delay_ms(10000);
-//	API_TCP_Server();
+////	Delay_ms(10000);
+////API_TCP_Server();
 //while(1)
 //{
 //	//API_TCP_Server();
@@ -281,10 +281,7 @@ TaskHandle_t myTaskHandle = NULL;
 									Selected_PID_type = PID_NOT_SELECTED;
 							    }
 #endif
-								for(int i=0;i<50;i++)
-								{
 								Run_Multi_Vital();
-								}
 								Device_stat = 3;
 #if !test
 								if(Is_Device_Paired == DC) // Paired condition
