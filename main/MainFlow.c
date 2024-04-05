@@ -36,7 +36,7 @@
 #include "ECG_12_Lead.h"
 
 extern uint8_t Device_stat;
-
+extern bool task_close;
 static void Interfaces_init(void);
 void POR_Init(void);
 void Manage_Device_Sleep(void);
@@ -588,6 +588,17 @@ void HandleDataSync(void)
 			  	//API_Disp_BT_Icon(GREEN);
 			  	//Is_Device_Paired = DEFAULT;// to avoid Redisplaying the same thing again
 			 }
+
+
+			if(task_close)
+			{
+				API_display_backlight_on();
+				API_DISP_Display_Screen(BLUETOOTH_DISCONNECTED);
+				Delay_ms(1000);
+				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
+				break;
+			}
+
 
 			if(IsValidRecordsInFlash == FALSE)// No records in flash
 			{

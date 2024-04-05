@@ -1750,7 +1750,14 @@ return 1;
  			break;
 
 		}
+ 		case WIFI_DISABLED:
+ 		{
+ 			mid_text1.text_starting_addr = "  WIFI ";
+ 			mid_text2.text_starting_addr = "disabled!";
+ 			mid_text3.text_status = FALSE;
+ 			break;
 
+ 		}
 
  		default :break;
 

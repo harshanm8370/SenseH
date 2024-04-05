@@ -121,7 +121,7 @@ bool BT_ongoing_session;
 * \param[in]	void
 * \return		void
 */
-bool task_close,start;
+bool task_close = 0,start;
 static uint32_t countReq =0;
 
 static uint64_t Application_len;
@@ -193,18 +193,21 @@ bool BT_process_requests(void)
 	switch (client_request_cmd){
 	case WIFI_ENABLE:
 		printf("\n Wifi Enabling \n");
+
 		if(task_close == 1)
 		{
 			start =1;
 			task_close =0;
 		}
 		API_TCP_Server();
+		Data_sync_in_progress = TRUE;
 		BT_ongoing_session = false;
 		Print_time("/SYNC start");
 		break;
 	case WIFI_DISABLE:
 		printf("\n Wifi Disabling \n");
 		disconnect_wifi();
+		Data_sync_in_progress = FALSE;
 		task_close = 1;
 		BT_ongoing_session = false;
 		Print_time("/SYNC END");
