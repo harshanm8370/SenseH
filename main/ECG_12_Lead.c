@@ -30,7 +30,7 @@
 bool Lead12_Data_Capture(void);
 bool Lead12_Data_Capture_new(uint32_t vlead);
 uint32_t flagECG=1,offfset=0;
-
+extern bool  MV50 ;
 
 bool Lead12_Test(void)
 {
@@ -117,7 +117,17 @@ bool Lead12_Test(void)
 				else
 				{
 					printf("\nDevice Memory Full... Please sync the data");
+					if(MV50)
+					{
 					 API_DISP_Memory_Full_Status();
+					 for(int delete_rec = 1; delete_rec <=50; delete_rec++)
+					 {
+						 printf("\n 12 Lead Deleting Record = %d",delete_rec);
+						 erase_one_record(ECG_12_LEAD);
+						 API_Flash_Check_Update_Valid_Record_Status();
+					 }
+					 MV50 = 0;
+					}
 				}
 				printf("\nTotal SPO2 Records = %ld", get_records_count(SPO2));
 				printf("\nTotal BP1 Records = %ld", get_records_count(BP1));
@@ -135,7 +145,7 @@ bool Lead12_Test(void)
 		 API_IO_Exp_Power_Control(EN_ANALOG,LOW);
 		 API_IO_Exp_Power_Control(EN_IR,LOW);
 
-		 Delay_ms(2000);
+		// Delay_ms(2000);
 	  	 API_Buzzer_Sound(SHORT_BEEP);
 
 	  	 printf("\nTest completed.");

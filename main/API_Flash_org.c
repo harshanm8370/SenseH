@@ -16,7 +16,7 @@ TOTAL_RECORDS_STRUCT_t total_records;
 RECORD_HEADER_STRUCT_t record_header;
 VITAL_RESULT_t Vital_result;
 PID_STRUCT PatientID;
-bool IsValidRecordsInFlash;
+bool IsValidRecordsInFlash,MV50;
 
 uint8_t API_Flash_Initialize_Data_pointers(void)
 {
@@ -191,6 +191,13 @@ uint32_t get_records_count(VITAL_TYPE_t vital_type)
 	get_record_pointer_details (vital_type, &records_pointer);
 
 	if (records_pointer.read_addr > records_pointer.write_addr){
+
+		printf("\nread addres > write address");
+
+		if(vital_type == ECG_12_LEAD)
+		{
+			printf("for 12 lead : \nREAD addres : %ld \n Write address : %ld",records_pointer.read_addr,records_pointer.write_addr);
+		}
 		records_count = (records_pointer.end_addr - records_pointer.read_addr) / records_pointer.one_record_len;
 		records_count += (records_pointer.start_addr - records_pointer.write_addr) / records_pointer.one_record_len;   
 	}
@@ -804,6 +811,10 @@ bool API_Flash_Org_Check_For_Memory_Free(void)
 	TOTAL_RECORDS_STRUCT_t nbf_records;
 
 	API_Get_Total_Record_Count(&nbf_records);
+	if(nbf_records.ecg_12_lead_ecord >= 50)
+	{
+		MV50 = 1;
+	}
 	if(nbf_records.bg_records < MAX_RECORDS)
 	{
 		if(nbf_records.bp1_records < MAX_RECORDS)

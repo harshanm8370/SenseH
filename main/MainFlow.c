@@ -593,22 +593,22 @@ void HandleDataSync(void)
 			if(task_close)
 			{
 				API_display_backlight_on();
-				API_DISP_Display_Screen(BLUETOOTH_DISCONNECTED);
+				API_DISP_Display_Screen(WIFI_DISABLED);
 				Delay_ms(1000);
 				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
 				break;
 			}
 
 
-			if(IsValidRecordsInFlash == FALSE)// No records in flash
-			{
-				API_display_backlight_on();
-				API_DISP_Display_Screen(DISP_DATA_SYNC_COMPLETED);
-				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
-			    Delay_ms(1000);
-				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
-				break;
-			}
+//			if(IsValidRecordsInFlash == FALSE)// No records in flash
+//			{
+//				API_display_backlight_on();
+//				API_DISP_Display_Screen(DISP_DATA_SYNC_COMPLETED);
+//				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
+//			    Delay_ms(1000);
+//				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
+//				break;
+//			}
 
 			if((btn_press == 1) || ((btn_press == 2)))
 			{
