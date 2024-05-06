@@ -120,13 +120,17 @@ void EVAL_REQ_VITAL_CMD(int *recived, char *buff) {
 
 bool wait_for_ack(int socket)
 {
-	char Vital_buff[10];
+	char Vital_buff[100];
 //	printf("\n reciving the frame format");
 	memset(&wifi_buf_rx.wifi_buf, 0, sizeof(wifi_buf_rx.wifi_buf));
 	memset(&Vital_buff, 0, sizeof(Vital_buff));
 
 	wifi_buf_rx.wifi_len = recv(socket, Vital_buff, sizeof(Vital_buff) - 1, 0);
 	int len =wifi_buf_rx.wifi_len;
+	for(int i=0;i<len;i++)
+	{
+		printf("\n %d %c",i,Vital_buff[i]);
+	}
 
 	if(0)
 	{
@@ -181,7 +185,7 @@ void wifi_start_access_point() {
 					.channel = 1,
 					.authmode = WIFI_AUTH_OPEN,
 					.ssid_hidden = 0,
-					.max_connection = 5,
+					.max_connection = 1,
 					.beacon_interval = 100
 			}
 	};
@@ -204,8 +208,8 @@ void wifi_start_access_point() {
 	esp_wifi_set_config(WIFI_IF_AP, &wifi_config);
 	esp_wifi_start();
 }
-
-
+int rc;
+bool start_sock;
 void socket_server_task(void *pvParametrs)
 {
 	struct sockaddr_in clientAddress;
@@ -222,39 +226,42 @@ void socket_server_task(void *pvParametrs)
 //	}
 
 //	Delay_ms(1000);
-	printf("\n\tstarting socket........");
-	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);//socket system call
-
-	if (sock < 0)
+	if(!start_sock)
 	{
-		ESP_LOGE(tag, "socket: %d %s", sock, strerror(errno));
-		goto END;
-	}
-	else
-	{
-		printf("\n socket created successfully with socket ID : %d",sock);
-	}
-//	Delay_ms(10000);
-	////family as IPv4.
-	serverAddress.sin_family = AF_INET;
-	//Binds the server to all available network interfaces.
-	serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
-	// 	: Sets the port number for the server.
-	serverAddress.sin_port = htons(PORT_NUMBER);
-	int rc = bind(sock, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
-	if (rc < 0)
-	{
-		ESP_LOGE(tag, "bind: %d %s", rc, strerror(errno));
-//		if(ret < 4)
-//		goto BIND;
-
-		ret++;
-	}
-	else
-	{
-		printf("\nBinded succesfully with socket if %d" ,rc);
+		printf("\n\tstarting socket........");
+		sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);//socket system call
+		start_sock =1;
 	}
 
+		if (sock < 0)
+		{
+			ESP_LOGE(tag, "socket: %d %s", sock, strerror(errno));
+			goto END;
+		}
+		else
+		{
+			printf("\n socket created successfully with socket ID : %d",sock);
+		}
+		//	Delay_ms(10000);
+		////family as IPv4.
+		serverAddress.sin_family = AF_INET;
+		//Binds the server to all available network interfaces.
+		serverAddress.sin_addr.s_addr = htonl(INADDR_ANY);
+		// 	: Sets the port number for the server.
+		serverAddress.sin_port = htons(PORT_NUMBER);
+	    rc = bind(sock, (struct sockaddr*)&serverAddress, sizeof(serverAddress));
+		if (rc < 0)
+		{
+			ESP_LOGE(tag, "bind: %d %s", rc, strerror(errno));
+			//		if(ret < 4)
+			//		goto BIND;
+
+			ret++;
+		}
+		else
+		{
+			printf("\nBinded succesfully with socket if %d" ,rc);
+		}
 
 	rc = listen(sock, 100);
 	if (rc < 0)
@@ -310,10 +317,10 @@ void socket_server_task(void *pvParametrs)
 	}
 
 	END:
-	ESP_LOGW(tag, " Failed End of socket_server_task");
+	//ESP_LOGW(tag, " Failed End of socket_server_task");
 	//shutdown(sock, 0);
 	        //close(listen_sock);
-	close(sock);
+	//close(sock);
 	vTaskDelete(NULL);
 }
 

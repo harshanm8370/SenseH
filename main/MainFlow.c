@@ -48,7 +48,8 @@ void Led_Blink(void *pvParameters);
 extern BT_STATUS Is_Device_Paired;
 uint8_t qv_flag,mv_flag;
 bool BLE_DS;
-#define test 0
+extern uint32_t FW_data_len;
+#define test 1
 
 
 TaskHandle_t myTaskHandle = NULL;
@@ -100,7 +101,7 @@ TaskHandle_t myTaskHandle = NULL;
     Interfaces_init();
     API_IO_Exp1_P0_write_pin(HIBERNATE,HIGH);//it should be high to  initialize the max30102
 
-   // API_RUN_TEMPERATURE_TEST();
+    //API_RUN_TEMPERATURE_TEST();
 
 	if(API_Flash_Initialize_Data_pointers() == RECORDS_UPDATE_FAILED)
 	   {
@@ -128,8 +129,8 @@ TaskHandle_t myTaskHandle = NULL;
 //	API_TCP_Server();
 //	Delay_ms(10000);
 //	disconnect_wifi();
-////	Delay_ms(10000);
-////API_TCP_Server();
+//	Delay_ms(100000);
+//API_TCP_Server();
 //while(1)
 //{
 //	//API_TCP_Server();
@@ -257,6 +258,7 @@ TaskHandle_t myTaskHandle = NULL;
 								}
 #endif
 								Run_Quick_Vital();
+								FW_data_len =0;
 								Device_stat  = 3;
 #if !test
 								if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
@@ -584,6 +586,7 @@ void HandleDataSync(void)
 				Delay_ms(1000);
 				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
 				BLE_DS = 1;
+				disconnect_wifi();
 				break;
 			  	//API_Disp_BT_Icon(GREEN);
 			  	//Is_Device_Paired = DEFAULT;// to avoid Redisplaying the same thing again

@@ -27,6 +27,9 @@
 #include "Battery_management.h"
 #include "MainFlow.h"
 
+
+extern bool LOD_N;
+extern uint8_t qv_flag;
 uint8_t hospital_pid[MAX_PID_RECORDS];
 
 typedef struct __attribute__((__packed__))
@@ -3136,8 +3139,65 @@ uint8_t left_offset = 0;
   	mid_icon.color              = BLUE;
 
   	API_Display_Middle_Section(mid_icon,mid_text1,mid_text2,mid_text3);
-  	Delay_ms(500);
+  	Delay_ms(1000);
   	API_Clear_Display(DISP_MIDDLE_SEC,WHITE);
+
+  	if(qv_flag == 12 && !LOD_N)
+  	{
+  		mid_text1.color = BLUE;
+  		mid_text1.text_starting_addr = "ECG6   ";
+  		mid_text1.text_status = display;
+  		mid_text2.text_status = 0;
+  		mid_text3.text_status = 0;
+  		mid_text4.text_status = 0;
+
+  		//mid_text5.text_starting_addr = "    Sleep    ";
+  		mid_text5.text_status = 0;
+  		mid_text6.text_status = 0;
+  		mid_text7.text_status = 0;
+
+  	  	//API_Clear_Display(DISP_TOP_SEC,BLUE);
+  	  	API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+  	  	API_Disp_Display_Text(mid_text1, mid_text2, mid_text3, mid_text4, mid_text5, mid_text6, mid_text7);
+
+  	left_offset = 85;
+  	top_offset = 20;
+  	api_disp_display_icon(tick_true,left_offset,top_offset,GREEN,WHITE);
+  	}
+  	else if(qv_flag == 11)
+  	{
+  		mid_text1.color = BLUE;
+  		  		mid_text1.text_starting_addr = "Spo2   ";
+  		  		mid_text1.text_status = display;
+  		  		mid_text2.text_status = 0;
+  		  	mid_text3.text_starting_addr = " HR  ";
+  		  		mid_text3.text_status = display;
+  		  		mid_text4.text_status = 0;
+
+  		  		mid_text5.text_starting_addr = " BP   ";
+  		  		mid_text5.text_status = display;
+  		  		mid_text6.text_status = 0;
+  		  		mid_text7.text_status = 0;
+
+  		  	  	//API_Clear_Display(DISP_TOP_SEC,BLUE);
+  		  	  	API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+  		  	  	API_Disp_Display_Text(mid_text1, mid_text2, mid_text3, mid_text4, mid_text5, mid_text6, mid_text7);
+
+  		  	left_offset = 85;
+  		  	top_offset = 20;
+  		  	if(!LOD_N)
+  		  	{
+  		  		api_disp_display_icon(tick_true,85,20,GREEN,WHITE);
+  		  		api_disp_display_icon(tick_true,85,60,GREEN,WHITE);
+  		  		api_disp_display_icon(tick_true,85,100,GREEN,WHITE);
+  		  	}
+  		  	else
+  		  	{
+  		  		api_disp_display_icon(NO_icon,85,20,RED,WHITE);
+  		  		api_disp_display_icon(NO_icon,85,55,RED,WHITE);
+  		  		api_disp_display_icon(NO_icon,85,95,RED,WHITE);
+  		  	}
+  	}
 
 
   //	#endif

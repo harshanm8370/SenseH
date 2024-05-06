@@ -28,7 +28,7 @@ static esp_adc_cal_characteristics_t *adc_chars;
 #elif CONFIG_IDF_TARGET_ESP32S2BETA
 static const adc_channel_t channel = ADC_CHANNEL_6;     // GPIO7 if ADC1, GPIO17 if ADC2
 #endif
-static const adc_atten_t atten = ADC_ATTEN_DB_11;//;ADC_ATTEN_DB_11;
+static const adc_atten_t atten = ADC_ATTEN_DB_0;//;ADC_ATTEN_DB_11;
 static const adc_unit_t unit = ADC_UNIT_1;
 
 #if CONFIG_IDF_TARGET_ESP32
@@ -86,21 +86,26 @@ void  API_IR_ADC_Init(void)
 
 }
 
-void API_IR_Data_Read(uint16_t data_object[], uint16_t data_ambient[],bool enable_adc2_read,uint16_t length_to_read)
+float API_IR_Data_Read(float data_object[], uint16_t data_ambient[],bool enable_adc2_read,uint16_t length_to_read)
 {
-        //Multisampling
-        for (int i = 0; i < length_to_read; i++)
-        {
-        	    data_object[i] = adc1_get_raw(ADC_CHANNEL_1);
+	float temp=0;
+	//Multisampling
+	for (int i = 0; i < length_to_read; i++)
+	{
+		data_object[i] = adc1_get_raw(ADC_CHANNEL_1);
 
-            	if(enable_adc2_read){
-                //adc2_get_raw((adc2_channel_t)channel, ADC_WIDTH_BIT_12, data_ambient+i);
-            		data_ambient[i] = adc1_get_raw(ADC_CHANNEL_2);
+		temp += data_object[i];
+		//printf("\n %f",temp);
+		//
+		//            	if(enable_adc2_read){
+		//                //adc2_get_raw((adc2_channel_t)channel, ADC_WIDTH_BIT_12, data_ambient+i);
+		//            		data_ambient[i] = adc1_get_raw(ADC_CHANNEL_2);
 
-            }
-        }
-
+	}
+	temp /= 25;
+	return temp;
 }
+
 
 void API_ADC_Conv_Avg(float ref_vol, uint16_t data_buff[],uint8_t avg_len,char *tag)
 {
@@ -122,21 +127,21 @@ void API_ADC_Conv_Avg(float ref_vol, uint16_t data_buff[],uint8_t avg_len,char *
 void API_RUN_TEMPERATURE_TEST(void)
 {
 	API_IO_Exp_Power_Control(EN_IR,HIGH);
-	uint16_t obj_data;
+	float obj_data=0;
 	uint16_t amb_data;
 	printf("\n\nIR Data Capture 10 SPS");
-	float a[4] = {2786.2664,-166.4331934,3.609542263,-0.016136966};
+	float temp_data[25] ;
 	char str1[10];
 	while(1)
 	{
 
-	  API_IR_Data_Read(&obj_data, &amb_data,true,1);
-	  IntergerToString(str1,obj_data);
+	  obj_data = API_IR_Data_Read(temp_data, &amb_data,true,25);
+	//  IntergerToString(str1,obj_data);
 	//	mid_text1.text_starting_addr = " Test Done! ";
 	//	mid_text1.color       = BLUE;
 
-	  printf("\n%d    ",obj_data);
+	  printf("\n%f    ",obj_data);
 
-	  Delay_ms(100);
+	  Delay_ms(1000);
 	}
 }

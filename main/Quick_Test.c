@@ -243,13 +243,14 @@ bool skip_quick_test = FALSE;
 	printf("\nTest completed.");
 	return true;
 }*/
-
+bool LOD_N;
 
  bool Run_Quick_Vital(void)
 {
 	//uint16_t result[4] = {0};
 
-
+//	 API_Disp_Quick_Test_Result();
+//	 Delay_ms(10000);
 	printf("\nQuick Test2 Started");
 
 	Is_time_displayed = TRUE;
@@ -383,7 +384,7 @@ bool skip_quick_test = FALSE;
 								if(Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,TRUE)==FALSE)
 								{
 									Disable_Power_Supply();
-									return FALSE;
+									LOD_N = 1;
 								}
 
 								Print_time("\nECG end");
@@ -400,20 +401,18 @@ bool skip_quick_test = FALSE;
 								if(!(Capture_BP_Data(TRUE)))
 								{
 									Disable_Power_Supply();
-									return FALSE;
+									//return FALSE;
+									LOD_N = 1;
 								}
 								API_IO_Exp_Power_Control(EN_VLED,LOW);
 								Print_time("\nBP END");
 							}
 #endif
 
-							Vital_result.SBP1 = 117; // Need to change later
-							Vital_result.DBP1 = 77; // Need to change later
-
-                            if(mv_flag)
-                            {
+//                            if(mv_flag)
+//                            {
 							   API_Disp_Quick_Test_Result();
-                            }
+//                            }
 							if(Selected_PID_type != GUEST_PID) Store_QuickTest1_Data_To_Flash();
 					   }
 					else
@@ -682,9 +681,9 @@ bool skip_quick_test = FALSE;
 	else if(captureType == CAPTURE_ECG_L1_AND_L2)
 		{
 		bool leadoffstatus_lead1 = 0, leadoffstatus_lead2 = 0;
-		//leadoffstatus_lead1 = API_ECG_Lead_OFF_Detect(LEAD1);
-	    //leadoffstatus_lead2 = API_ECG_Lead_OFF_Detect(LEAD2);
-		//printf("leadoffstatus_lead1=%d,leadoffstatus_lead2=%d\n",leadoffstatus_lead1,leadoffstatus_lead2);
+	//leadoffstatus_lead1 = API_ECG_Lead_OFF_Detect(LEAD1);
+	 //   leadoffstatus_lead2 = API_ECG_Lead_OFF_Detect(LEAD2);
+	//	printf("leadoffstatus_lead1=%d,leadoffstatus_lead2=%d\n",leadoffstatus_lead1,leadoffstatus_lead2);
 		if(leadoffstatus_lead1&leadoffstatus_lead1)
 		{
 			printf("leads are not connected\n");

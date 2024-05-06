@@ -55,6 +55,7 @@ void API_ECG_Enable_LeadOff_Detection(void);
 void API_ECG_Disable_LeadOff_Detection(void);
 
 bool API_ECG_Lead_OFF_Detect(ECG_LEADS_t lead);
+bool Ecg_LOD_Enable(void);
 void API_ECG_Registers_Check_For_Corruption(void);
 
 void API_ECG_Start_Conversion(void);

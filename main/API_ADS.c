@@ -1281,86 +1281,97 @@ static void SetDcLeadOffCurrent_in_Steps_8nA(uint16_t currentIn_nA)
 
 }
 
+bool Ecg_LOD_Enable(void)
+{
+	bool leadOffStatus = true;
+	    ECG_STATUS error_status = 0xFF;
+		TIMER_t timeout = TIMER_10SEC;
+
+		ECG_STATUS write_read_status = 0;
+
+	    uint8_t counter = 0;
+	    uint8_t leadMask=0xFF;
+	    uint8_t lod = 0;
+
+		API_ECG_Enable_LeadOff_Detection();
+
+
+		write_read_status |= api_ecg_reg_write(OSC_CN_REG,0x04);
+
+		//Set DC Lead OFF Mode
+		/*
+		 *  Bit 2 = 0;
+		 *  Bit 3 = 0;  Default it is 1.
+		 */
+		write_read_status |= api_ecg_reg_write(LOD_CN_REG, 0x00);
+
+		// Setting Drive current in nA
+		SetDcLeadOffCurrent_in_Steps_8nA(2047);
+		write_read_status |= api_ecg_reg_write(LOD_EN_REG, 0x3F);
+		return write_read_status;
+}
+
+
 bool API_ECG_Lead_OFF_Detect(ECG_LEADS_t lead)
 {
-    bool leadOffStatus = true;
-    ECG_STATUS error_status = 0xFF;
-	TIMER_t timeout = TIMER_10SEC;
-
-	ECG_STATUS write_read_status = 0;
-
-    uint8_t counter = 0;
-    uint8_t leadMask=0xFF;
-    uint8_t lod = 0;
-
-	API_ECG_Enable_LeadOff_Detection();
-
-
-	write_read_status |= api_ecg_reg_write(OSC_CN_REG,0x04);
-
-	//Set DC Lead OFF Mode
-	/*
-	 *  Bit 2 = 0;
-	 *  Bit 3 = 0;  Default it is 1.
-	 */
-	write_read_status |= api_ecg_reg_write(LOD_CN_REG, 0x00);
-
-	// Setting Drive current in nA
-	SetDcLeadOffCurrent_in_Steps_8nA(2047);
-
+    bool write_read_status;
+    ECG_STATUS error_status;
+    uint8_t lod,lod1;
+    Ecg_LOD_Enable();
 	// Enable Lead OFF detection
-	write_read_status |= api_ecg_reg_write(LOD_EN_REG, 0x3F);
-//	while(1)
-//	{
-//		Delay_ms(1000);
-//	    error_status=api_ecg_reg_read(ERROR_STATUS_REG,&lod);
-//		printf("error_status=0x%02X\n",lod);
-//	}
-
-	if(error_status != ECG_NO_ERROR ){
-		printf("\nLead off Detection.. Register read fail");
-	}
-
-	if(lead == LEAD1)
-	{
-	  leadMask = 0x03;// Lead1 Error Mask
-	}
-	else if(lead == LEAD2)
-	{
-	  leadMask = 0x07;// Lead2 Error Mask
-	}
-
-	else if(lead == LEAD12)
-	{
-		leadMask = 0x08;// Lead12 Error Mask
-		timeout = TIMER_3SEC;
-	}
-
-	API_TIMER_Register_Timer(timeout);
-
+	//write_read_status |= api_ecg_reg_write(LOD_EN_REG, 0x3F);
 	while(1)
 	{
-	    if( API_TIMER_Get_Timeout_Flag(timeout)) break;
-
-	    Delay_ms(1000);
-
-	    if(GetLeadOffStatus() & leadMask) // Returns true if electrode is not connected.
-	    {
-	    	counter = 0;
-	    }
-
-	    else
-	    {
-	    	counter++;
-	    }
-
-	    if(counter >= 1 ) // for retry
-	    {
-	    	leadOffStatus = false;
-	    	break;
-	    }
+		Delay_ms(1000);
+	    error_status=api_ecg_reg_read(ERROR_STATUS_REG,&lod);
+	    error_status=api_ecg_reg_read(ERROR_LOD_REG,&lod1);
+		printf("error_status=0x%02X 0%02X\n",lod,lod1);
 	}
-	printf("error_status=0x%2X\n",lod);
+
+//	if(error_status != ECG_NO_ERROR ){
+//		printf("\nLead off Detection.. Register read fail");
+//	}
+
+//	if(lead == LEAD1)
+//	{
+//	  leadMask = 0x03;// Lead1 Error Mask
+//	}
+//	else if(lead == LEAD2)
+//	{
+//	  leadMask = 0x07;// Lead2 Error Mask
+//	}
+//
+//	else if(lead == LEAD12)
+//	{
+//		leadMask = 0x08;// Lead12 Error Mask
+//		timeout = TIMER_3SEC;
+//	}
+
+//	API_TIMER_Register_Timer(timeout);
+//
+//	while(1)
+//	{
+//	    if( API_TIMER_Get_Timeout_Flag(timeout)) break;
+//
+//	    Delay_ms(1000);
+//
+////	    if(GetLeadOffStatus() & leadMask) // Returns true if electrode is not connected.
+////	    {
+////	    	counter = 0;
+////	    }
+//
+////	    else
+////	    {
+////	    	counter++;
+////	    }
+////
+////	    if(counter >= 1 ) // for retry
+////	    {
+////	    	leadOffStatus = false;
+////	    	break;
+////	    }
+//	}
+//	printf("error_status=0x%2X\n",lod);
 
 	if(lod&0x08)
 	{
@@ -1370,11 +1381,9 @@ bool API_ECG_Lead_OFF_Detect(ECG_LEADS_t lead)
 	}
 
 
-	printf("\ncounter = %d",counter);
 	API_ECG_Disable_LeadOff_Detection();
 
 
-	return leadOffStatus;
 }
 
 void API_ECG_Enable_LeadOff_Detection(void)

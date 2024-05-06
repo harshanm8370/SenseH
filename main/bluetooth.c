@@ -126,7 +126,7 @@ static uint32_t countReq =0;
 
 static uint64_t Application_len;
 static uint32_t FW_buff_index;
-static uint32_t FW_data_len;
+uint32_t FW_data_len;
 
 
 bool BT_process_requests(void)
