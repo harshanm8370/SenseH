@@ -668,13 +668,14 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
     // API_IO_Exp_Power_Control(EN_VLED,HIGH);
 
      printf("\nDevice ID = 0x%2X.\n",readPartID(0xFF));
-
 	 if(readPartID(0xFF) == 0x15U)
 	 {
 		 printf("\nDevice ID = 0x%2X.\n",readPartID(0xFF));
 		 //Max86150_SoftReset();
 //		 Max86150_Configure_Registers_new();
+
 		 //enableDATARDY();
+
 		 Max30101_Configure_Registers(0x10,4,0x07, 50, 50, 16384);
 		 //Max86150_Configure_Registers(0x10,4,0x07, 50, 50, 16384);
 		 //API_max86150_drdy_handle();
@@ -761,13 +762,16 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 
 					if(!is_dummy_capture)
 					{
+						if(ppg_count >= 50 && ppg_count < 650)
+						{
 						one_sample  = sample_buff[2U] | (sample_buff[1U] << 8U) | ((sample_buff[0U] & 0x03) << 16U);
-						Red_data[ppg_count] = one_sample >> 2U;
+						Red_data[ppg_count - 50] = one_sample >> 2U;
 
 						one_sample = sample_buff[5U] | (sample_buff[4U] << 8U) | ((sample_buff[3U]  & 0x03) << 16U);
-						IR_data[ppg_count] = one_sample >> 2U;
+						IR_data[ppg_count-50] = one_sample >> 2U;
 
 						one_sample = sample_buff[8U] | (sample_buff[4U] << 7U) | ((sample_buff[6U]  & 0x03) << 16U);
+						}
 					}
 					ppg_count++;
 					done = true;

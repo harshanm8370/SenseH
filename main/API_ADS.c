@@ -872,7 +872,7 @@ ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_3Lead(float *buff_lead_1, float *bu
 */
 static uint32_t drdy_count = 0;
 
-ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_2Lead(float *buff_lead_1, float *buff_lead_2)
+ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_2Lead(float *buff_lead_1, float *buff_lead_2,uint16_t sample_count)
 {
 	ECG_STATUS read_status = 0;
 //	uint8_t sample[0] = 0x11;
@@ -895,9 +895,11 @@ ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_2Lead(float *buff_lead_1, float *bu
 
 		read_status |= api_ecg_reg_read(DATA_CH2_ECG_L_REG,&sample[5U]);				// reading the CH2 data- lower byte
 
-		*buff_lead_1= (float)((((uint32_t)sample[6U])<<24U) | (((uint32_t)sample[0U])<<16U) | (((uint32_t)sample[1U])<<8U) | (sample[2U]) );
 
-		*buff_lead_2= (float)((((uint32_t)sample[6U])<<24U) | (((uint32_t)sample[3U])<<16U) | (((uint32_t)sample[4U])<<8U) | (sample[5U]) );
+		    *buff_lead_1= (float)((((uint32_t)sample[6U])<<24U) | (((uint32_t)sample[0U])<<16U) | (((uint32_t)sample[1U])<<8U) | (sample[2U]) );
+
+		    *buff_lead_2= (float)((((uint32_t)sample[6U])<<24U) | (((uint32_t)sample[3U])<<16U) | (((uint32_t)sample[4U])<<8U) | (sample[5U]) );
+
 
 		if(read_status == ECG_NO_ERROR)
 		{

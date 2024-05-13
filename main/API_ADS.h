@@ -40,7 +40,7 @@ ECG_STATUS API_ECG_Reginit_12Lead();
 ECG_STATUS API_ECG_Reginit_12Lead_new();
 ECG_STATUS API_ECG_Reginit_Testsetup();																	// setup for test signal
 ECG_STATUS API_ECG_Check_Error_Status(void);															// checking for error status
-ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_2Lead(float *buff_lead_1, float *buff_lead_2);								// capture samples for 2 lead
+ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_2Lead(float *buff_lead_1, float *buff_lead_2,uint16_t sample_count);								// capture samples for 2 lead
 ECG_STATUS IRAM_ATTR API_ECG_Capture_Samples_3Lead(float *buff_lead_1, float *buff_lead_2, float *buff_lead_3);			// capture samples for 3 lead
 bool API_ECG_Capture_Samples_1Lead(float *buff_lead_1);													// capture sample for single lead
 bool API_ECG_Capture_Samples_VLead(float *vlead,uint16_t nbf_samples);
@@ -73,7 +73,7 @@ extern int ECG_Drdy_count;
 #define ODR_1067 0
 #define ODR_1600 0 //dram0_0_seg' overflowed Device not supported
 
-#define ECG_IN_SECONDS 6 // Caution do'not change to higher record length, If done make sure ODR is set below 200
+#define ECG_IN_SECONDS 7 // Caution do'not change to higher record length, If done make sure ODR is set below 200
 #define ECG_DUMMY_CAPTURES 400
 
 #if ODR_50

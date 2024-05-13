@@ -20,6 +20,7 @@
 #include "Hardware.h"
 #include "bluetooth.h"
 #include "Battery_management.h"
+#include "max30101_config.h"
 
 // MACROS REQUIRED FOR WDOG SpO2
 
@@ -368,10 +369,17 @@ bool LOD_N;
 						    	return 0;
 						    }
 							API_Disp_Quick_test_screen(DISP_QT_PPG_TEST_IN_PROGRESS);
-							if(!(Capture_PPG_ECG_Data(CAPTURE_PPG,TRUE)))
+
+							for(int i=1;i<12;i++)
 							{
-								Disable_Power_Supply();
-								return 0;
+//								printf("PPG current = %02X",i*10);
+//								 writeRegister8(MAX30101_ADDR,REG_LED1_PA,i*10);
+//								 writeRegister8(MAX30101_ADDR,REG_LED2_PA,i*10);
+								if(!(Capture_PPG_ECG_Data(CAPTURE_PPG,TRUE)))
+								{
+									Disable_Power_Supply();
+									return 0;
+								}
 							}
 							API_IO_Exp_Power_Control(EN_VLED,LOW);
 							API_IO_Exp_Power_Control(EN_IR,LOW);
@@ -389,10 +397,12 @@ bool LOD_N;
 
 								Print_time("\nECG end");
 							}
-							else
-							{
+
 #endif
 #if 1
+
+							else
+														{
 								API_Disp_Quick_test_screen(DISP_QT_BP_TEST_IN_PROGRESS);
 								printf("\nCapturing BP................");
 								API_IO_Exp_Power_Control(EN_VLED,HIGH);
@@ -512,7 +522,7 @@ bool LOD_N;
 		{
 			for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
 			{
-				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index,0);
 			}
 		}
 
@@ -521,7 +531,7 @@ bool LOD_N;
 
 		for(raw_data_index=0; raw_data_index<600; raw_data_index++)
 			{
-				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index,0);
 			}
 		API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
 
@@ -545,7 +555,7 @@ bool LOD_N;
 		{
 			for(raw_data_index=0; raw_data_index<100; raw_data_index++)// ~3sec dummy capture
 			{
-				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index,0);
 			}
 		}
 
@@ -554,7 +564,7 @@ bool LOD_N;
 
 	for(raw_data_index=0; raw_data_index<600; raw_data_index++)
 		{
-			status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+			status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index,0);
 		}
 	printf("\nECG L1");
 
@@ -709,7 +719,7 @@ bool LOD_N;
 						return 0;
 					}*/
 
-					status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+					status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index,0);
 				}
 			}
 
@@ -721,7 +731,7 @@ bool LOD_N;
 				{
 					return  0;
 				}
-				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index);
+				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index,0);
 			}
 			API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
 
@@ -791,7 +801,7 @@ bool LOD_N;
 
 #if 1
 		ECG_Drdy_count = 0;
-		uint8_t ppg_index_cnt =0;
+		uint16_t ecg_index =0;
 		API_ECG_Stop_Conversion();
 		float ECG_temp =0 ;
 		uint32_t  ECG=0;
@@ -800,12 +810,14 @@ bool LOD_N;
 
 		API_TIMER_Register_Timer(LOD_WAIT_TIME);
 		//API_TIMER_Kill_Timer(DATA_SYNC_TIMEOUT);
+		ppg_count = 50;
 		while(1)
 		{
 			dly++;
 			if(dly == 25000)
 			{
 				cnt++;
+
 				API_MAX30101_Raw_Data_capture_new(SPO2_PPG_RED_BUFF, SPO2_PPG_IR_BUFF,0,0);
 				dly =0;
 				printf("\n %ld",SPO2_PPG_RED_BUFF[cnt]);
@@ -835,7 +847,7 @@ bool LOD_N;
 				{
 					return  0;
 				}
-				status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, &ECG_temp);
+				status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, &ECG_temp,raw_data_index);
 				status = API_MAX30101_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,0,0);
 			}
 		}
@@ -846,7 +858,7 @@ bool LOD_N;
 		MemSet(BP_PPG_RED_BUFF,0,sizeof(BP_PPG_RED_BUFF));
 		MemSet(BP_PPG_IR_BUFF,0,sizeof(BP_PPG_IR_BUFF));
 		ppg_count = 0;
-		ppg_index_cnt = 0;
+		ecg_index = 0;
 
 		Print_time("\nBP start");
 		for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
@@ -855,7 +867,16 @@ bool LOD_N;
 			{
 				return  0;
 			}
-			status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, &ECG_temp);
+			if(raw_data_index >= 50 && raw_data_index < 650)
+			{
+			ecg_index = raw_data_index - 50;
+			printf("\nRaw data index = %d",ecg_index);
+			}
+			else
+			{
+			//ecg_index = 0;
+			}
+			status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + ecg_index, &ECG_temp,raw_data_index);
 //			ppg_index_cnt++;
 //			if(ppg_index_cnt >=10)
 			{
@@ -864,7 +885,6 @@ bool LOD_N;
 			}
 		}
 		API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
-		ppg_index_cnt = 0;
 		Print_time("\nBP END");
 
 		printf("\n total data ready interrupts = %d\n", ECG_Drdy_count);
@@ -872,7 +892,7 @@ bool LOD_N;
 		ECG_Drdy_count = 0;
 		API_ECG_Stop_Conversion();
 		printf("\nECG L1 data:\n");
-		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
+		for(int i=0;i<600;i++)
 		{
 		  printf("\n%f",BP_ECG_Lead1_buff[i]);
 		}
@@ -885,12 +905,12 @@ bool LOD_N;
 #endif
 
 		printf("\nSPO2 PPG-RED DATA:");
-		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
+		for(int i=0;i<600;i++)
 		{
 		  printf("\n%ld",BP_PPG_RED_BUFF[i]);
 		}
 		printf("\nSPO2 PPG-IR DATA:");
-		for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
+		for(int i=0;i<600;i++)
 		{
 		  printf("\n%ld",BP_PPG_IR_BUFF[i]);
 		}
