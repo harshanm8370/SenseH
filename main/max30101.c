@@ -762,13 +762,13 @@ void writeRegister8(uint8_t address, uint8_t reg, uint8_t value)
 
 					if(!is_dummy_capture)
 					{
-						if(ppg_count >= 50 && ppg_count < 650)
+						if(ppg_count >= 100 && ppg_count < 700)
 						{
 						one_sample  = sample_buff[2U] | (sample_buff[1U] << 8U) | ((sample_buff[0U] & 0x03) << 16U);
-						Red_data[ppg_count - 50] = one_sample >> 2U;
+						Red_data[ppg_count - 100] = one_sample >> 2U;
 
 						one_sample = sample_buff[5U] | (sample_buff[4U] << 8U) | ((sample_buff[3U]  & 0x03) << 16U);
-						IR_data[ppg_count-50] = one_sample >> 2U;
+						IR_data[ppg_count-100] = one_sample >> 2U;
 
 						one_sample = sample_buff[8U] | (sample_buff[4U] << 7U) | ((sample_buff[6U]  & 0x03) << 16U);
 						}

@@ -137,40 +137,75 @@ static double avg_ptt_by_hrt = 0.00;
 
 /*----------------------------------------- FUNCTION DECLARATION ----------------------------------------------------*/
 
-static bool spo2_dummy_capture(void);
-static bool spo2_capture_raw_data(void);
 static bool spo2_4point_average(float input_buff[],float *output_buff, int32_t n_samples);
 static bool spo2_peak_detection(float filter_data[], uint16_t peak_location[],uint8_t *total_peak_count, uint16_t nbfSamples);
 static bool spo2_find_exact_valley_loc(uint8_t *valley_locs_count,uint16_t exact_valley_locs[],
 		 	 	 	 	 	 	 	 	 uint8_t total_peak_count,uint16_t peak_location[]);
 static void spo2_maxim_sort_ascend( uint8_t *buffer_x,uint8_t n_size );
 static uint8_t spo2_ac_dc_component_ratio(uint8_t valley_locs_count,uint16_t exact_valley_locs[],uint8_t ratio_buffer[]);
-static QUICK_TEST_STATUS spo2_store_data_to_flash(const uint32_t spo2_val);
 
-static QUICK_TEST_STATUS bp_dummy_capture(void);
-static QUICK_TEST_STATUS bp_capture_raw_data(void);
 static bool bp_ecg_peak_detection(uint16_t ecg_peak_pos[0], uint8_t *num_peaks);
 static bool bp_ppg_peak_detection(uint16_t ecg_peak_pos[5], uint16_t *ecg_loc_1 ,uint16_t *ecg_loc_2,uint16_t *ppg_peak_pos);
 static void bp_calculation(uint16_t ppgloc, uint16_t ecgloc1, uint16_t ecgloc2, uint16_t *sbp, uint16_t *dbp);
 static uint16_t heart_rate_computation(uint16_t peak_loc[]);
 
-static QUICK_TEST_STATUS bp_store_data_to_flash(const uint16_t sbp, const uint16_t dbp);
-static QUICK_TEST_STATUS ecg_lead1_store_data_to_flash(const uint16_t heart_rate);
 
 static void average_10point(float input[],float averaged_output[]);
 static bool bp_ppg_peak_detection_2nd_validation(float output_ECG_PPG[], uint16_t ecg_peak_pos[],uint16_t ppg_peak_pos[]);
 
 static void quick_test_clear_buffers(void);
-static void quick_test_set_wdog(void);
-static bool spo2_reg_int(void);
-static bool bp_reg_int(void);
-static bool quick_test_flash_memory_status_check(void);
-static QUICK_TEST_STATUS bp_store_multipliers_to_flash(const float sbp_multi,const float dbp_multi);
 
-//off-line feature related functions
-void store_spo2_data_to_flash_offline(uint32_t result);
-void store_bp_data_to_flash(uint32_t result);
-void ecg_lead1_hr_to_flash_offline(uint32_t heart_rate);
+uint16_t Count_PPG_peaks(uint32_t PPG_buff[]);
+
+
+
+
+uint16_t Count_PPG_peaks(uint32_t PPG_buff[])
+{
+
+	uint16_t ncount=0,pcount=0,peak=0,flagp=0,flagn=0;
+
+	  for (int i=0;i<600;i++)
+	  {
+	      if(PPG_buff[i] < PPG_buff[i+1])
+	      {
+//	          if(!(i%20))
+//	          {
+//	              printf("\nno of peaks is %d at point %d",peak,i);
+//	          }
+
+	         if(flagn)
+	         {
+	             flagn=0;
+	             ncount =0;
+	         }
+	          pcount++;
+	          //flagp =1;
+	        //  printf("\n positive peak");
+	      }
+	      if(PPG_buff[i] > PPG_buff[i+1])
+	      {
+	          if(pcount >= 20)
+	          {
+	          flagn =1;
+	          ncount++;
+	          //printf("\n adding negative count");
+	          }//printf("\n negative peak");
+	      }
+
+	      if(pcount >= 25 && ncount >= 10 && flagn == 1)
+	      {
+	          pcount =0;ncount =0;
+	          peak++;
+	          flagn =0;
+	          flagp = 0;
+	      }
+	  }
+	// printf("no of peaks is %d",peak);
+	    return peak;
+
+}
+
 
 bool Lead12_LeadOff_Detect(void);
 
@@ -408,14 +443,19 @@ bool LOD_N;
 								API_IO_Exp_Power_Control(EN_VLED,HIGH);
 								//API_IO_Exp_Power_Control(EN_IR,HIGH);
 								Print_time("\nBP START");
-								if(!(Capture_BP_Data(TRUE)))
-								{
-									Disable_Power_Supply();
-									//return FALSE;
-									LOD_N = 1;
-								}
-								API_IO_Exp_Power_Control(EN_VLED,LOW);
-								Print_time("\nBP END");
+//								for(int i=0;i<20;i++)
+//								{
+//									Delay_ms(2000);
+//									API_IO_Exp_Power_Control(EN_VLED,HIGH);
+									if(!(Capture_BP_Data(TRUE)))
+									{
+										Disable_Power_Supply();
+										//return FALSE;
+										LOD_N = 1;
+									}
+//									API_IO_Exp_Power_Control(EN_VLED,LOW);
+									Print_time("\nBP END");
+//								}
 							}
 #endif
 
@@ -725,13 +765,20 @@ bool LOD_N;
 
 			MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff));
 			MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff));
+			uint16_t ecg_index;
 			for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
 			{
 				if(IsUSB_Charger_Connected() || API_Push_Btn_Get_Buttton_Press())
 				{
 					return  0;
 				}
-				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index,0);
+				if(raw_data_index >= 100 && raw_data_index < 700)
+				{
+					ecg_index = raw_data_index - 100;
+				}
+				else
+					ecg_index = 600;
+				status = API_ECG_Capture_Samples_2Lead(ECG_Lead1_buff + ecg_index, ECG_Lead2_buff+ecg_index,0);
 			}
 			API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
 
@@ -740,13 +787,13 @@ bool LOD_N;
 			API_ECG_Stop_Conversion();
 #if 1
 			printf("\nECG L1 data:\n");
-			for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
+			for(int i=0;i<(600);i++)
 			{
 			  printf("\n%f",ECG_Lead1_buff[i]);
 			}
 
 			printf("\nECG L2 data:\n");
-			for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
+			for(int i=0;i<(600);i++)
 			{
 			  printf("\n%f",ECG_Lead2_buff[i]);
 			}
@@ -810,7 +857,7 @@ bool LOD_N;
 
 		API_TIMER_Register_Timer(LOD_WAIT_TIME);
 		//API_TIMER_Kill_Timer(DATA_SYNC_TIMEOUT);
-		ppg_count = 50;
+		ppg_count = 100;
 		while(1)
 		{
 			dly++;
@@ -867,14 +914,14 @@ bool LOD_N;
 			{
 				return  0;
 			}
-			if(raw_data_index >= 50 && raw_data_index < 650)
+			if(raw_data_index >= 100 && raw_data_index < 700)
 			{
-			ecg_index = raw_data_index - 50;
-			printf("\nRaw data index = %d",ecg_index);
+			ecg_index = raw_data_index - 100;
+//			printf("\nRaw data index = %d",ecg_index);
 			}
 			else
 			{
-			//ecg_index = 0;
+			ecg_index = 600;
 			}
 			status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + ecg_index, &ECG_temp,raw_data_index);
 //			ppg_index_cnt++;
@@ -887,7 +934,11 @@ bool LOD_N;
 		API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
 		Print_time("\nBP END");
 
-		printf("\n total data ready interrupts = %d\n", ECG_Drdy_count);
+		uint16_t PPG_peaks = Count_PPG_peaks(BP_PPG_IR_BUFF);
+		printf("\n \tPPG Peaks = %d ",PPG_peaks);
+
+
+		//printf("\n total data ready interrupts = %d\n", ECG_Drdy_count);
 		ppg_count = 0;
 		ECG_Drdy_count = 0;
 		API_ECG_Stop_Conversion();

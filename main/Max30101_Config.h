@@ -29,8 +29,8 @@ static const uint8_t MAX30101_MODECONFIG =		0x09;
 #define OVF_COUNTER					(uint8_t)0x00u					// OVF_COUNTER counts the number of samples lost. It saturates at 0xF.
 #define FIFO_RD_PTR					(uint8_t)0x00u					// FIFO Read Pointer points to the location from where the processor gets the next sample from the FIFO
 
-#define LED1_PA						(uint8_t)0x3Cu					// Choose value for approx. 7.4mA for LED1
-#define LED2_PA						(uint8_t)0x3Cu					// Choose value for approx. 7.4mA for LED2
+#define LED1_PA						(uint8_t)0x3cu					// Choose value for approx. 7.4mA for LED1
+#define LED2_PA						(uint8_t)0x3cu					// Choose value for approx. 7.4mA for LED2
 #define PILOT_PA					(uint8_t)0x7Fu					// Choose value for approx. 25.4mA for Pilot LED
 
 

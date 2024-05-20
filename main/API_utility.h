@@ -9,7 +9,7 @@
 #include "API_ADS.h"
 #define DATA_BUFFER3_LENGTH			20000U
 #define TOTAL_SAMPLES 600 //1
-#define TOTAL_SAMPLES_VCS (ECG_IN_SECONDS*SET_ODR) //1
+#define TOTAL_SAMPLES_VCS (601) //1
 
 /*-----------------------------------MACROS ------------------------------------------------------------------*/
 #define TRUE				1
