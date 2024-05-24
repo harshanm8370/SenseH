@@ -165,7 +165,7 @@ uint16_t Count_PPG_peaks(uint32_t PPG_buff[])
 
 	uint16_t ncount=0,pcount=0,peak=0,flagp=0,flagn=0;
 
-	  for (int i=0;i<600;i++)
+	  for (int i=0;i<400;i++)
 	  {
 	      if(PPG_buff[i] < PPG_buff[i+1])
 	      {
@@ -885,19 +885,47 @@ bool LOD_N;
 			}
 		}
 		API_Disp_Exit_Text();
+		uint16_t PPG_peaks=0;
 		if(enableDummyCapture)
 		{
-			ppg_count = 0;
-			for(raw_data_index=0; raw_data_index<ECG_DUMMY_CAPTURES; raw_data_index++)// ~3sec dummy capture
+			for (int i=0;i<4;i++)
 			{
-				if(IsUSB_Charger_Connected() || API_Push_Btn_Get_Buttton_Press())
+				ppg_count = 0;
+				for(raw_data_index=0; raw_data_index<ECG_DUMMY_CAPTURES; raw_data_index++)// ~3sec dummy capture
 				{
-					return  0;
+					if(IsUSB_Charger_Connected() || API_Push_Btn_Get_Buttton_Press())
+					{
+						return  0;
+					}
+					status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, &ECG_temp,raw_data_index);
+					status = API_MAX30101_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,0,0);
+
 				}
-				status = API_ECG_Capture_Samples_2Lead(BP_ECG_Lead1_buff + raw_data_index, &ECG_temp,raw_data_index);
-				status = API_MAX30101_Raw_Data_capture_new(BP_PPG_RED_BUFF, BP_PPG_IR_BUFF,0,0);
+				PPG_peaks = Count_PPG_peaks(BP_PPG_IR_BUFF);
+				printf("\n \tPPG Peaks = %d ",PPG_peaks);
+				if(PPG_peaks >= 2)
+				{
+					break;
+				}
+				else
+				{
+					API_Clear_Display(DISP_MIDDLE_SEC,WHITE);
+					API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER_PROPERLY);
+					API_Buzzer_Sound(SHORT_BEEP);
+					Delay_ms(1000);
+				}
 			}
 		}
+//	    PPG_peaks = Count_PPG_peaks(BP_PPG_IR_BUFF);
+//	    printf("\n \tPPG Peaks = %d ",PPG_peaks);
+//		return 0;
+		if(PPG_peaks < 2)
+		{
+		    return 0;
+		}
+
+
+
 
 		printf("\nReal BP Capture START:\n");
 		MemSet(BP_ECG_Lead1_buff,0,sizeof(BP_ECG_Lead1_buff));
@@ -934,7 +962,7 @@ bool LOD_N;
 		API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
 		Print_time("\nBP END");
 
-		uint16_t PPG_peaks = Count_PPG_peaks(BP_PPG_IR_BUFF);
+	    PPG_peaks = Count_PPG_peaks(BP_PPG_IR_BUFF);
 		printf("\n \tPPG Peaks = %d ",PPG_peaks);
 
 
