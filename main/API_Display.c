@@ -2545,11 +2545,11 @@ uint8_t left_offset = 0;
   		}
 
 
-  		if(Data_sync_in_progress)
-  			{
-  				count = 0xFF;
-  				break;
-  			}
+//  		if(Data_sync_in_progress)
+//  			{
+//  				count = 0xFF;
+//  				break;
+//  			}
 
 
   		if(Is_Device_Paired == BT_PAIRED) // Paired condition
@@ -2569,6 +2569,7 @@ uint8_t left_offset = 0;
 
   	switch(count)
   	{
+  	case 0 : ret_msg = OTA; break;
 		case 2 : ret_msg = QUICK_VITALS; break;
 		case 3 : ret_msg = ECG6LEAD; break;
 		case 4 : ret_msg = MULTI_VITALS; break;
@@ -2896,10 +2897,15 @@ uint8_t left_offset = 0;
   				break;
 
   		case DISP_QT_PLACE_FINGER_PROPERLY :
-
-  			mid_text4.text_starting_addr = "   Place    ";
-  			mid_text5.text_starting_addr = "   Finger   ";
-  			mid_text6.text_starting_addr = "  Properly  ";
+  			mid_text2.color = RED;
+  			mid_text3.color = RED;
+  			mid_text4.color = RED;
+  			mid_text2.text_starting_addr = "  Please   ";
+  			mid_text3.text_starting_addr = "   Relax   ";
+  			mid_text4.text_starting_addr = "  fingers  ";
+  			mid_text2.text_status = display;
+  			mid_text3.text_status = display;
+  			mid_text5.text_status = FALSE;
   			bottom_icon.icon_status		 = FALSE;
 
   			break;
