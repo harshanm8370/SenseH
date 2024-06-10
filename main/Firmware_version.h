@@ -8,8 +8,8 @@
 *****************************************************************************************/
 
 
-#define FIRMWARE_VER      		"SHB 0.1"
-#define FIRMWARE_VERSION  		"SHB 0.1"
+#define FIRMWARE_VER      		"SHB 0.11"
+#define FIRMWARE_VERSION  		"SHB 0.11"
 #define FW_VER_SIZE				10
 
 #endif
