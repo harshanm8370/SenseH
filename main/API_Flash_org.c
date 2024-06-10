@@ -199,7 +199,7 @@ uint32_t get_records_count(VITAL_TYPE_t vital_type)
 			printf("for 12 lead : \nREAD addres : %ld \n Write address : %ld",records_pointer.read_addr,records_pointer.write_addr);
 		}
 		records_count = (records_pointer.end_addr - records_pointer.read_addr) / records_pointer.one_record_len;
-		records_count += (records_pointer.start_addr - records_pointer.write_addr) / records_pointer.one_record_len;   
+		records_count += (records_pointer.write_addr - records_pointer.start_addr) / records_pointer.one_record_len;
 	}
 	else {
 		records_count = (records_pointer.write_addr - records_pointer.read_addr) / records_pointer.one_record_len;

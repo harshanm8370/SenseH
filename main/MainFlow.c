@@ -49,7 +49,9 @@ extern BT_STATUS Is_Device_Paired;
 uint8_t qv_flag,mv_flag;
 bool BLE_DS;
 extern uint32_t FW_data_len;
-#define test 0
+#define test 1
+
+
 
 TaskHandle_t myTaskHandle = NULL;
 
