@@ -61,6 +61,7 @@ static void print_char_val_type(esp_adc_cal_value_t val_type)
 }
 #endif
 
+
 void  API_IR_ADC_Init(void)
 {
 #if CONFIG_IDF_TARGET_ESP32

@@ -48,6 +48,7 @@ void Led_Blink(void *pvParameters);
 extern BT_STATUS Is_Device_Paired;
 uint8_t qv_flag,mv_flag;
 bool BLE_DS;
+extern bool ota_data_avlbl;
 extern uint32_t FW_data_len;
 #define test 1
 
@@ -101,7 +102,6 @@ TaskHandle_t myTaskHandle = NULL;
 
     Interfaces_init();
     API_IO_Exp1_P0_write_pin(HIBERNATE,HIGH);//it should be high to  initialize the max30102
-
     //API_RUN_TEMPERATURE_TEST();
 
 	if(API_Flash_Initialize_Data_pointers() == RECORDS_UPDATE_FAILED)
@@ -313,9 +313,15 @@ TaskHandle_t myTaskHandle = NULL;
 								API_TIMER_Register_Timer(USER_INACTIVE_TIMEOUT);
 							}
 
-						if (is_firmware_data_available())
+						if (ota_data_avlbl)
 						{
 							//API_display_backlight_on();
+							printf("\n OTA update detected");
+							API_DISP_Display_Screen(DISP_DEVICE_UPGRADING);
+							Delay_ms(10000);
+							API_display_backlight_off();
+							API_TIMER_Kill_Timer(USER_INACTIVE_TIMEOUT);
+							while(ota_data_avlbl);
 							/*if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
 						    {
 								    API_display_backlight_on();
@@ -323,9 +329,9 @@ TaskHandle_t myTaskHandle = NULL;
 									ota_flag = 0;
 									API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
 							}*/
-							ota_flag = 1;
-							API_TIMER_Kill_Timer(USER_INACTIVE_TIMEOUT);
-							Firmware_upgrade();
+						//	ota_flag = 1;
+
+			//Firmware_upgrade();
 						}
 
 					}
@@ -543,7 +549,10 @@ void HandleDataSync(void)
 	uint8_t btn_press;
 	uint16_t flag=0;
 	//int Dflag=20000;
-
+//	if(ota_data_avlbl)
+//	{
+//		return ;
+//	}
 	API_DISP_Display_Screen(DISP_DATA_SYNC_IN_PROGRESS);
 	//API_Disp_Display_Exit_Bottom_Section();
 
@@ -553,19 +562,20 @@ void HandleDataSync(void)
 	{
 		while(1)
 		{
+
 			/*if(Dflag-- <= 1)
 			{
 				API_display_backlight_off();
 			}*/
 			//ota_flag = 1;
-			if(flag++ < 250)
+			if(flag++ < 150)
 			{
 				API_display_backlight_off();
 			     API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
 			}
-			else if(flag > 250)
+			else if(flag > 150)
 			{
-				if(flag == 500)
+				if(flag == 300)
 				flag = 0;
 				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
 			}
@@ -588,6 +598,7 @@ void HandleDataSync(void)
 				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
 				BLE_DS = 1;
 				disconnect_wifi();
+				Data_sync_in_progress = 0;
 				break;
 			  	//API_Disp_BT_Icon(GREEN);
 			  	//Is_Device_Paired = DEFAULT;// to avoid Redisplaying the same thing again
@@ -619,10 +630,12 @@ void HandleDataSync(void)
 				API_DISP_Display_Screen(DISP_DATA_SYNC_IN_PROGRESS);
 				Delay_ms(200);
 				API_display_backlight_on();
-				Delay_ms(2000);
+				Delay_ms(5000);
 				API_display_backlight_off();
+
 				//break;
 			}
+
 		}
 	}
 	else

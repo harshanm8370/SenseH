@@ -17,9 +17,39 @@
 #include "API_timer.h"
 #include <stdio.h>
 #include <string.h>
+#include "OTA_Upgrade.h"
 
+#include <esp_ota_ops.h>
+#include "esp_system.h"
+#include "esp_event.h"
+#include "esp_log.h"
+#include "esp_ota_ops.h"
+#include "esp_app_format.h"
+#include "esp_flash_partitions.h"
+#include "esp_partition.h"
+#include "nvs.h"
+#include "nvs_flash.h"
+#include "driver/gpio.h"
+#include "errno.h"
+#include "esp_log.h"
+#include "API_utility.h"
+#include "API_IO_Exp.h"
+#include "API_Display.h"
 
+#define BUFFSIZE 			1024
+bool ota_data_avlbl =0;
+extern uint16_t bt_total_received_bytes;
+uint8_t ota_write_data[BUFFSIZE + 1];
+FIRMWARE_UPGRADE_STATE_t Upgrade_state;
+static const char *TAG = "ota";
+#define HASH_LEN 			32 /* SHA-256 digest length */
+//typedef enum { FALSE = 0, TRUE = 1 } Boolean;
+#define TIME_OUT_DELAY		60   //wait delay in sec
+#define BUFFSIZE 			1024
 //Global and Static varioubles
+bool is_OTA_request_arrived;
+ uint32_t FW_buff_index;
+ uint64_t Application_len;
 #define FALSE 0
 #define PORT_NUMBER 5002
 static char tag[] = "socket_server";
@@ -29,6 +59,9 @@ static int sock;
 int recived;
 int temp_flag=0;
 TaskHandle_t Handle = NULL;
+uint16_t received;
+extern uint32_t FW_data_len;
+bool ota_f;
 //Macros
 #define BUF_SIZE 600
 //Structure and enums
@@ -43,9 +76,11 @@ enum {
 typedef struct {
 	uint8_t wifi_status;
 	uint16_t wifi_len;
-	uint16_t wifi_buf[BUF_SIZE];
+	uint8_t wifi_buf[BUF_SIZE];
 } wifi_BUF_t;
 static wifi_BUF_t wifi_buf_rx;
+
+
 
 
 uint32_t API_Wifi_Receive(uint8_t *data_buf)
@@ -95,26 +130,274 @@ void disconnect_wifi()
 	//vTaskDelete(NULL);
 }
 
-void EVAL_REQ_VITAL_CMD(int *recived, char *buff) {
+void EVAL_REQ_VITAL_CMD(uint16_t *received, char *buff) {
     if (!strcmp(buff, "BP")) {
         printf("\nBP selected");
-        *recived = 0x10;
+        *received = 0x10;
     } else if (!strcmp(buff, "SPO2")) {
         printf("\nSPO2 selected");
-        *recived = 0x14;
+        *received = 0x14;
     } else if (!strcmp(buff, "ECG6")) {
         printf("\nECG6 selected");
-        *recived = 0x13;
+        *received = 0x13;
     } else if (!strcmp(buff, "ECG1")) {
         printf("\nECG1 selected");
-        *recived = 0x12;
+        *received = 0x12;
     } else if (!strcmp(buff, "ECG12")) {
         printf("\nECG12 selected");
-        *recived = 0x16;
+        *received = 0x16;
     } else if (!strcmp(buff, "OFF")) {
         printf("\nOFF selected");
-        *recived = 0x20;
+        *received = 0x20;
+    }else if (!strcmp(buff, "OTA")) {
+        printf("\nOTA selected");
+        *received = 0x07;
     }
+}
+uint8_t OTA_UPGRADE(int socket)
+{
+	ota_data_avlbl = 1;
+	ESP_LOGI(TAG, "OTA example app_main start");
+
+			    uint8_t sha_256[HASH_LEN] = { 0 };
+			    esp_partition_t partition;
+
+			    // get sha256 digest for the partition table
+			    partition.address   = ESP_PARTITION_TABLE_OFFSET;
+			    partition.size      = ESP_PARTITION_TABLE_MAX_LEN;
+			    partition.type      = ESP_PARTITION_TYPE_DATA;
+			    esp_partition_get_sha256(&partition, sha_256);
+			    print_sha256(sha_256, "SHA-256 for the partition table: ");
+
+			    // get sha256 digest for bootloader
+			    partition.address   = ESP_BOOTLOADER_OFFSET;
+			    partition.size      = ESP_PARTITION_TABLE_OFFSET;
+			    partition.type      = ESP_PARTITION_TYPE_APP;
+			    esp_partition_get_sha256(&partition, sha_256);
+			    print_sha256(sha_256, "SHA-256 for bootloader: ");
+
+			    // get sha256 digest for running partition
+			    esp_partition_get_sha256(esp_ota_get_running_partition(), sha_256);
+			    print_sha256(sha_256, "SHA-256 for current firmware: ");
+
+			    const esp_partition_t *running = esp_ota_get_running_partition();
+			    esp_ota_img_states_t ota_state;
+			    if (esp_ota_get_state_partition(running, &ota_state) == ESP_OK) {
+			        if (ota_state == ESP_OTA_IMG_PENDING_VERIFY) {
+			            // run diagnostic function ...
+			            bool diagnostic_is_ok = diagnostic();
+			            if (diagnostic_is_ok) {
+			                ESP_LOGI(TAG, "Diagnostics completed successfully! Continuing execution ...");
+			                esp_ota_mark_app_valid_cancel_rollback();
+			            } else {
+			                ESP_LOGE(TAG, "Diagnostics failed! Start rollback to the previous version ...");
+			                esp_ota_mark_app_invalid_rollback_and_reboot();
+			            }
+			        }
+			    }
+
+			    // Initialize NVS.
+			    esp_err_t err = nvs_flash_init();
+			    if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+			        // OTA app partition table has a smaller NVS partition size than the non-OTA
+			        // partition table. This size mismatch may cause NVS initialization to fail.
+			        // If this happens, we erase NVS partition and initialize NVS again.
+			        ESP_ERROR_CHECK(nvs_flash_erase());
+			        err = nvs_flash_init();
+			    }
+			    ESP_ERROR_CHECK( err );
+
+	//OTA_firmwareupdate function init
+			    int timer;
+			    	int data_read;
+			       // esp_err_t err;
+//			    	API_DISP_Display_Screen(DISP_DEVICE_UPGRADING);
+//			    	Delay_ms(5000);
+//			    	API_display_backlight_off();
+			        /* update handle : set by esp_ota_begin(), must be freed via esp_ota_end() */
+			        esp_ota_handle_t update_handle = 0 ;
+			        const esp_partition_t *update_partition = NULL;
+
+			        ESP_LOGI(TAG, "Starting OTA firmware update");
+
+			    	Upgrade_state = DEVICE_UPGRADE_START;
+			        const esp_partition_t *configured = esp_ota_get_boot_partition();
+			        running = esp_ota_get_running_partition();
+
+			        if (configured != running) {
+			            ESP_LOGW(TAG, "Configured OTA boot partition at offset 0x%08lx, but running from offset 0x%08lx",
+			                     configured->address, running->address);
+			            ESP_LOGW(TAG, "(This can happen if either the OTA boot data or preferred boot image become corrupted somehow.)");
+			        }
+			        ESP_LOGI(TAG, "Running partition type %d subtype %d (offset 0x%08lx)",
+			                 running->type, running->subtype, running->address);
+
+			        update_partition = esp_ota_get_next_update_partition(NULL);
+			        assert(update_partition != NULL);
+			        ESP_LOGI(TAG, "Writing to partition subtype %d at offset 0x%lx",
+			                 update_partition->subtype, update_partition->address);
+
+			        int binary_file_length = 0;
+			        /*deal with all received packets*/
+			        bool image_header_was_checked = false;
+
+			    	timer = TIME_OUT_DELAY * 2;
+
+
+			    	FW_complete_data_received = FALSE;
+			    	is_OTA_request_arrived = FALSE;
+			    	uint16_t len=0;
+			    	bool flag =1;
+			while(!FW_complete_data_received )
+			{
+
+				if(flag)
+				{
+					//API_display_backlight_off();
+					API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
+					flag = !flag;
+				}
+				else
+				{
+					flag = !flag;
+					API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
+				}
+				memset(&wifi_buf_rx.wifi_buf, 0, sizeof(wifi_buf_rx.wifi_buf));
+				wifi_buf_rx.wifi_len = recv(socket, (uint8_t*)wifi_buf_rx.wifi_buf, 511/*sizeof(wifi_buf_rx.wifi_buf) - 1*/, 0);
+	//			for(int i=0;i<wifi_buf_rx.wifi_len;i++)
+	//			{
+	//				printf(" %02x, ",wifi_buf_rx.wifi_buf[i]);
+	//			}
+	//			printf("\n");
+
+				len  = wifi_buf_rx.wifi_buf[2] << 8; //computing length field
+							len |= wifi_buf_rx.wifi_buf[3];
+							if (wifi_buf_rx.wifi_len - 4 != len){ //comparing with received with payload len
+								printf("Incorrect length, received: %d, packet len: %d\n", wifi_buf_rx.wifi_len - 4, len);
+								//bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
+								break;
+							}
+							else
+							{
+								printf("correct length, received: %d, packet len: %d\n", wifi_buf_rx.wifi_len - 4, len);
+							}
+							//TODO: Check CRC for the received packet
+
+							//bt_send_ack_or_nack_response(NACK_DEVICE_BUSY); //Processing data
+							if(is_OTA_request_arrived == FALSE){
+								is_OTA_request_arrived = TRUE;
+								//BT_ongoing_session     = TRUE;
+								Data_sync_in_progress  = TRUE;
+								FW_buff_index 	       = 0;
+								Application_len        = 0;
+								FW_complete_data_received = FALSE;
+				//				Upgradation_progress = DISP_DEVICE_UPGRADING;
+							}
+							bt_total_received_bytes = wifi_buf_rx.wifi_len;
+							int ret = BTL_validate_and_copy2buf(wifi_buf_rx.wifi_buf + 4);
+							if (ret == FW_PACKET_CURRUPTED) {
+								//bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
+							}
+							else if (ret == END_OF_FILE_RECORD){
+								FW_complete_data_received = TRUE;
+								is_OTA_request_arrived = FALSE;
+								//BT_ongoing_session = FALSE;
+							} //ACK response will be sent after reading firmware data in case of recevied packet is good
+				//			else if(ret == BT_DISCONNECTED)
+				//			{
+				//				FW_complete_data_received = FALSE;
+				//				is_OTA_request_arrived = FALSE;
+				//			}
+
+							//OTA data write section
+							data_read = read_firmware_data (ota_write_data, BUFFSIZE);
+
+									if(data_read == 2)
+									{
+										return 2;
+									}
+
+									if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
+									{
+									      return FALSE;
+									}
+
+							        if (data_read > 0) {
+							            if (image_header_was_checked == FALSE) {
+							            	image_header_was_checked = TRUE;
+											Upgrade_state = DEVICE_UPGRADING;
+							                err = esp_ota_begin(update_partition, OTA_SIZE_UNKNOWN, &update_handle);
+							                if (err != ESP_OK) {
+								                ESP_LOGE(TAG, "esp_ota_begin failed (%s)", esp_err_to_name(err));
+							                    //esp_ota_abort(update_handle);
+							    	        }
+							                ESP_LOGI(TAG, "esp_ota_begin succeeded");
+							            }
+							         //   esp_log_buffer_hex("OTA", ota_write_data, data_read);
+							            err = esp_ota_write(update_handle, (const void *)ota_write_data, data_read);
+							            if (err != ESP_OK) {
+								            ESP_LOGE(TAG, "esp_ota_write failed (%s)", esp_err_to_name(err));
+							                //esp_ota_abort(update_handle);
+							            }
+							            binary_file_length += data_read;
+							            ESP_LOGI(TAG, "Written image length %d", binary_file_length);
+										timer = TIME_OUT_DELAY * 2;
+							        } else if (data_read == 0) {
+										if (FW_complete_data_received == true){
+							          		ESP_LOGI(TAG, "Received complete firmware file..");
+											break;
+										}
+							        	//vTaskDelay(500 / portTICK_PERIOD_MS);
+										timer--;
+										if (timer <= 0){
+							          		ESP_LOGI(TAG, "TIME-OUT, firmware packet not received...");
+											break;
+										}
+							        }
+			}
+
+			 ESP_LOGI(TAG, "Total Write binary data length: %d", binary_file_length);
+			    if (FW_complete_data_received != true) {
+			        ESP_LOGE(TAG, "Error in receiving complete file");
+			       // esp_ota_abort(update_handle);
+					Upgrade_state = DEVICE_UPGRADE_FAIL;
+					API_display_backlight_on();
+					API_DISP_Display_Screen(DISP_DEVICE_UPGRADATION_FAIL);
+					Delay_ms(5000);
+					esp_restart();
+					return false;
+			    }
+			    err = esp_ota_end(update_handle);
+			    if (err != ESP_OK) {
+			        if (err == ESP_ERR_OTA_VALIDATE_FAILED) {
+			            ESP_LOGE(TAG, "Image validation failed, image is corrupted");
+			        } else {
+			            ESP_LOGE(TAG, "esp_ota_end failed (%s)!", esp_err_to_name(err));
+			        }
+					Upgrade_state = DEVICE_UPGRADE_FAIL;
+					 API_display_backlight_on();
+					API_DISP_Display_Screen(DISP_DEVICE_UPGRADATION_FAIL);
+					Delay_ms(5000);
+					esp_restart();
+					return false;
+			    }
+			    err = esp_ota_set_boot_partition(update_partition);
+			    if (err != ESP_OK) {
+			        ESP_LOGE(TAG, "esp_ota_set_boot_partition failed (%s)!", esp_err_to_name(err));
+					Upgrade_state = DEVICE_UPGRADE_FAIL;
+					API_display_backlight_on();
+					API_DISP_Display_Screen(DISP_DEVICE_UPGRADATION_FAIL);
+					Delay_ms(5000);
+					esp_restart();
+					return false;
+			    }
+			    ESP_LOGI(TAG, "Prepare to restart system!");
+				Upgrade_state = DEVICE_UPGRADE_SUCCESS;
+				API_display_backlight_on();
+				API_DISP_Display_Screen(DISP_DEVICE_UPGRADED);
+				Delay_ms(5000);
+				esp_restart();
+
 }
 
 
@@ -126,6 +409,11 @@ bool wait_for_ack(int socket)
 	memset(&Vital_buff, 0, sizeof(Vital_buff));
 
 	wifi_buf_rx.wifi_len = recv(socket, Vital_buff, sizeof(Vital_buff) - 1, 0);
+	if(Is_Test_In_Progress)
+		{
+			printf("\nTest is in progress, So can not sync the data");
+			return false;
+		}
 	int len =wifi_buf_rx.wifi_len;
 	for(int i=0;i<len;i++)
 	{
@@ -148,9 +436,16 @@ bool wait_for_ack(int socket)
 		wifi_buf_rx.wifi_buf[5]=00;
 
 		//the recived value based upon the client request vital commmand
-		EVAL_REQ_VITAL_CMD(&recived, Vital_buff);
-		wifi_buf_rx.wifi_buf[1]=recived;
-
+		EVAL_REQ_VITAL_CMD(&received, Vital_buff);
+		wifi_buf_rx.wifi_buf[1]=received;
+		if(received == 0x07)
+		{
+			printf("GOing OTA function\n");
+			OTA_UPGRADE(socket);
+		}
+		else
+		{
+			Data_sync_in_progress = TRUE;
 	/*	printf("\n ++++++++++++ Received String (Debug): ");
 		for(int i=0;i< wifi_buf_rx.wifi_len;i++)
 		{
@@ -171,11 +466,14 @@ bool wait_for_ack(int socket)
 
 		// return (wifi_buf_rx.wifi_buf[1] == 20);
 		return temp_flag;
+		}
 
 	}
 
 	return false;
 }
+
+
 
 void wifi_start_access_point() {
 	wifi_config_t wifi_config = {

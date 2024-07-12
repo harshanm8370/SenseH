@@ -102,7 +102,7 @@ static void btn_measure_time_duration()
 
 uint32_t API_Push_Btn_Debounce_check(uint32_t time_elapsed)
 {
-		if(time_elapsed < 200)
+		if(time_elapsed <200)
 		{
 			btn_duration = 0;
 		}
@@ -117,7 +117,7 @@ uint32_t API_Push_Btn_Debounce_check(uint32_t time_elapsed)
 			btn_duration = 2;
 		}
 
-		else if(time_elapsed >= 10000 )//10 sec
+		else if(time_elapsed >= 40000 )//10 sec
 		{
 			btn_duration = 3;
 		}

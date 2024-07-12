@@ -26,8 +26,8 @@
 #include "bluetooth.h"
 #include "Battery_management.h"
 #include "MainFlow.h"
-
-
+extern uint8_t ECG6,ECG1,ECG12,SPO2_f,BP;
+extern bool ota_data_avlbl ;
 extern bool LOD_N;
 extern uint8_t qv_flag;
 uint8_t hospital_pid[MAX_PID_RECORDS];
@@ -1216,6 +1216,15 @@ return 1;
 
  	  		  break;
  	  	  }
+
+ 		case PLEASE_SYNC_DATA :{
+ 			mid_text1.text_starting_addr = "  Take test ";
+ 			mid_text2.text_starting_addr = "  From STD  ";
+ 			mid_text3.text_starting_addr = "   Device   ";
+ 			mid_icon.icon_status = FALSE;
+
+ 		 	  		  break;
+ 		 	  	  }
 
  		case DISP_SPO2_SCREEN :{
  		    mid_icon.icon_starting_addr  = SPO2Icon1;
@@ -2462,14 +2471,27 @@ uint8_t left_offset = 0;
   	printf("\n\nIn View Screen\n");
 
 	btn_press = API_Push_Btn_Get_Buttton_Press(); // Dummy read
+	bool first =1,LOW_space=0;
 
   	while(1)
   	{
 		//btn_press = API_Push_Btn_Get_hold_time();
 
-  		Detect_low_battery_display_notification();
-  		if(API_Check_USB_Charger_Connection_Display_Notification())
+  		//Detect_low_battery_display_notification();
+  		API_Flash_Org_Check_For_Memory_Free();
+  		if( (ECG6 >= 90 || ECG12 >= 40 || SPO2_f >= 90 || BP >= 90 ||ECG1 >= 90) && (API_TIMER_Get_Timeout_Flag(DEEP_SLEEP_TIMEOUT) || first))
   		{
+  			API_DISP_Display_Screen(PLEASE_SYNC_DATA);// critically low voltage
+  			Delay_ms(2000);
+  		 	API_TIMER_Register_Timer(DEEP_SLEEP_TIMEOUT);
+  		 	first =0;
+  		 	LOW_space=1;
+  			//printf("\nmore than 90 samples ");
+  		}
+
+  		if(Detect_low_battery_display_notification() || API_Check_USB_Charger_Connection_Display_Notification() || LOW_space )
+  		{
+  			LOW_space =0;
   			API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
   			API_Disp_Display_Text(text1, text2, text3, text4, text5, text6, text7);
   			API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
@@ -2545,11 +2567,11 @@ uint8_t left_offset = 0;
   		}
 
 
-//  		if(Data_sync_in_progress)
-//  			{
-//  				count = 0xFF;
-//  				break;
-//  			}
+  		if(Data_sync_in_progress)
+  			{
+  				count = 0xFF;
+  				break;
+  			}
 
 
   		if(Is_Device_Paired == BT_PAIRED) // Paired condition
@@ -2562,6 +2584,9 @@ uint8_t left_offset = 0;
 		{
 			API_Disp_BT_Icon(WHITE);
 			Is_Device_Paired = DC;
+			Selected_PID_type = PID_NOT_SELECTED;
+			ret_msg = NO_TEST;
+			break;
 		}
 
   		//printf("\nbtn_press=%d\n",btn_press);
@@ -2900,9 +2925,9 @@ uint8_t left_offset = 0;
   			mid_text2.color = RED;
   			mid_text3.color = RED;
   			mid_text4.color = RED;
-  			mid_text2.text_starting_addr = "  Please   ";
-  			mid_text3.text_starting_addr = "   Relax   ";
-  			mid_text4.text_starting_addr = "  fingers  ";
+  			mid_text2.text_starting_addr = " Press";
+  			mid_text3.text_starting_addr = " Finger ";
+  			mid_text4.text_starting_addr = " Gently";
   			mid_text2.text_status = display;
   			mid_text3.text_status = display;
   			mid_text5.text_status = FALSE;
@@ -3327,7 +3352,7 @@ uint8_t left_offset = 0;
 //		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
 		gpio_set_level(ECG_CSn_VCS, 1);
 
- 		api_disp_display_char( " SHB 0.1 ", font19x10, WHITE, BLACK, 20, 100);
+ 		api_disp_display_char( " SHB 0.11 ", font19x10, WHITE, BLACK, 20, 100);
  		//api_disp_display_char(FIRMWARE_VERSION, font19x10, BLUE, BLACK, 5, 120);
   }
 
@@ -3442,7 +3467,7 @@ bool API_DISP_Memory_Full_Status(void)
 
        if((IsUSB_Charger_Connected()))
        {
-
+    	   printf("\n charger connected");
    		struct DISPLAY_TEXT mid_sec_text1,mid_sec_text2,mid_sec_text3,mid_sec_text4,mid_sec_text5,mid_sec_text6,mid_sec_text7;
 
    		mid_sec_text2.text_starting_addr = "   PLEASE   ";
@@ -3480,10 +3505,6 @@ bool API_DISP_Memory_Full_Status(void)
    				printf("\n charger not connected");
    				status = true;
    				break;
-   			}
-   			else
-   			{
-   				printf("\n charger connected");
    			}
    		}
    		//Delay_ms(DISP_NOTIFICATION_TIME);
@@ -3719,16 +3740,32 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
 	//api_disp_set_pointer_driver_side(col_start,DISP_MAX_COLS,row_start,DISP_MAX_ROWS);
 			 	 api_disp_display_icon (SenseHlargelogo, 15, 42,BLUE, WHITE);
+			 	 bool first=1,LOW_space=0;
 
   	while(1)
   	{
-
-  		Detect_low_battery_display_notification();
-  		if(API_Check_USB_Charger_Connection_Display_Notification())
+//  		if(ota_data_avlbl)
+//  		{
+//  			return 0;
+//  		}
+  		API_Flash_Org_Check_For_Memory_Free();
+  		  		if( (ECG6 >= 90 || ECG12 >= 40 || SPO2_f >= 90 || BP >= 90 ||ECG1 >= 90) && (API_TIMER_Get_Timeout_Flag(DEEP_SLEEP_TIMEOUT) || first))
+  		  		{
+  		  			API_DISP_Display_Screen(PLEASE_SYNC_DATA);// critically low voltage
+  		  			Delay_ms(2000);
+  		  		 	API_TIMER_Register_Timer(DEEP_SLEEP_TIMEOUT);
+  		  		 	first =0;
+  		  		 	LOW_space=1;
+  		  			//printf("\nmore than 90 samples ");
+  		  		}
+  		if(API_Check_USB_Charger_Connection_Display_Notification() || Detect_low_battery_display_notification() || LOW_space)
   		{
+  			LOW_space =0;
   			api_disp_display_icon (SenseHlargelogo, 15, 42,BLUE, WHITE);
   			//API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+
   			API_Disp_Display_Text(text1, text2, text3, text4, text5, text6, text7);
+  			api_disp_display_icon(star,left_offset,top_offset,RED,WHITE);
   			API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
   		}
 
@@ -3818,6 +3855,7 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
   		if(Data_sync_in_progress)
   			{
+         		printf("\n data sync started...........................................%d",ota_data_avlbl);
   				count = 0xFF;
   				break;
   			}

@@ -55,6 +55,7 @@ static const uint8_t spp_adv_data[23] = {
     0x03,0x03,0xF0,0xAB,
     /* Complete device Name in advertising */
     0x0F,0x09, 'S', 'S', 'H', '-', '2', '2', '-', '0', '1', '4'
+
 };
 
 static uint16_t mtu_size = 23;

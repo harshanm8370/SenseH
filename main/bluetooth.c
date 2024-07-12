@@ -98,7 +98,7 @@ static uint8_t wf_tx_buff[2]={4,4};
 static uint8_t bt_rx_buff[600] = {0};
 //static uint8_t wf_rx_buff[600] = {0};
 static uint8_t client_request_cmd = 0;
-static uint16_t bt_total_received_bytes = 0;
+uint16_t bt_total_received_bytes = 0;
 static uint16_t count = 0;
 static uint16_t skip_count = 0;
 static uint32_t remainder = 0;
@@ -200,7 +200,7 @@ bool BT_process_requests(void)
 			task_close =0;
 		}
 		API_TCP_Server();
-		Data_sync_in_progress = TRUE;
+		Data_sync_in_progress = FALSE;
 		BT_ongoing_session = false;
 		Print_time("/SYNC start");
 		break;
@@ -408,6 +408,10 @@ bool BT_process_requests(void)
 				printf("Incorrect length, received: %d, packet len: %d\n", bt_total_received_bytes - 4, len);
 				bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
 				break;
+			}
+			else
+			{
+				printf("correct length, received: %d, packet len: %d\n", bt_total_received_bytes - 4, len);
 			}
 			//TODO: Check CRC for the received packet
 

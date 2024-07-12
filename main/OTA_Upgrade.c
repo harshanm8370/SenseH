@@ -41,7 +41,7 @@ static uint8_t ota_write_data[BUFFSIZE + 1] = { 0 };
 
 static FIRMWARE_UPGRADE_STATE_t Upgrade_state;
 
-static void print_sha256 (const uint8_t *image_hash, const char *label)
+void print_sha256 (const uint8_t *image_hash, const char *label)
 {
     char hash_print[HASH_LEN * 2 + 1];
     hash_print[HASH_LEN * 2] = 0;
@@ -165,7 +165,7 @@ static char ota_firmware_upgrade(void)
     return true;
 }
 
-static bool diagnostic(void)
+bool diagnostic(void)
 {
     gpio_config_t io_conf;
     io_conf.intr_type    = GPIO_INTR_DISABLE;

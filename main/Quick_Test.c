@@ -22,6 +22,8 @@
 #include "Battery_management.h"
 #include "max30101_config.h"
 
+
+extern uint8_t ECG6,ECG1,ECG12,SPO2_f,BP;
 // MACROS REQUIRED FOR WDOG SpO2
 
 #define SPO2_WAIT_TIME							5
@@ -193,7 +195,7 @@ uint16_t Count_PPG_peaks(uint32_t PPG_buff[])
 	          }//printf("\n negative peak");
 	      }
 
-	      if(pcount >= 25 && ncount >= 10 && flagn == 1)
+	      if(pcount >= 35 && ncount >= 10 && flagn == 1)
 	      {
 	          pcount =0;ncount =0;
 	          peak++;
@@ -279,7 +281,7 @@ bool skip_quick_test = FALSE;
 	printf("\nTest completed.");
 	return true;
 }*/
-bool LOD_N;
+bool LOD_N =0;
 
  bool Run_Quick_Vital(void)
 {
@@ -299,7 +301,6 @@ bool LOD_N;
 	// API_IO_Exp_Power_Control(EN_IR,HIGH);
 
 
-
 	if((Selected_PID_type == VALID_PID) || (Selected_PID_type == GUEST_PID))
 	{
 			if(API_Flash_Org_Check_For_Memory_Free())
@@ -307,6 +308,10 @@ bool LOD_N;
 
 				//API_Buzzer_Sound(SHORT_BEEP);
 
+				for(int i=0;i<91;i++)
+				{
+					Store_QuickTest1_Data_To_Flash();
+				}
 				API_Disp_Quick_Test_Icon();
 
 				API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER);
@@ -447,18 +452,20 @@ bool LOD_N;
 //								{
 //									Delay_ms(2000);
 //									API_IO_Exp_Power_Control(EN_VLED,HIGH);
+
+								LOD_N = 0;
 									if(!(Capture_BP_Data(TRUE)))
 									{
 										Disable_Power_Supply();
 										//return FALSE;
 										LOD_N = 1;
 									}
-//									API_IO_Exp_Power_Control(EN_VLED,LOW);
+							//	API_IO_Exp_Power_Control(EN_VLED,LOW);
 									Print_time("\nBP END");
 //								}
 							}
 #endif
-
+							Disable_Power_Supply();
 //                            if(mv_flag)
 //                            {
 							   API_Disp_Quick_Test_Result();
@@ -482,14 +489,36 @@ bool LOD_N;
 				 API_DISP_Memory_Full_Status();
 #if 1 //Enabled for Debug purpose to delete all 100 data
 				 for(int delete_rec = 1; delete_rec <=100; delete_rec++)
-				 {
-					 printf("\n Deleting Record = %d",delete_rec);
-					 erase_one_record(BP1);
-					 erase_one_record(ECG_1_Lead);
-					 erase_one_record(ECG_6_Lead);
-					 erase_one_record(SPO2);
-					 API_Flash_Check_Update_Valid_Record_Status();
-				 }
+				 						 {
+				 							 printf("\n Deleting Record = %d",delete_rec);
+				 							 if(BP)
+				 							 {
+				 								 printf("\ncalling BP erase record");
+				 							 erase_one_record(BP1);
+				 							 }
+				 							 if(ECG1)
+				 							 {
+				 								 printf("\ncalling ECG1 erase record");
+				 							 erase_one_record(ECG_1_Lead);
+				 							 }
+				 							 if(ECG6)
+				 							 {
+				 								 printf("\ncalling ECG6 erase record");
+				 							 erase_one_record(ECG_6_Lead);
+				 							 }
+				 							 if(SPO2_f)
+				 							 {
+				 								 printf("\ncalling ECG6 erase record");
+				 							 erase_one_record(SPO2);
+				 							 }
+				 							 API_Flash_Check_Update_Valid_Record_Status();
+				 						 }
+				 						 SPO2_f=0;
+				 						 ECG1=0;
+				 						 ECG12=0;
+				 						 ECG6=0;
+				 						 BP=0;
+
 #endif
 			}
 	}
@@ -510,7 +539,7 @@ bool LOD_N;
   	{
   		Selected_PID_type = PID_NOT_SELECTED;
   	}
-
+  	Disable_Power_Supply();
 	return true;
 }
 
@@ -923,8 +952,8 @@ bool LOD_N;
 		{
 		    return 0;
 		}
-
-
+		API_Disp_Quick_Test_Icon();
+		API_Disp_Quick_test_screen(DISP_QT_BP_TEST_IN_PROGRESS);
 
 
 		printf("\nReal BP Capture START:\n");
@@ -1130,7 +1159,6 @@ void Store_QuickTest1_Data_To_Flash(void)
 		MemCpy(BT_flash_buffer+offfset,BP_ECG_Lead1_buff,(SPO2_RED_SAMPLES*4));
 		offfset += 1200*4;
 		status = API_Flash_Write_Record(BP1,(void*)BT_flash_buffer);
-
 		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(BP_DATA_STORE_TO_FLASH_FAIL);
 
 
@@ -1150,7 +1178,6 @@ void Store_QuickTest1_Data_To_Flash(void)
 
 
 		status = API_Flash_Write_Record(ECG_1_Lead,(void*)BT_flash_buffer);
-
 		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(ECG_DATA_STORE_TO_FLASH_FAIL);
 
 		offfset = 0;
@@ -1167,7 +1194,6 @@ void Store_QuickTest1_Data_To_Flash(void)
 		MemCpy(BT_flash_buffer+offfset,BP_PPG_IR_BUFF,(SPO2_IR_SAMPLES*4));
 
 		status = API_Flash_Write_Record(SPO2,(void*)BT_flash_buffer);
-
 		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(SPO2_DATA_STORE_TO_FLASH_FAIL);
 	}
 

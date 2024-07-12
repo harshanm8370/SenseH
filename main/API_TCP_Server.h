@@ -18,6 +18,6 @@ void wifi_restart(void);
 void wifi_send_data(uint8_t* data, size_t length);
 bool wait_for_ack(int socket);
 uint32_t API_Wifi_Receive(uint8_t *data_buff);
-void EVAL_REQ_VITAL_CMD(int *recived, char *buff);
-
+void EVAL_REQ_VITAL_CMD(uint16_t *recived, char *buff);
+uint8_t OTA_UPDATE(void);
 
