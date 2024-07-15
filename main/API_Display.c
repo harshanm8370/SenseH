@@ -1218,9 +1218,10 @@ return 1;
  	  	  }
 
  		case PLEASE_SYNC_DATA :{
- 			mid_text1.text_starting_addr = "  Take test ";
- 			mid_text2.text_starting_addr = "  From STD  ";
- 			mid_text3.text_starting_addr = "   Device   ";
+ 			mid_icon.icon_status    = OFF;
+ 			mid_text1.text_starting_addr = "MEMORY LOW";
+ 			mid_text2.text_starting_addr = " SYNC DATA";
+ 			mid_text3.text_starting_addr = "   data   ";
  			mid_icon.icon_status = FALSE;
 
  		 	  		  break;
@@ -2436,7 +2437,7 @@ uint8_t left_offset = 0;
 	uint8_t left_offset = 20;
 	uint8_t btn_press;
 
-  	struct DISPLAY_TEXT text1,text2,text3,text4,text5,text6,text7;
+  	struct DISPLAY_TEXT text1,text2,text3,text4,text5,text6,text7,T1,T2,T3,T4,T5,T6,T7;
 
   	text1.color= BLUE;
   	text1.text_starting_addr = "   Select   ";
@@ -2476,12 +2477,14 @@ uint8_t left_offset = 0;
   	while(1)
   	{
 		//btn_press = API_Push_Btn_Get_hold_time();
-
+  	//API_DISP_Display_Screen(PLEASE_SYNC_DATA);
   		//Detect_low_battery_display_notification();
   		API_Flash_Org_Check_For_Memory_Free();
+
   		if( (ECG6 >= 90 || ECG12 >= 40 || SPO2_f >= 90 || BP >= 90 ||ECG1 >= 90) && (API_TIMER_Get_Timeout_Flag(DEEP_SLEEP_TIMEOUT) || first))
   		{
-  			API_DISP_Display_Screen(PLEASE_SYNC_DATA);// critically low voltage
+  			//API_DISP_Display_Screen(PLEASE_SYNC_DATA);// critically low voltage
+  			 API_DISP_Memory_LOW_Status();
   			Delay_ms(2000);
   		 	API_TIMER_Register_Timer(DEEP_SLEEP_TIMEOUT);
   		 	first =0;
@@ -3357,38 +3360,70 @@ uint8_t left_offset = 0;
   }
 
 
+  bool API_DISP_Memory_LOW_Status(void)
+   {
+   		struct DISPLAY_TEXT mid_sec_text1,mid_sec_text2,mid_sec_text3,mid_sec_text4,mid_sec_text5,mid_sec_text6,mid_sec_text7;
 
-bool API_DISP_Memory_Full_Status(void)
-{
-		struct DISPLAY_TEXT mid_sec_text1,mid_sec_text2,mid_sec_text3,mid_sec_text4,mid_sec_text5,mid_sec_text6,mid_sec_text7;
+   		bool check_status = TRUE;
 
-		bool check_status = TRUE;
+   		mid_sec_text2.text_starting_addr = "MEMORY LOW";
+   		mid_sec_text2.color = BLUE;
+   		mid_sec_text2.text_status = display;
 
-		mid_sec_text2.text_starting_addr = "MEMORY FULL";
-		mid_sec_text2.color = BLUE;
-		mid_sec_text2.text_status = display;
+   		mid_sec_text3.text_starting_addr = "PLEASE SYNC ";
+   		mid_sec_text3.color = BLUE;
+   		mid_sec_text3.text_status = display;
 
-		mid_sec_text3.text_starting_addr = "PLEASE SYNC ";
-		mid_sec_text3.color = BLUE;
-		mid_sec_text3.text_status = display;
+   		mid_sec_text4.text_starting_addr = "   DATA     ";
+   		mid_sec_text4.color = BLUE;
+   		mid_sec_text4.text_status = display;
 
-		mid_sec_text4.text_starting_addr = "   DATA     ";
-		mid_sec_text4.color = BLUE;
-		mid_sec_text4.text_status = display;
+   		mid_sec_text1.text_status = FALSE;
+   		mid_sec_text5.text_status = FALSE;
+   		mid_sec_text6.text_status = FALSE;
+   		mid_sec_text7.text_status = FALSE;
 
-		mid_sec_text1.text_status = FALSE;
-		mid_sec_text5.text_status = FALSE;
-		mid_sec_text6.text_status = FALSE;
-		mid_sec_text7.text_status = FALSE;
+   		API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
 
-		API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+   		API_Disp_Display_Text(mid_sec_text1,mid_sec_text2, mid_sec_text3,mid_sec_text4, mid_sec_text5,mid_sec_text6,mid_sec_text7);
+   		API_Clear_Display(DISP_BOTTOM_SEC , BLUE);
+   		Delay_ms(DISP_NOTIFICATION_TIME);
 
-		API_Disp_Display_Text(mid_sec_text1,mid_sec_text2, mid_sec_text3,mid_sec_text4, mid_sec_text5,mid_sec_text6,mid_sec_text7);
-		API_Clear_Display(DISP_BOTTOM_SEC , BLUE);
-		Delay_ms(DISP_NOTIFICATION_TIME);
+   		return check_status;
+   }
 
-		return check_status;
-}
+
+  bool API_DISP_Memory_Full_Status(void)
+  {
+  		struct DISPLAY_TEXT mid_sec_text1,mid_sec_text2,mid_sec_text3,mid_sec_text4,mid_sec_text5,mid_sec_text6,mid_sec_text7;
+
+  		bool check_status = TRUE;
+
+  		mid_sec_text2.text_starting_addr = "MEMORY FULL";
+  		mid_sec_text2.color = BLUE;
+  		mid_sec_text2.text_status = display;
+
+  		mid_sec_text3.text_starting_addr = " ERASING  ";
+  		mid_sec_text3.color = BLUE;
+  		mid_sec_text3.text_status = display;
+
+  		mid_sec_text4.text_starting_addr = "   DATA     ";
+  		mid_sec_text4.color = BLUE;
+  		mid_sec_text4.text_status = display;
+
+  		mid_sec_text1.text_status = FALSE;
+  		mid_sec_text5.text_status = FALSE;
+  		mid_sec_text6.text_status = FALSE;
+  		mid_sec_text7.text_status = FALSE;
+
+  		API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+
+  		API_Disp_Display_Text(mid_sec_text1,mid_sec_text2, mid_sec_text3,mid_sec_text4, mid_sec_text5,mid_sec_text6,mid_sec_text7);
+  		API_Clear_Display(DISP_BOTTOM_SEC , BLUE);
+  		Delay_ms(DISP_NOTIFICATION_TIME);
+
+  		return check_status;
+  }
 
 
   void API_DISP_Update_Battery_Status(BATTERY_PONINTS_t points,bool charging, bool empty,uint16_t color)

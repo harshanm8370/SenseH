@@ -490,6 +490,7 @@ bool LOD_N =0;
 #if 1 //Enabled for Debug purpose to delete all 100 data
 				 for(int delete_rec = 1; delete_rec <=100; delete_rec++)
 				 						 {
+					 printf("\n BP %d ",BP);
 				 							 printf("\n Deleting Record = %d",delete_rec);
 				 							 if(BP)
 				 							 {

@@ -834,15 +834,20 @@ bool API_Flash_Org_Check_For_Memory_Free(void)
 							SPO2_f=nbf_records.spo2_records;
 							if(nbf_records.temp_records < MAX_RECORDS)
 							{
-								status = true;
+								return true;
 							}
 						}
 					}
 				}
 			}
 		}
-	}
 
+	}
+	BP =nbf_records.bp1_records;
+				ECG1 =nbf_records.ecg_1_records;
+				SPO2_f=nbf_records.spo2_records;
+				ECG12 = nbf_records.ecg_12_lead_ecord;
+				ECG6 =nbf_records.ecg_3_records;
 	return status;
 }
 

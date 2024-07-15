@@ -117,7 +117,7 @@ uint32_t API_Push_Btn_Debounce_check(uint32_t time_elapsed)
 			btn_duration = 2;
 		}
 
-		else if(time_elapsed >= 40000 )//10 sec
+		else if(time_elapsed >= 4000 )//10 sec
 		{
 			btn_duration = 3;
 		}

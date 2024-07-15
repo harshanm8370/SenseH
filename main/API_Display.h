@@ -298,6 +298,7 @@ void API_Disp_Reset_Screen(void);
 void API_DISP_Toggle_Date_Time(void);
 void API_DISP_Firmware_Version(void);
 bool API_DISP_Memory_Full_Status(void);
+bool API_DISP_Memory_LOW_Status(void);
 void API_DISP_Update_Battery_Status(BATTERY_PONINTS_t points,bool charging, bool empty,uint16_t color);
 
 void API_DISP_Error_Code(uint32_t Error);
