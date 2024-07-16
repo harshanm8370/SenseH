@@ -50,7 +50,7 @@ uint8_t qv_flag,mv_flag;
 bool BLE_DS;
 extern bool ota_data_avlbl;
 extern uint32_t FW_data_len;
-#define test 1
+#define test 0
 
 
 

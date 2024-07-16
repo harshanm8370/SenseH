@@ -308,10 +308,10 @@ bool LOD_N =0;
 
 				//API_Buzzer_Sound(SHORT_BEEP);
 
-				for(int i=0;i<91;i++)
-				{
-					Store_QuickTest1_Data_To_Flash();
-				}
+//				for(int i=0;i<91;i++)
+//				{
+//					Store_QuickTest1_Data_To_Flash();
+//				}
 				API_Disp_Quick_Test_Icon();
 
 				API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER);
