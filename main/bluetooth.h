@@ -140,7 +140,7 @@ typedef struct __attribute__((__packed__))
 	uint8_t     sos;
 	uint8_t     cmd;
 	uint16_t    length;
-	uint8_t 	data[10];
+	uint8_t 	data[3];
 	uint8_t     eos;
 	uint16_t    chksum;
 }FW_VER_RESPONSE;

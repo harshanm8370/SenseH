@@ -486,6 +486,25 @@ uint32_t API_BLE_Transmit(uint8_t *buf, uint16_t numbytes)
     return TX_RX_SUCCESS;
 }
 
+uint32_t API_BLE_Transmitchar(char *buf, uint16_t numbytes)
+{
+    if (numbytes > BLE_SPP_MTU) {
+        ESP_LOGE(API_BLE_TAG, "API_BLE_Transmit, Data len: %d, out of limit\n", numbytes);
+        return TX_RX_FAILED;
+    }
+
+
+	memset(tx_buf.buf, 0x0, sizeof(tx_buf.buf));
+    memcpy(tx_buf.buf, buf, numbytes);
+	tx_buf.len = numbytes;
+
+    return TX_RX_SUCCESS;
+}
+
+
+
+
+
 uint32_t API_BLE_Receive(uint8_t *data_buf)
 {
 //	printf("Total data received: %d\n", rx_buf.len);

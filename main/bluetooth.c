@@ -881,7 +881,10 @@ void bt_firmware_request_response(void)
 	frame.sos = SOS;
 	frame.cmd = EOR;
 	frame.length = FW_VER_SIZE + EOS_SIZE + CHKSUM_SIZE;
-	MemCpy(&frame.data, FIRMWARE_VERSION, sizeof(FIRMWARE_VERSION));
+	frame.data[0] = 1; // major fw version
+	frame.data[1] = 0; // minor fw version
+	frame.data[2] = 0; // bug fix
+	//MemCpy(&frame.data, FIRMWARE_VERSION, sizeof(FIRMWARE_VERSION));
 	frame.eos = EOS;
 	frame.chksum = compute_crc_16((uint8_t*)&frame, sizeof(frame)-CHKSUM_SIZE);
 	API_BLE_Transmit((uint8_t*)&frame, sizeof(frame));

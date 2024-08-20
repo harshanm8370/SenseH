@@ -1156,9 +1156,9 @@ void Store_QuickTest1_Data_To_Flash(void)
 
 		offfset = REC_HEADER_LEN;
 		MemCpy(BT_flash_buffer+offfset,BP_PPG_IR_BUFF,(SPO2_RED_SAMPLES*4));
-		offfset += 1200*4;
+		offfset += 600*4;
 		MemCpy(BT_flash_buffer+offfset,BP_ECG_Lead1_buff,(SPO2_RED_SAMPLES*4));
-		offfset += 1200*4;
+		offfset += 600*4;
 		status = API_Flash_Write_Record(BP1,(void*)BT_flash_buffer);
 		if(status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(BP_DATA_STORE_TO_FLASH_FAIL);
 

@@ -52,6 +52,7 @@ enum{
 void API_BLE_Init(void);
 uint8_t API_BLE_Conn_Status(void);
 uint32_t API_BLE_Transmit(uint8_t *tx_buff, uint16_t numbytes);
+uint32_t API_BLE_Transmitchar(char *buf, uint16_t numbytes);
 uint32_t API_BLE_Receive(uint8_t *data_buff);
 uint8_t API_BLE_Signal_Strength(void);
 uint8_t API_BLE_Disconnect_Device(void);

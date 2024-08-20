@@ -3762,6 +3762,7 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 		API_Clear_Display(DISP_TOP_SEC,BLUE);
 		API_Disp_BT_Icon(WHITE);
 		API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+		 api_disp_display_icon (SenseHlargelogo, 15, 42,BLUE, WHITE);
 		API_Disp_Display_Text(text1, text2, text3, text4, text5, text6, text7);
 	  	API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
 	}
@@ -3774,7 +3775,8 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 //	api_disp_display_icon(star,left_offset,top_offset,RED,WHITE);
 
 	//api_disp_set_pointer_driver_side(col_start,DISP_MAX_COLS,row_start,DISP_MAX_ROWS);
-			 	 api_disp_display_icon (SenseHlargelogo, 15, 42,BLUE, WHITE);
+	//API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+			 	// api_disp_display_icon (SenseHlargelogo, 15, 42,BLUE, WHITE);
 			 	 bool first=1,LOW_space=0;
 
   	while(1)
