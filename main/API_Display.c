@@ -3527,9 +3527,9 @@ void API_Disp_Lead_Count(uint8_t lead)
 	StrCat(string2,string1);
 	StrCat(string2,"  ");
 
-	mid_text1.text_starting_addr =string2;
-	mid_text2.text_starting_addr = " Capture In ";
-	mid_text3.text_starting_addr = "  Progress  ";
+	mid_text1.text_starting_addr =string1;
+//	mid_text2.text_starting_addr = " Capture In ";
+//	mid_text3.text_starting_addr = "  Progress  ";
 
 
   	API_Display_Middle_Section(mid_icon,mid_text1,mid_text2,mid_text3);

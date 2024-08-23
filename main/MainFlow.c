@@ -99,8 +99,9 @@ TaskHandle_t myTaskHandle = NULL;
 
     Interfaces_init();
     API_IO_Exp1_P0_write_pin(HIBERNATE,HIGH);//it should be high to  initialize the max30102
-
-    //API_RUN_TEMPERATURE_TEST();
+#if 1
+     API_RUN_TEMPERATURE_TEST();
+#endif
 
 	if(API_Flash_Initialize_Data_pointers() == RECORDS_UPDATE_FAILED)
 	   {
