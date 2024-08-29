@@ -8,7 +8,7 @@
 #include "esp_system.h"
 #include "driver/spi_master.h"
 #include "driver/gpio.h"
-
+#include "API_IO_Exp.h"
 #include "freertos/task.h"
 #include "protofonts.h"
 #include "icons.h"
@@ -24,7 +24,12 @@
 #include "OTA_Upgrade.h"
 #include "ProjectConfiguration.h"
 #include "bluetooth.h"
-
+#include "Battery_management.h"
+#include "MainFlow.h"
+extern uint8_t ECG6,ECG1,ECG12,SPO2_f,BP;
+extern bool ota_data_avlbl ;
+extern bool LOD_N;
+extern uint8_t qv_flag;
 uint8_t hospital_pid[MAX_PID_RECORDS];
 
 typedef struct __attribute__((__packed__))
@@ -126,6 +131,7 @@ uint8_t TestStateCounter = 0;
 
 #define ENABLE_3_WIRE_DISP     true
 #define DONT_DISPLAY           0
+//#define MARKETING_REQUIREMENT 1
 
 static void send_d_or_c_bit(bool d_or_c);
 
@@ -149,6 +155,7 @@ static void api_disp_display_screen1_PIDS(void);
 
 static void api_disp_display_time(uint8_t hour, uint8_t minute);
 static void api_disp_display_date(uint8_t day,char * month);
+void API_Disp_Exit_Text(void);
 
 static void api_disp_display_icon(const uint8_t *ImgPointer, uint8_t left_offset, uint8_t top_offset, uint16_t IconColor, uint16_t BGColor);
 
@@ -686,7 +693,10 @@ api_disp_write_data_1byte(disp_spi,0x00,1);         // start address 0
 void API_DISP_Clear_Full_Screen_3_Wire(uint16_t color)
 {
 	int i;
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
+	API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
+	API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
 
 	API_IO_Exp1_P1_write_pin(DISPLAY_CSN, LOW);
 	api_disp_write_com(SET_COLUMN_ADDRESS); // Column address setting
@@ -701,6 +711,8 @@ api_disp_write_data(0x7f);         // end address 127
 	api_disp_write_data(0x00);         // end address 0
 	api_disp_write_data(0xA0);           // end address 160
 	api_disp_write_com(WRITE_MEMORY_START); //command for storing the pixel data in the display_RAM
+	//API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
+	//API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
 
 	for(i = 0; i < DISP_TOTAL_PIXELS; i++)//Transmit all 128*160 pixel data ,per pixel will have 16bit
 	{
@@ -864,7 +876,8 @@ return 1;
  {
 	API_IO_Exp_Select(IO_EXPANDER_1);
 
-	API_IO_Exp1_P1_write_pin(ECG_CSN, HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN, HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
 	API_IO_Exp1_P0_write_pin(EFM_DISP_RESN, HIGH);
 	API_IO_Exp1_P1_write_pin(DISPLAY_CSN, LOW);
@@ -1203,6 +1216,16 @@ return 1;
 
  	  		  break;
  	  	  }
+
+ 		case PLEASE_SYNC_DATA :{
+ 			mid_icon.icon_status    = OFF;
+ 			mid_text1.text_starting_addr = "MEMORY LOW";
+ 			mid_text2.text_starting_addr = " SYNC DATA";
+ 			mid_text3.text_starting_addr = "   data   ";
+ 			mid_icon.icon_status = FALSE;
+
+ 		 	  		  break;
+ 		 	  	  }
 
  		case DISP_SPO2_SCREEN :{
  		    mid_icon.icon_starting_addr  = SPO2Icon1;
@@ -1732,7 +1755,22 @@ return 1;
  				bottom_icon.icon_starting_addr 	= FALSE ;
  				break;
  		}
+ 		case BLUETOOTH_DISCONNECTED:
+		{
+ 			mid_text1.text_starting_addr = "  Bluetooth ";
+ 			mid_text2.text_starting_addr = "disconnected";
+ 			mid_text3.text_status = FALSE;
+ 			break;
 
+		}
+ 		case WIFI_DISABLED:
+ 		{
+ 			mid_text1.text_starting_addr = "  WIFI ";
+ 			mid_text2.text_starting_addr = "disabled!";
+ 			mid_text3.text_status = FALSE;
+ 			break;
+
+ 		}
 
  		default :break;
 
@@ -2399,7 +2437,7 @@ uint8_t left_offset = 0;
 	uint8_t left_offset = 20;
 	uint8_t btn_press;
 
-  	struct DISPLAY_TEXT text1,text2,text3,text4,text5,text6,text7;
+  	struct DISPLAY_TEXT text1,text2,text3,text4,text5,text6,text7,T1,T2,T3,T4,T5,T6,T7;
 
   	text1.color= BLUE;
   	text1.text_starting_addr = "   Select   ";
@@ -2410,19 +2448,20 @@ uint8_t left_offset = 0;
   	text2.text_status = display;
 
   	text3.color = BLUE;
-  	text3.text_starting_addr = " Multi Vital";/*!  { spo2, HR(ECG-L6), BP, Temp, BG }  */
+  	text3.text_starting_addr = "  Ecg6Lead ";/*!  { spo2, HR(ECG-L6), BP, Temp, BG }  */
   	text3.text_status = display;
 
   	text4.color = BLUE;
-  	text4.text_starting_addr = "    Exit    ";
+  	text4.text_starting_addr = " Multi Vital";
   	text4.text_status = display;
 
-  	//text6.color = BLUE;
-  	//text6.text_starting_addr = "    Exit    ";
-	text5.text_status = 0;
+  	text5.color = BLUE;
+  	text5.text_starting_addr = "    Sleep    ";
+	text5.text_status = display;
   	text6.text_status = 0;
   	text7.text_status = 0;
 
+  	//API_Clear_Display(DISP_TOP_SEC,BLUE);
   	API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
   	API_Disp_Display_Text(text1, text2, text3, text4, text5, text6, text7);
   	API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
@@ -2433,10 +2472,35 @@ uint8_t left_offset = 0;
   	printf("\n\nIn View Screen\n");
 
 	btn_press = API_Push_Btn_Get_Buttton_Press(); // Dummy read
+	bool first =1,LOW_space=0;
 
   	while(1)
   	{
 		//btn_press = API_Push_Btn_Get_hold_time();
+  	//API_DISP_Display_Screen(PLEASE_SYNC_DATA);
+  		//Detect_low_battery_display_notification();
+  		API_Flash_Org_Check_For_Memory_Free();
+
+  		if( (ECG6 >= 90 || ECG12 >= 40 || SPO2_f >= 90 || BP >= 90 ||ECG1 >= 90) && (API_TIMER_Get_Timeout_Flag(DEEP_SLEEP_TIMEOUT) || first))
+  		{
+  			//API_DISP_Display_Screen(PLEASE_SYNC_DATA);// critically low voltage
+  			 API_DISP_Memory_LOW_Status();
+  			Delay_ms(2000);
+  		 	API_TIMER_Register_Timer(DEEP_SLEEP_TIMEOUT);
+  		 	first =0;
+  		 	LOW_space=1;
+  			//printf("\nmore than 90 samples ");
+  		}
+
+  		if(Detect_low_battery_display_notification() || API_Check_USB_Charger_Connection_Display_Notification() || LOW_space )
+  		{
+  			LOW_space =0;
+  			API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+  			API_Disp_Display_Text(text1, text2, text3, text4, text5, text6, text7);
+  			API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
+  			api_disp_display_icon(star,left_offset,top_offset,RED,WHITE);
+  		}
+
 
   		btn_press = API_Push_Btn_Get_Buttton_Press();
 
@@ -2454,18 +2518,22 @@ uint8_t left_offset = 0;
 				api_disp_display_icon(star,left_offset,top_offset,WHITE,WHITE);
 				count++;
 
-				if(count == 2)
+				if(count == 2 || count == 4)
 				{
 					left_offset = 3;
 				}
-				 if(count == 4)
+				if(count == 3)
+				{
+					left_offset = 10;
+				}
+				 if(count == 5)
 				 {
 					left_offset = 30;
 				 }
 
 				 top_offset = top_offset + 20;
 
-				 if (count == 5)
+				 if (count == 6)
 				 {
 					count = 1;
 					left_offset = 20;
@@ -2497,7 +2565,7 @@ uint8_t left_offset = 0;
 
   		if(API_TIMER_Get_Timeout_Flag(DATE_TIME_FLIP_TIME) == TRUE) // call get_time_out function
   		{
-			API_DISP_Toggle_Date_Time();
+			//API_DISP_Toggle_Date_Time();
 			API_TIMER_Register_Timer(DATE_TIME_FLIP_TIME);
   		}
 
@@ -2518,7 +2586,10 @@ uint8_t left_offset = 0;
   		else if(Is_Device_Paired == BT_DISCONNECTED) // disconnected condition
 		{
 			API_Disp_BT_Icon(WHITE);
-			Is_Device_Paired = DEFAULT;
+			Is_Device_Paired = DC;
+			Selected_PID_type = PID_NOT_SELECTED;
+			ret_msg = NO_TEST;
+			break;
 		}
 
   		//printf("\nbtn_press=%d\n",btn_press);
@@ -2526,9 +2597,11 @@ uint8_t left_offset = 0;
 
   	switch(count)
   	{
+  	case 0 : ret_msg = OTA; break;
 		case 2 : ret_msg = QUICK_VITALS; break;
-		case 3 : ret_msg = MULTI_VITALS; break;
-		case 4 : ret_msg = TEST_EXIT; break;
+		case 3 : ret_msg = ECG6LEAD; break;
+		case 4 : ret_msg = MULTI_VITALS; break;
+		case 5 : ret_msg = TEST_EXIT; break;
 		case 0xFF :ret_msg = DATA_SYNC; break;
 		default: ret_msg = NO_TEST; break;
   	}
@@ -2696,7 +2769,8 @@ uint8_t left_offset = 0;
 
   void API_Disp_Quick_test_screen(DISP_QUICK_TEST_SCREENS_t disp_qt_screen)
   {
-		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+		gpio_set_level(ECG_CSn_VCS, 1);
 
   	struct DISPLAY_TEXT mid_text1,mid_text2,mid_text3,mid_text4,mid_text5,mid_text6,mid_text7,btm_text;
   	struct DISPLAY_ICON btm_icon;
@@ -2793,6 +2867,21 @@ uint8_t left_offset = 0;
 
   	  			break;
 
+  		case DISP_QT_ECG_TEST_IN_PROGRESS :
+
+  		  	  			mid_text4.text_starting_addr = " ECG Test  ";
+  		  	  			mid_text5.text_starting_addr = "In Progress ";
+  		  	  			mid_text6.text_starting_addr = "            ";
+  		  	  			bottom_icon.icon_status		 = FALSE;
+
+  		  	  			btm_icon.icon_status        = FALSE;
+  		  	  			btm_text.text_status        = display;
+  		  	  			btm_text.text_starting_addr = "    Exit    ";
+  		  	  			btm_text.color              = WHITE;
+
+  		  	  			break;
+
+
   		case DISP_QT_ECG_L2_TEST_IN_PROGRESS :
 
   		  	  			mid_text4.text_starting_addr = "ECG-L2 Test ";
@@ -2821,11 +2910,30 @@ uint8_t left_offset = 0;
 
 				break;
 
-  		case DISP_QT_PLACE_FINGER_PROPERLY :
+  		case DISP_QT_BP_TEST_IN_PROGRESS :
 
-  			mid_text4.text_starting_addr = "   Place    ";
-  			mid_text5.text_starting_addr = "   Finger   ";
-  			mid_text6.text_starting_addr = "  Properly  ";
+  				mid_text4.text_starting_addr = " BP Test In ";
+  				mid_text5.text_starting_addr = "  Progress  ";
+  				mid_text6.text_starting_addr = "            ";
+  				bottom_icon.icon_status		 = FALSE;
+
+  				btm_icon.icon_status        = FALSE;
+  				btm_text.text_status        = display;
+  				btm_text.text_starting_addr = "    Exit    ";
+  				btm_text.color              = WHITE;
+
+  				break;
+
+  		case DISP_QT_PLACE_FINGER_PROPERLY :
+  			mid_text2.color = RED;
+  			mid_text3.color = RED;
+  			mid_text4.color = RED;
+  			mid_text2.text_starting_addr = " Press";
+  			mid_text3.text_starting_addr = " Finger ";
+  			mid_text4.text_starting_addr = " Gently";
+  			mid_text2.text_status = display;
+  			mid_text3.text_status = display;
+  			mid_text5.text_status = FALSE;
   			bottom_icon.icon_status		 = FALSE;
 
   			break;
@@ -2867,7 +2975,7 @@ uint8_t left_offset = 0;
   	}
 
   	API_Disp_Display_Text(mid_text1,mid_text2,mid_text3,mid_text4,mid_text5,mid_text6,mid_text7);
-  //	API_Display_Bottom_Section(btm_icon, btm_text);
+  	//API_Display_Bottom_Section(btm_icon, btm_text);
   	if(disp_qt_screen == DISP_QT_SCREEN)
   	{
   		API_Clear_Display (DISP_BOTTOM_SEC ,BLUE);
@@ -2928,11 +3036,11 @@ uint8_t left_offset = 0;
   }
 
 
-  void API_Disp_Quick_Test_Result(uint16_t result[])
+  void API_Disp_Quick_Test_Result(void)
   {
   	struct DISPLAY_TEXT mid_text1,mid_text2,mid_text3,mid_text4,mid_text5,mid_text6,mid_text7,btm_text;
   	struct DISPLAY_ICON btm_icon;
-
+/*
   	char string1[12] = {0};
   	char string2[12] = {0};
   	char string3[12] = {0};
@@ -3050,26 +3158,113 @@ uint8_t left_offset = 0;
   	#else
   	mid_text1.color       = WHITE;
   	mid_text2.color       = WHITE;
-  	mid_text3.color       = WHITE;
-
+  	mid_text3.color       = WHITE;*/
+  	API_Clear_Display(DISP_MIDDLE_SEC,WHITE);
 #ifndef MARKETING_REQUIREMENT
   	mid_text1.text_starting_addr = " Test Done! ";
 	mid_text1.color       = BLUE;
+	mid_text1.text_status = display;
+
+	mid_text2.text_status = 0;
+	mid_text3.text_status = 0;
 #endif
   	mid_icon.icon_status        = ON;
   	mid_icon.icon_starting_addr = ThumbsUpIcon1;
   	mid_icon.color              = BLUE;
 
   	API_Display_Middle_Section(mid_icon,mid_text1,mid_text2,mid_text3);
+  	Delay_ms(1000);
+  	API_Clear_Display(DISP_MIDDLE_SEC,WHITE);
 
-  	#endif
+  	if(qv_flag == 12 && !LOD_N)
+  	{
+  		mid_text1.color = BLUE;
+  		mid_text1.text_starting_addr = "ECG6   ";
+  		mid_text1.text_status = display;
+  		mid_text2.text_status = 0;
+  		mid_text3.text_status = 0;
+  		mid_text4.text_status = 0;
+
+  		//mid_text5.text_starting_addr = "    Sleep    ";
+  		mid_text5.text_status = 0;
+  		mid_text6.text_status = 0;
+  		mid_text7.text_status = 0;
+
+  	  	//API_Clear_Display(DISP_TOP_SEC,BLUE);
+  	  	API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+  	  	API_Disp_Display_Text(mid_text1, mid_text2, mid_text3, mid_text4, mid_text5, mid_text6, mid_text7);
+
+  	left_offset = 85;
+  	top_offset = 20;
+  	api_disp_display_icon(tick_true,left_offset,top_offset,GREEN,WHITE);
+  	}
+  	else if(qv_flag == 11)
+  	{
+  		mid_text1.color = BLUE;
+  		  		mid_text1.text_starting_addr = "Spo2   ";
+  		  		mid_text1.text_status = display;
+  		  		mid_text2.text_status = 0;
+  		  	mid_text3.text_starting_addr = " HR  ";
+  		  		mid_text3.text_status = display;
+  		  		mid_text4.text_status = 0;
+
+  		  		mid_text5.text_starting_addr = " BP   ";
+  		  		mid_text5.text_status = display;
+  		  		mid_text6.text_status = 0;
+  		  		mid_text7.text_status = 0;
+
+  		  	  	//API_Clear_Display(DISP_TOP_SEC,BLUE);
+  		  	  	API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+  		  	  	API_Disp_Display_Text(mid_text1, mid_text2, mid_text3, mid_text4, mid_text5, mid_text6, mid_text7);
+
+  		  	left_offset = 85;
+  		  	top_offset = 20;
+  		  	if(!LOD_N)
+  		  	{
+  		  		api_disp_display_icon(tick_true,85,20,GREEN,WHITE);
+  		  		api_disp_display_icon(tick_true,85,60,GREEN,WHITE);
+  		  		api_disp_display_icon(tick_true,85,100,GREEN,WHITE);
+  		  	}
+  		  	else
+  		  	{
+  		  		api_disp_display_icon(NO_icon,85,20,RED,WHITE);
+  		  		api_disp_display_icon(NO_icon,85,55,RED,WHITE);
+  		  		api_disp_display_icon(NO_icon,85,95,RED,WHITE);
+  		  	}
+  	}
+
+
+  //	#endif
 
 
   }
 
+
+
+
+  void API_Disp_Exit_Text(void)
+    {
+	  struct DISPLAY_TEXT bottom_text;
+	  struct DISPLAY_ICON bottom_icon;
+
+	  bottom_icon.icon_starting_addr = STARTIcon1;
+	  bottom_icon.color              = BLUE;
+	  bottom_icon.icon_status        = OFF;
+
+	  bottom_text.text_starting_addr    = "    EXIT    ";
+	  bottom_text.color                 = WHITE;
+	  bottom_text.text_status           = display;
+	  API_Display_Bottom_Section(bottom_icon,bottom_text);
+
+    }
+
+
+
+
   void API_Disp_Quick_Test_Icon(void)
   {
-	  API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	  API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	  gpio_set_level(ECG_CSn_VCS, 1);
 
   	uint8_t left_offset = 10;
   	uint8_t top_offset  = 30;
@@ -3157,45 +3352,78 @@ uint8_t left_offset = 0;
 
   void API_DISP_Firmware_Version(void)
   {
-		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//		API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+		gpio_set_level(ECG_CSn_VCS, 1);
 
- 		api_disp_display_char( " FW Version ", font19x10, BLUE, BLACK, 5, 80);
- 		api_disp_display_char(FIRMWARE_VERSION, font19x10, BLUE, BLACK, 5, 100);
+ 		api_disp_display_char( " SHB 0.11 ", font19x10, WHITE, BLACK, 20, 100);
+ 		//api_disp_display_char(FIRMWARE_VERSION, font19x10, BLUE, BLACK, 5, 120);
   }
 
 
+  bool API_DISP_Memory_LOW_Status(void)
+   {
+   		struct DISPLAY_TEXT mid_sec_text1,mid_sec_text2,mid_sec_text3,mid_sec_text4,mid_sec_text5,mid_sec_text6,mid_sec_text7;
 
-bool API_DISP_Memory_Full_Status(void)
-{
-		struct DISPLAY_TEXT mid_sec_text1,mid_sec_text2,mid_sec_text3,mid_sec_text4,mid_sec_text5,mid_sec_text6,mid_sec_text7;
+   		bool check_status = TRUE;
 
-		bool check_status = TRUE;
+   		mid_sec_text2.text_starting_addr = "MEMORY LOW";
+   		mid_sec_text2.color = BLUE;
+   		mid_sec_text2.text_status = display;
 
-		mid_sec_text2.text_starting_addr = "MEMORY FULL";
-		mid_sec_text2.color = BLUE;
-		mid_sec_text2.text_status = display;
+   		mid_sec_text3.text_starting_addr = "PLEASE SYNC ";
+   		mid_sec_text3.color = BLUE;
+   		mid_sec_text3.text_status = display;
 
-		mid_sec_text3.text_starting_addr = "PLEASE SYNC ";
-		mid_sec_text3.color = BLUE;
-		mid_sec_text3.text_status = display;
+   		mid_sec_text4.text_starting_addr = "   DATA     ";
+   		mid_sec_text4.color = BLUE;
+   		mid_sec_text4.text_status = display;
 
-		mid_sec_text4.text_starting_addr = "   DATA     ";
-		mid_sec_text4.color = BLUE;
-		mid_sec_text4.text_status = display;
+   		mid_sec_text1.text_status = FALSE;
+   		mid_sec_text5.text_status = FALSE;
+   		mid_sec_text6.text_status = FALSE;
+   		mid_sec_text7.text_status = FALSE;
 
-		mid_sec_text1.text_status = FALSE;
-		mid_sec_text5.text_status = FALSE;
-		mid_sec_text6.text_status = FALSE;
-		mid_sec_text7.text_status = FALSE;
+   		API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
 
-		API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+   		API_Disp_Display_Text(mid_sec_text1,mid_sec_text2, mid_sec_text3,mid_sec_text4, mid_sec_text5,mid_sec_text6,mid_sec_text7);
+   		API_Clear_Display(DISP_BOTTOM_SEC , BLUE);
+   		Delay_ms(DISP_NOTIFICATION_TIME);
 
-		API_Disp_Display_Text(mid_sec_text1,mid_sec_text2, mid_sec_text3,mid_sec_text4, mid_sec_text5,mid_sec_text6,mid_sec_text7);
-		API_Clear_Display(DISP_BOTTOM_SEC , BLUE);
-		Delay_ms(DISP_NOTIFICATION_TIME);
+   		return check_status;
+   }
 
-		return check_status;
-}
+
+  bool API_DISP_Memory_Full_Status(void)
+  {
+  		struct DISPLAY_TEXT mid_sec_text1,mid_sec_text2,mid_sec_text3,mid_sec_text4,mid_sec_text5,mid_sec_text6,mid_sec_text7;
+
+  		bool check_status = TRUE;
+
+  		mid_sec_text2.text_starting_addr = "MEMORY FULL";
+  		mid_sec_text2.color = BLUE;
+  		mid_sec_text2.text_status = display;
+
+  		mid_sec_text3.text_starting_addr = " ERASING  ";
+  		mid_sec_text3.color = BLUE;
+  		mid_sec_text3.text_status = display;
+
+  		mid_sec_text4.text_starting_addr = "   DATA     ";
+  		mid_sec_text4.color = BLUE;
+  		mid_sec_text4.text_status = display;
+
+  		mid_sec_text1.text_status = FALSE;
+  		mid_sec_text5.text_status = FALSE;
+  		mid_sec_text6.text_status = FALSE;
+  		mid_sec_text7.text_status = FALSE;
+
+  		API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+
+  		API_Disp_Display_Text(mid_sec_text1,mid_sec_text2, mid_sec_text3,mid_sec_text4, mid_sec_text5,mid_sec_text6,mid_sec_text7);
+  		API_Clear_Display(DISP_BOTTOM_SEC , BLUE);
+  		Delay_ms(DISP_NOTIFICATION_TIME);
+
+  		return check_status;
+  }
 
 
   void API_DISP_Update_Battery_Status(BATTERY_PONINTS_t points,bool charging, bool empty,uint16_t color)
@@ -3227,11 +3455,17 @@ bool API_DISP_Memory_Full_Status(void)
   							break;
   						}
 
-  				case  DISP_THREE_STICK :
+  				case  DISP_CHARGE_STICK :
   						{
-  							api_disp_display_icon(batteryFull, DISP_TOP_SEC_BAT_COL_START_ADDR, DISP_TOP_SEC_BAT_ROW_START_ADDR, color, BLUE);
+  							api_disp_display_icon(batteryCharging, DISP_TOP_SEC_BAT_COL_START_ADDR, DISP_TOP_SEC_BAT_ROW_START_ADDR, color, BLUE);
   							break;
   						}
+
+  				case  DISP_THREE_STICK :
+  					{
+  						api_disp_display_icon(batteryFull, DISP_TOP_SEC_BAT_COL_START_ADDR, DISP_TOP_SEC_BAT_ROW_START_ADDR, color, BLUE);
+  						break;
+  					}
   			}
   	}
 
@@ -3266,9 +3500,9 @@ bool API_DISP_Memory_Full_Status(void)
   {
 	  bool status = false;
 
-       if(IsUSB_Charger_Connected())
+       if((IsUSB_Charger_Connected()))
        {
-
+    	   printf("\n charger connected");
    		struct DISPLAY_TEXT mid_sec_text1,mid_sec_text2,mid_sec_text3,mid_sec_text4,mid_sec_text5,mid_sec_text6,mid_sec_text7;
 
    		mid_sec_text2.text_starting_addr = "   PLEASE   ";
@@ -3292,8 +3526,24 @@ bool API_DISP_Memory_Full_Status(void)
 
    		API_Disp_Display_Text(mid_sec_text1,mid_sec_text2, mid_sec_text3,mid_sec_text4, mid_sec_text5,mid_sec_text6,mid_sec_text7);
    		API_Clear_Display(DISP_BOTTOM_SEC , BLUE);
-   		Delay_ms(DISP_NOTIFICATION_TIME);
-   		status = true;
+   		API_TIMER_Register_Timer(DEEP_SLEEP_TIMEOUT);
+   		while(1)
+   		{
+   			if(API_TIMER_Get_Timeout_Flag(DEEP_SLEEP_TIMEOUT))
+   			{
+   				printf("\ntimer stopped");
+   				EnterSleepMode(SYSTEM_DEEP_SLEEP);
+   			}
+   			if(!IsUSB_Charger_Connected())
+   			{
+   				API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+   				printf("\n charger not connected");
+   				status = true;
+   				break;
+   			}
+   		}
+   		//Delay_ms(DISP_NOTIFICATION_TIME);
+
        }
 
        return status;
@@ -3351,7 +3601,8 @@ void API_Disp_Lead_Count(uint8_t lead)
 
 void API_DISP_SenseSemi_Logo(SENSESEMI_LOGO_t moving_or_static)
 {
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
 
 	struct DISPLAY_TEXT mid_text1,mid_text2,mid_text3;
@@ -3393,7 +3644,7 @@ void API_DISP_SenseSemi_Logo(SENSESEMI_LOGO_t moving_or_static)
 			 API_Clear_Display (DISP_BOTTOM_SEC,BLACK);
 
 			 api_disp_set_pointer_driver_side(col_start,DISP_MAX_COLS,row_start,DISP_MAX_ROWS);
-		 	 api_disp_display_icon (logo, 40, 30,BLUE, BLACK);
+		 	 api_disp_display_icon (SenseHlargelogo, 15, 50,BLUE, BLACK);
 
 			 //api_disp_tx_buffer(logo+2,buff_nbf_rows * buff_nbf_cols);
 		}
@@ -3472,9 +3723,11 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
 	char pidArray[12]={'\0'};
 
+	API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
+
 	VITAL_TYPE_t ret_msg=0xFF;
-	uint8_t top_offset = 20;
-	uint8_t count = 1;
+	uint8_t top_offset = 80;
+	int count = -1;
 	uint8_t left_offset = 2;
 	uint8_t btn_press;
 
@@ -3482,30 +3735,34 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
   	struct DISPLAY_TEXT text1,text2,text3,text4,text5,text6,text7;
 
-  	text1.color= BLUE;
-  	text1.text_starting_addr = "  Register  ";
-  	text1.text_status = display;
+  	text4.color= BLUE;
+  	text4.text_starting_addr = " Enter  PID ";
+  	text4.text_status = display;
 
-  	text2.color = BLUE;
-  	text2.text_starting_addr = "    PID     ";
-
-	text2.text_status = display;
-
-  	text4.color = BLUE;
-  	text4.text_starting_addr = " Enter      ";
-  	text4.text_status = 0;
-
-	text5.color = BLUE;
-  	text5.text_starting_addr = " Exit       ";
+  	text5.color = BLUE;
+  	text5.text_starting_addr = " ---------- ";
   	text5.text_status = display;
+	//text2.text_status = display;
 
+  	//text4.color = BLUE;
+  	//text4.text_starting_addr = " Enter      ";
+  	//text4.text_status = 0;
 
+	text6.color = BLUE;
+  	text6.text_starting_addr = "    Exit   ";
+  	text6.text_status = display;
+
+  	text2.text_status = 0;
 	text3.text_status = 0;
-  	text6.text_status = 0;
+	text1.text_status = 0;
+  //	text5.text_status = 0;
   	text7.text_status = 0;
 	if(Selected_PID_type != VALID_PID)
 	{
+		API_Clear_Display(DISP_TOP_SEC,BLUE);
+		API_Disp_BT_Icon(WHITE);
 		API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+		 api_disp_display_icon (SenseHlargelogo, 15, 42,BLUE, WHITE);
 		API_Disp_Display_Text(text1, text2, text3, text4, text5, text6, text7);
 	  	API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
 	}
@@ -3515,13 +3772,43 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
   	printf("\n\nIn View Screen\n");
 
 	btn_press = API_Push_Btn_Get_Buttton_Press(); // Dummy read
-	api_disp_display_icon(star,left_offset,top_offset,RED,WHITE);
+//	api_disp_display_icon(star,left_offset,top_offset,RED,WHITE);
+
+	//api_disp_set_pointer_driver_side(col_start,DISP_MAX_COLS,row_start,DISP_MAX_ROWS);
+	//API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+			 	// api_disp_display_icon (SenseHlargelogo, 15, 42,BLUE, WHITE);
+			 	 bool first=1,LOW_space=0;
 
   	while(1)
   	{
+//  		if(ota_data_avlbl)
+//  		{
+//  			return 0;
+//  		}
+  		API_Flash_Org_Check_For_Memory_Free();
+  		  		if( (ECG6 >= 90 || ECG12 >= 40 || SPO2_f >= 90 || BP >= 90 ||ECG1 >= 90) && (API_TIMER_Get_Timeout_Flag(DEEP_SLEEP_TIMEOUT) || first))
+  		  		{
+  		  			API_DISP_Display_Screen(PLEASE_SYNC_DATA);// critically low voltage
+  		  			Delay_ms(2000);
+  		  		 	API_TIMER_Register_Timer(DEEP_SLEEP_TIMEOUT);
+  		  		 	first =0;
+  		  		 	LOW_space=1;
+  		  			//printf("\nmore than 90 samples ");
+  		  		}
+  		if(API_Check_USB_Charger_Connection_Display_Notification() || Detect_low_battery_display_notification() || LOW_space)
+  		{
+  			LOW_space =0;
+  			api_disp_display_icon (SenseHlargelogo, 15, 42,BLUE, WHITE);
+  			//API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+
+  			API_Disp_Display_Text(text1, text2, text3, text4, text5, text6, text7);
+  			api_disp_display_icon(star,left_offset,top_offset,RED,WHITE);
+  			API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
+  		}
+
+
 
   		btn_press = API_Push_Btn_Get_Buttton_Press();
-
 
 		if(btn_press == 3)
 		{
@@ -3542,13 +3829,15 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
 					if(count == 2)
 					{
-						top_offset = top_offset + 80;
+						top_offset = top_offset + 40 ;
+						left_offset += 30;
 					}
 
 					else
 					{
 						count=1;
-						top_offset=20;
+						top_offset=80;
+						left_offset = 2;
 						API_TIMER_Kill_Timer(TEST_ENTERY_TIMEOUT);
 					}
 				}
@@ -3563,13 +3852,13 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 					{
 						count = 1;
 						left_offset = 2;
-						top_offset = 20;
+						top_offset = 80;
 						API_TIMER_Kill_Timer(TEST_ENTERY_TIMEOUT);
 					}
 
 					else
 					{
-						top_offset = top_offset + 20;
+						top_offset = top_offset + 40;
 					}
 				}
 
@@ -3596,13 +3885,14 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 
   		if(API_TIMER_Get_Timeout_Flag(DATE_TIME_FLIP_TIME) == TRUE) // call get_time_out function
   		{
-			API_DISP_Toggle_Date_Time();
+			//API_DISP_Toggle_Date_Time();
 			API_TIMER_Register_Timer(DATE_TIME_FLIP_TIME);
   		}
 
 
   		if(Data_sync_in_progress)
   			{
+         		printf("\n data sync started...........................................%d",ota_data_avlbl);
   				count = 0xFF;
   				break;
   			}
@@ -3617,24 +3907,30 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
   		else if(Is_Device_Paired == BT_DISCONNECTED) // disconnected condition
 		{
 			API_Disp_BT_Icon(WHITE);
-			Is_Device_Paired = DEFAULT;
+			Is_Device_Paired = DC;
 		}
 
   		if((Selected_PID_type == VALID_PID) && (!is_Pid_Displayed))
   		{
+  			API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
   			pidArray[0]=' ';
   			MemCpy(pidArray+1,(char*)(PatientID.pid+10),8);
   			pidArray[11]='\0';
 
-  		  	text1.text_starting_addr = "   Select   ";
-
-			text3.text_starting_addr =pidArray;
-			text3.text_status = display;
+  		  //	text1.text_starting_addr = "    PID    ";
+  		    text4.text_starting_addr = " PID is ";
+			text5.text_starting_addr =pidArray;
+			text3.text_status = 0;
+			text1.text_status = 0;
+			text2.text_status = 0;
+			text6.text_status = 0;
+			text7.text_status = 0;
 		  	text4.text_status = display;
 		  	text5.text_status = display;
-		  	API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
+		  	//API_Clear_Display (DISP_MIDDLE_SEC ,WHITE);
 
-		  	API_Disp_Display_Text(text1, text2, text3, text4, text5, text6, text7);
+		  	API_Disp_Display_Text(text1,text2,text3,text4, text5,text6,text7);
+		  	api_disp_display_icon (SenseHlargelogo, 15, 42,BLUE, WHITE);
 			api_disp_display_icon(star,left_offset,top_offset,RED,WHITE);
 
 			is_Pid_Displayed = true;
@@ -3649,6 +3945,10 @@ VITAL_TYPE_t API_Disp_Select_PID_Screen(void)
 			{
 				printf("%d",pidArray[i]);
 			}
+
+			//count = 2;
+			Delay_ms(5000);
+			return VIEW_SCREEN;
 
   		}
   	}

@@ -23,7 +23,7 @@
 #define BG_ONE_REC_LEN   					56U			// Total bg_data length = ((1)*2)+ 54
 #define TEMP_ONE_REC_LEN       				56U			// Total temp_data length = ((1)*2)+ 54
 #define SPO2_ONE_REC_LEN         			4854U		// Total spo2_data length = ((600+600)*4)+ 54
-#define BP1_ONE_REC_LEN 			    	9654U		// 	Total bp_data length = ((1200+1200)*4)+ 54
+#define BP1_ONE_REC_LEN 			    	4854U		// 	Total bp_data length = ((1200+1200)*4)+ 54
 #define BP2_ONE_REC_LEN						9654U
 #define ECG_3_LEAD_REC_LEN 					4854U		// 	Total ecg_data length = ((600+600)*4)+ 54
 #define ECG_12_LEAD_ONE_REC_LEN				19254U		// Total Record len=(47(header )+8 lead data(2400 bytes each))
@@ -65,9 +65,9 @@
 #define ECG_2_LEAD_TOTAL_SECTORS			62
 #define SPO2_TOTAL_SECTORS					120    //(4854 * 100) / 4096 ~= 120
 #define ECG_3_LEAD_TOTAL_SECTORS			120    //(4854 * 100) / 4096 ~= 120
-#define BP1_TOTAL_SECTORS					245    //(9654 * 100) / 4096 ~= 245
+#define BP1_TOTAL_SECTORS					125    //(9654 * 100) / 4096 ~= 245
 #define BP2_TOTAL_SECTORS					245
-#define ECG_12_LEAD_TOTAL_SECTORS			235    //(19254*100/4096)
+#define ECG_12_LEAD_TOTAL_SECTORS			245    //(19254*100/4096)
 
 #define OFFLINE_CONFIG_RECORD_TOTAL_SECTORS 480
 

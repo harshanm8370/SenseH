@@ -36,7 +36,7 @@
 #define SPP_PROFILE_NUM             1
 #define SPP_PROFILE_APP_IDX         0
 #define ESP_SPP_APP_ID              0x56
-#define SAMPLE_DEVICE_NAME          "SSH-22-024"    //The Device Name Characteristics in GAP
+#define SAMPLE_DEVICE_NAME          "SSH-22-014"    //The Device Name Characteristics in GAP
 #define SPP_SVC_INST_ID	            0
 
 /// SPP Service
@@ -54,7 +54,8 @@ static const uint8_t spp_adv_data[23] = {
     /* Complete List of 16-bit Service Class UUIDs */
     0x03,0x03,0xF0,0xAB,
     /* Complete device Name in advertising */
-    0x0F,0x09, 'S', 'S', 'H', '-', '2', '2', '-', '0', '2', '4'
+    0x0F,0x09, 'S', 'S', 'H', '-', '2', '2', '-', '0', '1', '4'
+
 };
 
 static uint16_t mtu_size = 23;
@@ -132,7 +133,7 @@ static const uint16_t character_declaration_uuid = ESP_GATT_UUID_CHAR_DECLARE;
 static const uint16_t character_client_config_uuid = ESP_GATT_UUID_CHAR_CLIENT_CONFIG;
 
 static const uint8_t char_prop_read_notify = ESP_GATT_CHAR_PROP_BIT_READ|ESP_GATT_CHAR_PROP_BIT_NOTIFY;
-static const uint8_t char_prop_read_write = ESP_GATT_CHAR_PROP_BIT_WRITE_NR|ESP_GATT_CHAR_PROP_BIT_READ;
+static const uint8_t char_prop_read_write = ESP_GATT_CHAR_PROP_BIT_WRITE|ESP_GATT_CHAR_PROP_BIT_READ;
 
 ///SPP Service - data receive characteristic, read&write without response
 static const uint16_t spp_data_receive_uuid = ESP_GATT_UUID_SPP_DATA_RECEIVE;
@@ -476,12 +477,33 @@ uint32_t API_BLE_Transmit(uint8_t *buf, uint16_t numbytes)
         ESP_LOGE(API_BLE_TAG, "API_BLE_Transmit, Data len: %d, out of limit\n", numbytes);
         return TX_RX_FAILED;
     }
+
+
 	memset(tx_buf.buf, 0x0, sizeof(tx_buf.buf));
     memcpy(tx_buf.buf, buf, numbytes);
 	tx_buf.len = numbytes;
 
     return TX_RX_SUCCESS;
 }
+
+uint32_t API_BLE_Transmitchar(char *buf, uint16_t numbytes)
+{
+    if (numbytes > BLE_SPP_MTU) {
+        ESP_LOGE(API_BLE_TAG, "API_BLE_Transmit, Data len: %d, out of limit\n", numbytes);
+        return TX_RX_FAILED;
+    }
+
+
+	memset(tx_buf.buf, 0x0, sizeof(tx_buf.buf));
+    memcpy(tx_buf.buf, buf, numbytes);
+	tx_buf.len = numbytes;
+
+    return TX_RX_SUCCESS;
+}
+
+
+
+
 
 uint32_t API_BLE_Receive(uint8_t *data_buf)
 {

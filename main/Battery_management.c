@@ -21,13 +21,14 @@
 #include "esp_sleep.h"
 #include "push_button.h"
 #include "esp_bt.h"
-#include "max86150.h"
+#include "max30101.h"
 #include "esp_bt_main.h"
 #include "driver/periph_ctrl.h"
 #include "soc/rtc_cntl_reg.h"
 #include "soc/rtc.h"
 #include "Hardware.h"
 #include "driver/adc.h"
+#include "ProjectConfiguration.h"
 
 
 #define BATTERY_LOW_VOLTAGE_THRESHOLD   (float)3.7
@@ -38,7 +39,7 @@ static void power_down_all_modules(void);
 bool Detect_low_battery_display_notification()
 {
 	bool is_lowBattery = false;
-
+    static bool ones=1;
 	static float battery_voltage = 0x00;
 
 	static char buff[10]; // testing
@@ -47,23 +48,46 @@ bool Detect_low_battery_display_notification()
 
 	  battery_voltage = API_ADC_Read_Battery_Voltage();
 
-	//  printf("\nbattery_voltage=%f",battery_voltage);
+	 // printf("\nbattery_voltage = %f",battery_voltage);
 
 	  Fuel_Guage_update_battery_status(battery_voltage);
+	  if(ones)
+	  {
+		  //printf("\n initialising timer");
+		  API_TIMER_Register_Timer(DATA_SYNC_TIMEOUT);
+		  ones =0;
+	  }
 
 		/*FloatToString(battery_voltage,buff);
 		API_Disp_Dsplay_Char_With_Offset(21,4,buff,GREEN);*/
-
 		if(battery_voltage < FUEL_GUAGE_10_PER_VOLTAGE)
 		{
-			   API_DISP_Display_Screen(DISP_VERY_LOW_VOLTAGE_PLEASE_CHARGE);// critically low voltage
-			   is_lowBattery = true;
-		}
+			//printf("\nones = %d",ones);
+		      // ones++;
+			//printf("\n Vlow notification");
+		       if(API_TIMER_Get_Timeout_Flag(DATA_SYNC_TIMEOUT))
+		       {
+		    	   API_DISP_Display_Screen(DISP_VERY_LOW_VOLTAGE_PLEASE_CHARGE);// critically low voltage
+		    	   API_TIMER_Register_Timer(DATA_SYNC_TIMEOUT);
+		    	   Delay_ms(1000);
+		    	   is_lowBattery = true;
+		    	   return 1;
+		       }
+			  // is_lowBattery = true;
 
+		}
 		else if(battery_voltage < FUEL_GUAGE_15_PER_VOLTAGE)
 		{
+			//printf("\nones = %d",ones);4
+			printf("\n low notification");
+			if(API_TIMER_Get_Timeout_Flag(DATA_SYNC_TIMEOUT))
+					       {
+			API_TIMER_Register_Timer(DATA_SYNC_TIMEOUT);
 			  API_DISP_Display_Screen(DISP_LOW_VOLTAGE_PLEASE_CHARGE); // low voltage
-			  is_lowBattery = true;
+			  Delay_ms(1000);
+			  return 1;
+					       }
+			  //is_lowBattery = true;
 		}
 
 		return  is_lowBattery;

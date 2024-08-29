@@ -4,13 +4,14 @@
 #include "esp_event_loop.h"
 #include "nvs_flash.h"
 #include "driver/gpio.h"
+#include "soc/gpio_periph.h"
 #include "sdkconfig.h"
 #include "stdio.h"
 #include "string.h"
 #include "stdlib.h"
 #include "stdbool.h"
 #include "esp_ota_ops.h"
-#include "max86150.h"
+#include "max30101.h"
 #include "API_Display.h"
 #include "API_adc.h"
 #include "API_IO_Exp.h"
@@ -29,22 +30,48 @@
 #include "Hardware.h"
 #include "esp_sleep.h"
 #include "API_utility.h"
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "API_TCP_Server.h"
+#include "ECG_12_Lead.h"
 
+extern uint8_t Device_stat;
+extern bool task_close;
 static void Interfaces_init(void);
 void POR_Init(void);
 void Manage_Device_Sleep(void);
-
+bool flag = 1,ota_flag=1;
 void TestNbfsTests_PerBatteryFull(void);
 void ExecuteComplianceSequence(void);
 void HandleDataSync(void);
+void Led_Blink(void *pvParameters);
+extern BT_STATUS Is_Device_Paired;
+uint8_t qv_flag,mv_flag;
+bool BLE_DS;
+extern bool ota_data_avlbl;
+extern uint32_t FW_data_len;
+#define test 1//PID screen
 
-void TestFlashStorage(void);
+
+
+TaskHandle_t myTaskHandle = NULL;
+
+
 
  void Application_Run(void)
 {
+	 Device_stat = 0;
+	 ota_flag = 0;
+	// flag = 1;
 	static SELECTED_TEST_t state;
+	 xTaskCreate(Led_Blink, "Led_Blink", 4096, NULL, 5, &myTaskHandle);
 
 	printf("\nSystem turning on..");
+
+
+	//xTaskCreate(myTask, "My Task", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
+	// Start the scheduler
+   // vTaskStartScheduler();
 
 	/*API_IO_Exp_PowerOnReset_Configuration();
 
@@ -59,12 +86,23 @@ void TestFlashStorage(void);
         }
 	}*/
 
+    PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[ECG_CSn_VCS], PIN_FUNC_GPIO);
+
+    gpio_set_direction(ECG_CSn_VCS, GPIO_MODE_OUTPUT);
+    gpio_set_direction(MAX30101_DRDY_INTR_PIN,GPIO_MODE_INPUT);
+    gpio_set_pull_mode(MAX30101_DRDY_INTR_PIN,GPIO_PULLUP_ONLY);
+    gpio_set_level(ECG_CSn_VCS, 1);
+
+
 	API_TIMER_Run_1MS_Timer();
 
 	API_IO_Exp_init();
+	//API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
+    //API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
 
     Interfaces_init();
-
+    API_IO_Exp1_P0_write_pin(HIBERNATE,HIGH);//it should be high to  initialize the max30102
+    //API_RUN_TEMPERATURE_TEST();
 
 	if(API_Flash_Initialize_Data_pointers() == RECORDS_UPDATE_FAILED)
 	   {
@@ -83,41 +121,85 @@ void TestFlashStorage(void);
 	  API_DISP_SenseSemi_Logo(STATIC_IMAGE);
 	  API_DISP_Firmware_Version();
 
-	/* Delay Provided for the User to read the Firmware version */
-	Delay_ms(3000);
-	POR_Init();
+//	/* Delay Provided for the User to read the Firmware version */
+//	Delay_ms(3000);
+//	POR_Init();
+//	/** Testing */
+//	/***************************************************/
 
-	/** Testing */
-	/***************************************************/
-
+//	API_TCP_Server();
+//	Delay_ms(10000);
+//	disconnect_wifi();
+//	Delay_ms(100000);
+//API_TCP_Server();
+//while(1)
+//{
+//	//API_TCP_Server();
+//
+//
+//	//Delay_ms(30000);
+//
+//   // disconnect_wifi();
+//
+//	//Delay_ms(30000);
+//
+//	//wifi_restart();
+//}
+#if test
 	Selected_PID_type = VALID_PID;
+#endif
 
 	/***************************************************/
 		char datetime[18]; // Assuming you want to store the result in a char array
 	    const char *customFormat = "%Y-%m-%d %H:%M:%S"; // Example date-time format
 
+	      API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
+	      API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
+	  //  uint16_t result[5] ={0};
+
+	    //API_Disp_Quick_Test_Result(result);
+	    //Delay_ms(15000);
+	     /* API_IO_Exp_Power_Control(EN_VLED,LOW);
+	      while(1)
+	      {
+	      printf("\nDevice ID = 0x%2X.\n",readPartID(0xFF));
+	      }*/
+
+    	  API_Check_USB_Charger_Connection_Display_Notification();
 
 	while(1)
 	{
+		//ota_flag = 1;
 		if(flash_data.sys_mode == DEVICE_ACTIVE_MODE)
 		{
 			    if(Detect_low_battery_display_notification()==false)
 				{
-			    	  state = API_Disp_Select_PID_Screen();
-			    	//state = VIEW_SCREEN;
-
+#if test
+			    	 state = VIEW_SCREEN;
+#else
+			    	 state = API_Disp_Select_PID_Screen();
+			    	 Device_stat = 1;
+#endif
 			    	    if(state == VIEW_SCREEN)
 			    	    {
 			    	    	state = API_Display_View_Screen();
+			    	    	//ota_flag = 1;
 			    	    	//API_RTC_Update_Date_Time(8, 8, 2023, 16, 24, 17);
 							API_RTC_Get_Date_Time(datetime, customFormat);
 							printf("Formatted Date and Time: %s\n", datetime);
 			    	    }
 
+
+
 						if(state == DATA_SYNC)
 						{
 							HandleDataSync();
-							state = NO_TEST;
+							if(BLE_DS)
+							{
+								Selected_PID_type = 0;
+								BLE_DS = 0;
+							}
+							state = VIEW_SCREEN;
 						}
 
 						 if((state == QUICK_VITALS) || (state == MULTI_VITALS))
@@ -133,19 +215,84 @@ void TestFlashStorage(void);
 						{
 							API_TIMER_Kill_Timer(USER_INACTIVE_TIMEOUT);
 						}
+				/*	     if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
+						 {
+								Selected_PID_type = PID_NOT_SELECTED;
+						 }*/
 
 						switch(state)
 						{
 							case QUICK_VITALS:{
-								Is_Test_In_Progress = true;
+                                qv_flag = 11;
+                                Device_stat = 2;
+							//	Is_Test_In_Progress = true;
+#if !test
+								if(Is_Device_Paired == DC) // Paired condition
+								{
+									//printf("\n\t%d",Is_Device_Paired);
+								   Selected_PID_type = PID_NOT_SELECTED;
+								}
+#endif
 								Run_Quick_Vital();
+								Device_stat  = 3;
+#if !test
+								if(Is_Device_Paired == DC) // Paired condition
+								{
+									Selected_PID_type = PID_NOT_SELECTED;
+								}
+#endif
+								 qv_flag = 0;
+								//ota_flag = 0;
 								Is_Test_In_Progress = false;
 								break;
 							}
 
+							case ECG6LEAD:{
+								qv_flag = 12;
+								Device_stat = 2;
+								//	Is_Test_In_Progress = true;
+#if !test
+								if(Is_Device_Paired ==DC) // Paired condition
+								{
+									//printf("\n\t%d",Is_Device_Paired);
+									Selected_PID_type = PID_NOT_SELECTED;
+								}
+#endif
+								Run_Quick_Vital();
+								FW_data_len =0;
+								Device_stat  = 3;
+#if !test
+								if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
+								{
+									Selected_PID_type = DC;
+								}
+#endif
+								qv_flag = 0;
+								//ota_flag = 0;
+								Is_Test_In_Progress = false;
+								break;
+							  }
+
 							case MULTI_VITALS:{
 								Is_Test_In_Progress = true;
+								mv_flag =1 ;
+								Device_stat = 2;
+								qv_flag = 0;
+#if !test
+								if(Is_Device_Paired == DC) // Paired condition
+								{
+									Selected_PID_type = PID_NOT_SELECTED;
+							    }
+#endif
 								Run_Multi_Vital();
+								Device_stat = 3;
+#if !test
+								if(Is_Device_Paired == DC) // Paired condition
+								{
+									Selected_PID_type = PID_NOT_SELECTED;
+								}
+#endif
+								mv_flag = 0;
 								Is_Test_In_Progress = false;
 
 								break;
@@ -166,10 +313,25 @@ void TestFlashStorage(void);
 								API_TIMER_Register_Timer(USER_INACTIVE_TIMEOUT);
 							}
 
-						if (is_firmware_data_available())
+						if (ota_data_avlbl)
 						{
+							//API_display_backlight_on();
+							printf("\n OTA update detected");
+							API_DISP_Display_Screen(DISP_DEVICE_UPGRADING);
+							Delay_ms(10000);
+							API_display_backlight_off();
 							API_TIMER_Kill_Timer(USER_INACTIVE_TIMEOUT);
-							Firmware_upgrade();
+							while(ota_data_avlbl);
+							/*if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
+						    {
+								    API_display_backlight_on();
+									API_DISP_Display_Screen(DISP_DEVICE_UPGRADATION_FAIL);
+									ota_flag = 0;
+									API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
+							}*/
+						//	ota_flag = 1;
+
+			//Firmware_upgrade();
 						}
 
 					}
@@ -186,13 +348,59 @@ void TestFlashStorage(void);
 		}
 
 		if(flash_data.sys_mode == DEVICE_HIBERNET_MODE)
-				{
-					EnterSleepMode(SYSTEM_DEEP_SLEEP);
+		{
+			EnterSleepMode(SYSTEM_DEEP_SLEEP);
 
-				}
+		}
 	}
 
 }
+
+
+
+
+
+ void API_display_backlight_on(void)
+ {
+ 	API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,HIGH);
+ 	API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
+ }
+ void API_display_backlight_off(void)
+ {
+ 	API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
+ 	API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,LOW);
+ }
+
+
+
+
+ void Led_Blink(void *pvParameters) {
+     while (1) {
+     	//printf("\n in task function");
+     	vTaskDelay(pdMS_TO_TICKS(2000/portTICK_PERIOD_MS));
+     	if(ota_flag)
+     	{
+         // Your task code here
+        // vTaskDelay(pdMS_TO_TICKS(1000/portTICK_PERIOD_MS)); // Delay the task for 1000 milliseconds
+     		// vTaskDelay(pdMS_TO_TICKS(2000/portTICK_PERIOD_MS)); // Delay the task for 1000 milliseconds
+            if(flag)
+            {
+         	   API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
+         	   flag = !flag;
+         	   //vTaskDelay(pdMS_TO_TICKS(1000/portTICK_PERIOD_MS)); // Delay the task for 1000 milliseconds
+            }
+            else
+            {
+ 				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
+ 				flag = !flag;
+ 				//vTaskDelay(pdMS_TO_TICKS(1000/portTICK_PERIOD_MS)); // Delay the task for 1000 milliseconds
+            }
+     	}
+     }
+     vTaskDelete(NULL);
+
+ }
+
 
 static void Interfaces_init(void)
 {
@@ -207,7 +415,7 @@ static void Interfaces_init(void)
 	API_DISP_Clear_Full_Screen_3_Wire(WHITE);
 
 	/*********** MAX86150 ********************************************************/
-	API_MAX86150_I2C_Init();
+	API_MAX30101_I2C_Init();
 
 	/*********** Battery Monitor  ***********************************************/
 	API_Battery_monitor_Init();
@@ -221,23 +429,22 @@ static void Interfaces_init(void)
 	/**************** IR ADC init ***********************************************/
 	API_IR_ADC_Init();
 
-
 	/**************** BLE init ***********************************************/
-	API_BLE_Init();
-
+   API_BLE_Init();
 }
 
 
 void POR_Init(void)
 {
-	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+//	API_IO_Exp1_P1_write_pin(ECG_CSN,HIGH);
+	gpio_set_level(ECG_CSn_VCS, 1);
 
 	API_Select_PID();
 
 	memset(PatientID.pid,'\0',sizeof(PatientID.pid));
 
 	API_Disp_Reset_Screen();
-	API_DISP_Toggle_Date_Time();
+	//API_DISP_Toggle_Date_Time();
 	API_Disp_BT_Icon(WHITE);
 	flash_data.sys_mode = DEVICE_ACTIVE_MODE;
 	Did_Push_Button_Pressed = false;
@@ -279,7 +486,7 @@ void Manage_Device_Sleep(void)
 			if(API_Push_Btn_Get_Buttton_Press())
 			 {
 				POR_Init();
-
+				 Interfaces_init();
 				break;
 			 }
 		}
@@ -322,7 +529,7 @@ void ExecuteComplianceSequence(void)
 {
 	uint8_t btn_press=0;
 	API_ECG_Init();
-	API_MAX86150_Setup();
+	API_MAX30101_Setup();
 	API_ECG_Reginit_12Lead();
 	API_TIMER_Register_Timer(USER_INACTIVE_TIMEOUT);
 
@@ -340,41 +547,100 @@ void ExecuteComplianceSequence(void)
 void HandleDataSync(void)
 {
 	uint8_t btn_press;
-
+	uint16_t flag=0;
+	//int Dflag=20000;
+//	if(ota_data_avlbl)
+//	{
+//		return ;
+//	}
 	API_DISP_Display_Screen(DISP_DATA_SYNC_IN_PROGRESS);
-	API_Disp_Display_Exit_Bottom_Section();
+	//API_Disp_Display_Exit_Bottom_Section();
 
+	Delay_ms(1000);
+	//API_display_backlight_off();
 	if(Detect_low_battery_display_notification()==false)
 	{
 		while(1)
 		{
+
+			/*if(Dflag-- <= 1)
+			{
+				API_display_backlight_off();
+			}*/
+			//ota_flag = 1;
+			if(flag++ < 150)
+			{
+				API_display_backlight_off();
+			     API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
+			}
+			else if(flag > 150)
+			{
+				if(flag == 300)
+				flag = 0;
+				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
+			}
 			btn_press = API_Push_Btn_Get_Buttton_Press();
 
-			if(API_TIMER_Get_Timeout_Flag(DATA_SYNC_TIMEOUT)) // call get_time_out function
+			/*if(API_TIMER_Get_Timeout_Flag(DATA_SYNC_TIMEOUT)) // call get_time_out function
 			{
 				BT_Sync_Timeout_Init_State();
+				API_display_backlight_on();
 				API_DISP_Display_Screen(DISP_DATA_SYNC_FAIL);
 				Delay_ms(2000);
 				 EnterSleepMode(SYSTEM_DEEP_SLEEP);
-			}
+			}*/
 
-			if(IsValidRecordsInFlash == false)// No records in flash
+			if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
+			 {
+				API_display_backlight_on();
+				API_DISP_Display_Screen(BLUETOOTH_DISCONNECTED);
+				Delay_ms(1000);
+				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
+				BLE_DS = 1;
+				disconnect_wifi();
+				Data_sync_in_progress = 0;
+				break;
+			  	//API_Disp_BT_Icon(GREEN);
+			  	//Is_Device_Paired = DEFAULT;// to avoid Redisplaying the same thing again
+			 }
+
+
+			if(task_close)
 			{
-				API_DISP_Display_Screen(DISP_DATA_SYNC_COMPLETED);
-				Delay_ms(2000);
+				API_display_backlight_on();
+				API_DISP_Display_Screen(WIFI_DISABLED);
+				Delay_ms(1000);
+				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
 				break;
 			}
+
+
+//			if(IsValidRecordsInFlash == FALSE)// No records in flash
+//			{
+//				API_display_backlight_on();
+//				API_DISP_Display_Screen(DISP_DATA_SYNC_COMPLETED);
+//				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,LOW);
+//			    Delay_ms(1000);
+//				API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
+//				break;
+//			}
 
 			if((btn_press == 1) || ((btn_press == 2)))
 			{
-				API_DISP_Display_Screen(DISP_DATA_SYNC_FAIL);
-				Delay_ms(2000);
-				break;
+				API_DISP_Display_Screen(DISP_DATA_SYNC_IN_PROGRESS);
+				Delay_ms(200);
+				API_display_backlight_on();
+				Delay_ms(5000);
+				API_display_backlight_off();
+
+				//break;
 			}
+
 		}
 	}
 	else
 	{
+		API_display_backlight_on();
 		API_DISP_Display_Screen(DISP_DATA_SYNC_FAIL);
 		Delay_ms(2000);
 		EnterSleepMode(SYSTEM_DEEP_SLEEP);

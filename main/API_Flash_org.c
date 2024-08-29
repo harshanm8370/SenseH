@@ -16,8 +16,8 @@ TOTAL_RECORDS_STRUCT_t total_records;
 RECORD_HEADER_STRUCT_t record_header;
 VITAL_RESULT_t Vital_result;
 PID_STRUCT PatientID;
-bool IsValidRecordsInFlash;
-
+bool IsValidRecordsInFlash,MV50;
+uint8_t ECG6,ECG1,ECG12,SPO2_f,BP;
 uint8_t API_Flash_Initialize_Data_pointers(void)
 {
 	API_FLASH_Read(DATA_POINTERS_START_ADDR, &flash_data, sizeof(flash_data));
@@ -41,8 +41,8 @@ uint8_t API_Flash_Initialize_Data_pointers(void)
 			flash_data.bp1_write_addr				= BP1_START_ADDR;
 			flash_data.bp1_read_addr				= BP1_START_ADDR;
 
-			flash_data.bp2_write_addr				= BP2_START_ADDR;
-			flash_data.bp2_read_addr				= BP2_START_ADDR;
+			//flash_data.bp2_write_addr				= BP2_START_ADDR;
+			//flash_data.bp2_read_addr				= BP2_START_ADDR;
 
 			flash_data.ecg_1_lead_write_addr		= ECG_1_LEAD_START_ADDR;
 		    flash_data.ecg_1_lead_read_addr			= ECG_1_LEAD_START_ADDR;
@@ -112,7 +112,7 @@ void get_record_pointer_details (VITAL_TYPE_t vital, RECORD_POINTER_t *record_po
 			record_pointer->end_addr = BP1_END_ADDR;
 			record_pointer->one_record_len = BP1_ONE_REC_LEN;
 			break;
-		case BP2:
+		/*case BP2:
 			record_pointer->write_addr = flash_data.bp2_write_addr;
 			record_pointer->read_addr = flash_data.bp2_read_addr;
 			record_pointer->new_write_addr = &flash_data.bp2_write_addr;
@@ -120,7 +120,7 @@ void get_record_pointer_details (VITAL_TYPE_t vital, RECORD_POINTER_t *record_po
 			record_pointer->start_addr = BP2_START_ADDR;
 			record_pointer->end_addr = BP2_END_ADDR;
 			record_pointer->one_record_len = BP2_ONE_REC_LEN;
-			break;
+			break;*/
 		case SPO2:
 			record_pointer->write_addr = flash_data.spo2_write_addr;
 			record_pointer->read_addr = flash_data.spo2_read_addr;
@@ -187,12 +187,19 @@ uint32_t get_records_count(VITAL_TYPE_t vital_type)
 {
 	RECORD_POINTER_t records_pointer;
 	uint32_t records_count = 0;
-	
 	get_record_pointer_details (vital_type, &records_pointer);
 
 	if (records_pointer.read_addr > records_pointer.write_addr){
+
+		//printf("\nread addres > write address");
+//
+//		if(vital_type == ECG_12_LEAD)
+//		{
+//			printf("for 12 lead : \nREAD addres : %ld \n Write address : %ld",records_pointer.read_addr,records_pointer.write_addr);
+//		}
+		//printf("\n VITAL tpe : %d,READ addres : %ld  Write address : %ld one record len n: %ld , end Adress : %ld Strat address : %ld",vital_type,records_pointer.read_addr,records_pointer.write_addr,records_pointer.one_record_len,records_pointer.end_addr,records_pointer.start_addr);
 		records_count = (records_pointer.end_addr - records_pointer.read_addr) / records_pointer.one_record_len;
-		records_count += (records_pointer.start_addr - records_pointer.write_addr) / records_pointer.one_record_len;   
+		records_count += (records_pointer.write_addr - records_pointer.start_addr) / records_pointer.one_record_len;
 	}
 	else {
 		records_count = (records_pointer.write_addr - records_pointer.read_addr) / records_pointer.one_record_len;
@@ -324,8 +331,9 @@ void erase_one_record(VITAL_TYPE_t vital_type)
 	if(!get_records_count(vital_type)){
 		return;
 	}
+	printf("\n before get length");
    	get_record_pointer_details (vital_type, &records_pointer);	
-
+   	printf("\n after get length");
 	new_read_addr = records_pointer.new_read_addr;
 	temp_read_addr = records_pointer.read_addr + records_pointer.one_record_len;
  	//Roll over record read pointer to start of record 
@@ -356,7 +364,7 @@ void  API_Get_Total_Record_Count (TOTAL_RECORDS_STRUCT_t *total_records)
 	//BP1
 	total_records->bp1_records = get_records_count(BP1);
 	//BP2
-	total_records->bp2_records = get_records_count(BP2);
+	//total_records->bp2_records = get_records_count(BP2);
 
 	total_records->ecg_1_records = get_records_count(ECG_1_Lead);
 	//3 lead ecg record count
@@ -802,34 +810,44 @@ bool API_Flash_Org_Check_For_Memory_Free(void)
 {
 	bool status = false;
 	TOTAL_RECORDS_STRUCT_t nbf_records;
-
 	API_Get_Total_Record_Count(&nbf_records);
+	if(nbf_records.ecg_12_lead_ecord >= 50)
+	{
+		MV50 = 1;
+	}
 	if(nbf_records.bg_records < MAX_RECORDS)
+	{
+		if(nbf_records.bp1_records < MAX_RECORDS)
 		{
-			if(nbf_records.bp1_records < MAX_RECORDS)
+			BP =nbf_records.bp1_records;
+			if(nbf_records.ecg_12_lead_ecord < 50)
+			{
+				ECG12 = nbf_records.ecg_12_lead_ecord;
+				if(nbf_records.ecg_1_records < MAX_RECORDS)
 				{
-				if(nbf_records.bp2_records < MAX_RECORDS)
+					ECG1 =nbf_records.ecg_1_records;
+					if(nbf_records.ecg_3_records < MAX_RECORDS)
 					{
-					if(nbf_records.ecg_12_lead_ecord < MAX_RECORDS)
-					{
-						if(nbf_records.ecg_1_records < MAX_RECORDS)
+						ECG6 =nbf_records.ecg_3_records;
+						if(nbf_records.spo2_records < MAX_RECORDS)
 						{
-							if(nbf_records.ecg_3_records < MAX_RECORDS)
-								{
-								if(nbf_records.spo2_records < MAX_RECORDS)
-									{
-									if(nbf_records.temp_records < MAX_RECORDS)
-										{
-											status = true;
-										}
-									}
-								}
-						 }
+							SPO2_f=nbf_records.spo2_records;
+							if(nbf_records.temp_records < MAX_RECORDS)
+							{
+								return true;
+							}
+						}
 					}
 				}
 			}
 		}
 
+	}
+	BP =nbf_records.bp1_records;
+				ECG1 =nbf_records.ecg_1_records;
+				SPO2_f=nbf_records.spo2_records;
+				ECG12 = nbf_records.ecg_12_lead_ecord;
+				ECG6 =nbf_records.ecg_3_records;
 	return status;
 }
 
@@ -840,8 +858,8 @@ void API_Flash_Check_Update_Valid_Record_Status(void)
 
 	API_Get_Total_Record_Count(&nbf_records);
 
-	printf("\n bg:%d\n bp1:%d\n bp2:%d\n ecg12:%d\n ecg1:%d\n ecg3:%d\n spo2:%d\n temp:%d\n\n",nbf_records.bg_records,
-				nbf_records.bp1_records,nbf_records.bp2_records,nbf_records.ecg_12_lead_ecord,nbf_records.ecg_1_records,nbf_records.ecg_3_records,
+	printf("\n bg:%d\n bp1:%d\n ecg12:%d\n ecg1:%d\n ecg3:%d\n spo2:%d\n temp:%d\n\n",nbf_records.bg_records,
+				nbf_records.bp1_records,nbf_records.ecg_12_lead_ecord,nbf_records.ecg_1_records,nbf_records.ecg_3_records,
 				nbf_records.spo2_records,nbf_records.temp_records);
 
 	if(nbf_records.bg_records == 0)

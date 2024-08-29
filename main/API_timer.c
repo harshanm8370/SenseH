@@ -22,6 +22,7 @@ static bool time_out_10sec = false;
 static bool time_out_15sec = false;
 static bool time_out_30sec = false;
 static bool time_out_1min  = false;
+static bool time_out_2min  = false;
 static bool time_out_3min  = false;
 static bool time_out_5min  = false;
 static bool time_out_10min = false;
@@ -40,6 +41,7 @@ static uint32_t top_value_10sec = 0x00;
 static uint32_t top_value_15sec = 0x00;
 static uint32_t top_value_30sec = 0x00;
 static uint32_t top_value_1min  = 0x00;
+static uint32_t top_value_2min  = 0x00;
 static uint32_t top_value_3min  = 0x00;
 static uint32_t top_value_5min  = 0x00;
 static uint32_t top_value_10min = 0x00;
@@ -225,6 +227,12 @@ void API_TIMER_Register_Timer(TIMER_t timer_type)
 			time_out_1min = false;
 			break;
 		}
+	case TIMER_2MIN  :
+			{
+				top_value_2min  = 120000;
+				time_out_2min = false;
+				break;
+			}
 	case TIMER_3MIN  :
 		{
 			top_value_3min  = 180000;
@@ -309,6 +317,11 @@ void API_TIMER_Kill_Timer(TIMER_t timer_type)
 			time_out_1min = false;
 			break;
 		}
+		case TIMER_2MIN  :{
+					top_value_2min  = 0;
+					time_out_2min = false;
+					break;
+				}
 		case TIMER_3MIN  :{
 			top_value_3min  = 0;
 			time_out_3min = false;
@@ -441,6 +454,16 @@ bool API_TIMER_Get_Timeout_Flag(TIMER_t timer_type)
 			}
 		 break;
 		}
+
+		case TIMER_2MIN  :
+				{
+					if(time_out_1min == true)
+					{
+						time_out_2min = false;
+						time_out_flag =true;
+					}
+				 break;
+				}
 
 		case TIMER_3MIN  :
 		{

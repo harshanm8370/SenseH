@@ -10,7 +10,23 @@
 #include "Firmware_version.h"
 #include "ProjectConfiguration.h"
 #include "API_Display.h"
+#include "API_TCP_Server.h"
+#include <string.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
+#include <freertos/semphr.h>
+#include "esp_event.h"
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
+
+uint8_t Device_stat;
+extern char tag[];
+extern int clientSock;
+int last_flag;
 /************************************************ MACROS *****************************************************************/
 #define BT_RAW_DATA_LENGTH			  	580	 //BT_PACKET_SIZE = BT_RAW_DATA_LENGTH + payload bytes, this should not cross MTU:600   
 #define OFFLINE_REC_SUMMARY_LEN			81  /*need to verify */
@@ -51,6 +67,7 @@ static void bt_firmware_request_response(void);
 
 static uint8_t  FW_buffer[BUFFER_SIZE];
 
+
 /*
 static void bt_send_device_self_diagnosis_response(void);
 static void bt_send_device_full_diagnosis_response(void);
@@ -77,9 +94,11 @@ static VITALS_RESPONSE_STATE bt_response_state = INIT_STATE;
 
 static uint32_t total_length_to_send = 0;
 static uint8_t bt_tx_buff[600] = {0};
+static uint8_t wf_tx_buff[2]={4,4};
 static uint8_t bt_rx_buff[600] = {0};
-static uint8_t client_request_cmd = 0; 
-static uint16_t bt_total_received_bytes = 0;
+//static uint8_t wf_rx_buff[600] = {0};
+static uint8_t client_request_cmd = 0;
+uint16_t bt_total_received_bytes = 0;
 static uint16_t count = 0;
 static uint16_t skip_count = 0;
 static uint32_t remainder = 0;
@@ -88,6 +107,7 @@ static char mobile_number[10] = {'\0'};
 static bool is_arrived_timesynq_req = FALSE;
 static bool is_OTA_request_arrived  = FALSE;
 uint8_t BT_flash_buffer[DATA_BUFFER3_LENGTH];
+//for testing
 /************************strctures*******************************/
 
 bool FW_complete_data_received = false;
@@ -101,46 +121,58 @@ bool BT_ongoing_session;
 * \param[in]	void
 * \return		void
 */
-
+bool task_close = 0,start;
 static uint32_t countReq =0;
 
 static uint64_t Application_len;
 static uint32_t FW_buff_index;
-static uint32_t FW_data_len;
+uint32_t FW_data_len;
 
 
-void BT_process_requests(void)
+bool BT_process_requests(void)
 {
 	static bool bt_session_complete    = FALSE;
 	char date_info[50];
 	int len;
 
 	memset(bt_rx_buff, 0x00, sizeof(bt_rx_buff));
-	bt_total_received_bytes = API_BLE_Receive(bt_rx_buff);
-	if (BUF_EMPTY == bt_total_received_bytes){
+	//printf("%d ")
+	if(clientSock != -1 && clientSock > 1)
+	{
+		bt_total_received_bytes = API_Wifi_Receive(bt_rx_buff);
+		printf("\nData received from wifi");
+	}
+	else
+	{
+		bt_total_received_bytes = API_BLE_Receive(bt_rx_buff);
+		printf("\nData received from BLE");
+	}
+
+	if (BUF_EMPTY == bt_total_received_bytes)
+	{
 		bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
 		printf("No command received from APP\n");
-		return; 
+		return false;
 	}
     //Condition for not to respond to any Junk data from bluetooth
 	if((bt_rx_buff[0] != SOS) && ((bt_rx_buff[bt_total_received_bytes-3]) != EOS)){
 		bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
-        printf("Not a valid command request string from BT/APP\n");
-        return;
-    }
-    if((bt_rx_buff[1] == REC_SNAPSHOT_REQ) || (bt_rx_buff[1] == TIME_SYNC_REQ)){
+		printf("Not a valid command request string from BT/APP\n");
+		return false;
+	}
+	if((bt_rx_buff[1] == REC_SNAPSHOT_REQ) || (bt_rx_buff[1] == TIME_SYNC_REQ)){
 		BT_ongoing_session = FALSE;
 		bt_response_state = INIT_STATE;
 
 	}
 
-    if(Is_Test_In_Progress)
-    {
-    	bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
-    	printf("\nTest is in progress, So can not sync the data");
-    	return;
-    }
-	//New request from the BT client for record sync  	
+	if(Is_Test_In_Progress)
+	{
+		bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
+		printf("\nTest is in progress, So can not sync the data");
+		return false;
+	}
+	//New request from the BT client for record sync
 	if(BT_ongoing_session == FALSE){
 		client_request_cmd = bt_rx_buff[1];
 		BT_ongoing_session = TRUE;
@@ -157,20 +189,43 @@ void BT_process_requests(void)
 	}
 
 
-//	printf("client_request_cmd: %x\n", client_request_cmd);
+	printf("client_request_cmd: %02X\n", client_request_cmd);
+
 	switch (client_request_cmd){
-		case BP1_data_req:
-			printf("\nBP1 Sync started");
-			Data_sync_in_progress = TRUE;
-			bt_session_complete = bt_send_multi_response(BP1, BP1_ONE_REC_LEN);
-			printf("bt_session_complete is %d\n",bt_session_complete);
-			printf("\ncount=%ld",countReq++);
-			if (bt_session_complete){
-		    	BT_ongoing_session = false;
-				client_request_cmd = NO_CMD_REQ;
-				printf("\nBP1 Sync END");
-			}
-			break;
+	case WIFI_ENABLE:
+		printf("\n Wifi Enabling \n");
+
+		if(task_close == 1)
+		{
+			start =1;
+			task_close =0;
+		}
+		API_TCP_Server();
+		Data_sync_in_progress = FALSE;
+		BT_ongoing_session = false;
+		Print_time("/SYNC start");
+		break;
+	case WIFI_DISABLE:
+		printf("\n Wifi Disabling \n");
+		disconnect_wifi();
+		Data_sync_in_progress = FALSE;
+		task_close = 1;
+		BT_ongoing_session = false;
+		Print_time("/SYNC END");
+		clientSock = -1;
+		break;
+	case BP1_data_req:
+		printf("\nBP1 Sync started");
+		Data_sync_in_progress = TRUE;
+		bt_session_complete = bt_send_multi_response(BP1, BP1_ONE_REC_LEN);
+		printf("bt_session_complete is %d\n",bt_session_complete);
+		printf("\ncount=%ld",countReq++);
+		if (bt_session_complete){
+			BT_ongoing_session = false;
+			client_request_cmd = NO_CMD_REQ;
+			printf("\nBP1 Sync END");
+		}
+		break;
 
 		case BP2_data_req:
 			printf("\nBP2 Sync started");
@@ -183,6 +238,22 @@ void BT_process_requests(void)
 				client_request_cmd = NO_CMD_REQ;
 				printf("\nBP2 Sync END");
 			}
+			break;
+
+
+		case Test_status_req:
+			//Data_sync_in_progress = TRUE;
+			printf("\nrequesting for test stat");
+
+			if(API_BLE_Transmit((uint8_t *)&Device_stat, sizeof(Device_stat)) == 3)
+				printf("\n response transmitted as : %d",Device_stat);
+			bt_session_complete = TRUE;
+
+			if (bt_session_complete){
+					BT_ongoing_session = false;
+					client_request_cmd = NO_CMD_REQ;
+				}
+
 			break;
 
 		case BG_data_req:
@@ -216,24 +287,23 @@ void BT_process_requests(void)
 					}
 					break;
 
-		case ECG_6_Lead_data_req:
-		    //send ecg response over bluetooth
-			Data_sync_in_progress = TRUE;
-			bt_session_complete = bt_send_multi_response(ECG_6_Lead, ECG_3_LEAD_REC_LEN);
-			if (bt_session_complete){
-				BT_ongoing_session = false;
-				client_request_cmd = NO_CMD_REQ; 
-			}
-			break;
+	case ECG_6_Lead_data_req:
+		Data_sync_in_progress = TRUE;
+		bt_session_complete = bt_send_multi_response(ECG_6_Lead, ECG_3_LEAD_REC_LEN);
+		if (bt_session_complete){
+			BT_ongoing_session = false;
+			client_request_cmd = NO_CMD_REQ;
+		}
+		break;
 
-		case ECG_12_Lead_data_req:
-			Data_sync_in_progress = TRUE;
-			bt_session_complete = bt_send_multi_response(ECG_12_LEAD, ECG_12_LEAD_ONE_REC_LEN);
-			if (bt_session_complete){
-				BT_ongoing_session = 0x00;
-				client_request_cmd = NO_CMD_REQ; 
-			}
-			break;
+	case ECG_12_Lead_data_req:
+		Data_sync_in_progress = TRUE;
+		bt_session_complete = bt_send_multi_response(ECG_12_LEAD, ECG_12_LEAD_ONE_REC_LEN);
+		if (bt_session_complete){
+			BT_ongoing_session = 0x00;
+			client_request_cmd = NO_CMD_REQ;
+		}
+		break;
 
 		case SPO2_data_req:
 			Data_sync_in_progress = TRUE;
@@ -340,6 +410,10 @@ void BT_process_requests(void)
 				bt_send_ack_or_nack_response(NACK_INVALID_PACKET);
 				break;
 			}
+			else
+			{
+				printf("correct length, received: %d, packet len: %d\n", bt_total_received_bytes - 4, len);
+			}
 			//TODO: Check CRC for the received packet
 
 			bt_send_ack_or_nack_response(NACK_DEVICE_BUSY); //Processing data
@@ -361,6 +435,11 @@ void BT_process_requests(void)
 				is_OTA_request_arrived = FALSE;
 				//BT_ongoing_session = FALSE;
 			} //ACK response will be sent after reading firmware data in case of recevied packet is good
+			else if(ret == BT_DISCONNECTED)
+			{
+				FW_complete_data_received = FALSE;
+				is_OTA_request_arrived = FALSE;
+			}
 			break;
 
 		default:
@@ -371,6 +450,7 @@ void BT_process_requests(void)
 	}
     //Clear the BT receive buffer
 	MemSet(bt_rx_buff, 0x00, sizeof(bt_rx_buff));
+	return true;
 }
 
 /*bool bt_send_single_response(VITAL_TYPE_t vital, uint16_t one_record_len)
@@ -380,6 +460,7 @@ void BT_process_requests(void)
  */
 bool bt_send_single_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 {
+	printf("\n %s",__func__);
 	uint16_t crc_value = 0;
 	uint8_t status = FALSE;
 	uint16_t total_length = (one_record_len + EOS_SIZE + CHKSUM_SIZE);
@@ -391,7 +472,8 @@ bool bt_send_single_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 				Load_record_header_to_buffer();
 			}
 			else{
-				API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+				wifi_send_data(bt_tx_buff, total_length_to_send);
+
 			}
 			retry_count++;
 			return (bt_response_session_complete);
@@ -406,34 +488,34 @@ bool bt_send_single_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 	else{
 		total_length_to_send = (one_record_len + BT_PACKET_FIELD_LENGTH);
 		switch (bt_response_state) {
-			case INIT_STATE:
-				status = API_Flash_Read_Record(vital, BT_flash_buffer);
-				//If no data in the flash than we send ack as data not available
-				if(status == NO_RECORDS_IN_FLASH) {
-					bt_send_ack_or_nack_response(NACK_DATA_NOT_AVAILABLE);
-					bt_response_session_complete = TRUE;
-					break;
-				}
-				bt_tx_buff[0] = SOS;
-				bt_tx_buff[1] = EOR;
-				MemCpy(bt_tx_buff + SOS_SIZE + CMD_SIZE, &total_length, LENGTH_SIZE);
-				MemCpy((bt_tx_buff + SOS_SIZE + CMD_SIZE + LENGTH_SIZE), BT_flash_buffer, one_record_len);
-				bt_tx_buff[(SOS_SIZE + CMD_SIZE + LENGTH_SIZE + one_record_len)] = EOS;
-				crc_value = compute_crc_16(bt_tx_buff, total_length_to_send - CHKSUM_SIZE);
-				MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE + one_record_len + EOS_SIZE ), &crc_value,CHKSUM_SIZE);
-				API_BLE_Transmit(bt_tx_buff, total_length_to_send);
-				bt_response_state = WAIT_ACK_EOR_STATE;
-				break;
-
-			case WAIT_ACK_EOR_STATE:
-				erase_one_record(vital);
-				bt_response_state = INIT_STATE;
+		case INIT_STATE:
+			status = API_Flash_Read_Record(vital, BT_flash_buffer);
+			if(status == NO_RECORDS_IN_FLASH) {
+				bt_send_ack_or_nack_response(NACK_DATA_NOT_AVAILABLE);
 				bt_response_session_complete = TRUE;
-				Data_sync_in_progress = FALSE;
 				break;
-			
-			default:
-				break;
+			}
+			bt_tx_buff[0] = SOS;
+			bt_tx_buff[1] = EOR;
+			MemCpy(bt_tx_buff + SOS_SIZE + CMD_SIZE, &total_length, LENGTH_SIZE);
+			MemCpy((bt_tx_buff + SOS_SIZE + CMD_SIZE + LENGTH_SIZE), BT_flash_buffer, one_record_len);
+			bt_tx_buff[(SOS_SIZE + CMD_SIZE + LENGTH_SIZE + one_record_len)] = EOS;
+			crc_value = compute_crc_16(bt_tx_buff, total_length_to_send - CHKSUM_SIZE);
+			MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE + one_record_len + EOS_SIZE ), &crc_value,CHKSUM_SIZE);
+			//API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+			wifi_send_data(bt_tx_buff, total_length_to_send);
+			bt_response_state = WAIT_ACK_EOR_STATE;
+			break;
+
+		case WAIT_ACK_EOR_STATE:
+			erase_one_record(vital);
+			bt_response_state = INIT_STATE;
+			bt_response_session_complete = TRUE;
+			Data_sync_in_progress = FALSE;
+			break;
+
+		default:
+			break;
 		}
 	}
 	return (bt_response_session_complete);
@@ -463,8 +545,7 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 				Load_record_header_to_buffer();
 			}
 			else {
-				printf("1. %s --> Length: %ld\n", __func__, total_length_to_send);
-				API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+				wifi_send_data(bt_tx_buff, total_length_to_send);
 			}
 			retry_count++;
 			return(bt_response_session_complete);
@@ -478,22 +559,28 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 	}
 	else {
 		retry_count = 0;
-		// this block is to serve the BP_RECORD REQUEST
-		switch (bt_response_state){
+
+		while(clientSock != -1 && clientSock > 0)
+		{
+			switch (bt_response_state)
+			{
 			case INIT_STATE:
-
+				last_flag = 0;
 				BP_Length_tx = 0;
-
 				total_length_to_send = (REC_HEADER_LEN + BT_PACKET_FIELD_LENGTH);
+				printf("\n total_length_to_send: %ld",total_length_to_send);
 				status = API_Flash_Read_Record(vital, BT_flash_buffer);
+				printf("\n status: %d",status);
 				/*this block will send DATA_NOT_AVAILABLE nack if no record found */
 				if(status == NO_RECORDS_IN_FLASH){
+					printf("\n NO_RECORDS_IN_FLASH");
 					bt_send_ack_or_nack_response(NACK_DATA_NOT_AVAILABLE);
 					bt_response_session_complete = TRUE;
 					break;
 				}
 				Load_record_header_to_buffer();
 				bt_response_state = WAIT_ACK_SOR_STATE;
+				skip_count = 0;
 				break;
 
 				//to send the continuation of the record
@@ -504,17 +591,18 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 				count = (one_record_len - REC_HEADER_LEN)/BT_RAW_DATA_LENGTH;
 				remainder = (one_record_len - REC_HEADER_LEN)%BT_RAW_DATA_LENGTH;
 				printf("count: %d, remainder: %ld\n", count, remainder);
-				if(count){
-					Load_Raw_Data_To_Buffer(COR);	//load the raw data to the buffer
+               if(count){
+					Load_Raw_Data_To_Buffer(SOR);	//load the raw data to the buffer
 					skip_count ++;					//increment the skip_counter to point to next 240 bytes
 					count --;						//after sending every packet we decrement the count
 					printf("2. %s --> Length: %ld\n", __func__, total_length_to_send);
-					API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+					wifi_send_data(bt_tx_buff, total_length_to_send);
 					bt_response_state = WAIT_ACK_COR_STATE;
 				}
 				break;
 
 			case WAIT_ACK_COR_STATE:
+
 				MemSet(bt_tx_buff,0x00,sizeof(bt_tx_buff));
 				/*in this block we are sending remaining packets*/
 				printf("Packet count: %d\n", count);
@@ -525,11 +613,15 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 						Load_Raw_Data_To_Buffer(EOR);								//   IF No remainder then overwrite the COR by EOR
 						bt_response_state = WAIT_ACK_EOR_STATE;
 						printf("3. %s --> Length: %ld\n", __func__, total_length_to_send);
-						API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+						wifi_send_data(bt_tx_buff, total_length_to_send);
+
 					}
 					else{
 						Load_Raw_Data_To_Buffer(COR);
-						API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+						wifi_send_data(bt_tx_buff, total_length_to_send);
+
+
+
 						bt_response_state = WAIT_ACK_COR_STATE;
 					}
 					++skip_count;
@@ -549,8 +641,8 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 					crc_value = compute_crc_16(bt_tx_buff,(total_length_to_send-CHKSUM_SIZE));
 					MemCpy(bt_tx_buff + remainder + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE + EOS_SIZE),&crc_value,CHKSUM_SIZE);
 					printf("4. %s --> Length: %ld\n", __func__, total_length_to_send);
-					API_BLE_Transmit(bt_tx_buff, total_length_to_send);
-
+					//API_BLE_Transmit(bt_tx_buff, total_length_to_send);
+					wifi_send_data(bt_tx_buff, total_length_to_send);
 					bt_response_state = WAIT_ACK_EOR_STATE;
 					break;
 				}
@@ -573,17 +665,80 @@ bool bt_send_multi_response(VITAL_TYPE_t vital, uint16_t one_record_len)
 
 				printf("ecg_1_records : %d\n", Total_Read_CurrentRecords.ecg_1_records);
 
-				break;
-		}
-	}
+				wifi_send_data(wf_tx_buff,sizeof(wf_tx_buff) / sizeof(wf_tx_buff[0]));
+				last_flag=1;
 
-	if(bt_response_state != WAIT_ACK_EOR_STATE){
-	BP_Length_tx += total_length_to_send-BT_PACKET_FIELD_LENGTH;
-	//printf("BP_Length_tx = %d\n",BP_Length_tx);
+				break;
+
+			}//switch
+			if(last_flag==1)
+			{
+				close(clientSock);
+				clientSock = -1;
+				last_flag = 0;
+				break;
+			}
+		}
+
+
+	}//else
+
+	if(bt_response_state != WAIT_ACK_EOR_STATE)
+	{
+		BP_Length_tx += total_length_to_send-BT_PACKET_FIELD_LENGTH;
+		//printf("BP_Length_tx = %d\n",BP_Length_tx);
 
 	}
 
 	return(bt_response_session_complete);
+
+}
+void wifi_send_data(uint8_t* data, size_t length)
+{
+	if (clientSock != -1 && clientSock > 0 )
+	{
+		printf("\nSending data...");
+
+		for (size_t i = 0; i < length; i++)
+		{
+			printf("%02X ", data[i]);
+		}
+		printf("\n");
+
+		int bytes_sent = send(clientSock, (uint8_t*)data, length, 0);
+		if (bytes_sent < 0)
+		{
+			printf("\n send failed: errnr ");
+		}
+		else
+		{
+			printf( "Sent  bytes %d", bytes_sent);
+			char endbuffer[10];
+			memset(endbuffer, 0, sizeof(endbuffer));
+			while(1)
+			{
+				int len = recv(clientSock, endbuffer, sizeof(endbuffer) - 1, 0);
+				if (len > 0)
+				{
+					if (strcmp(endbuffer, "END") == 0)
+					{
+						printf("\n Received String (Debug): %s", endbuffer);
+
+						break;
+					}
+					else if (strcmp(endbuffer, "ACK") == 0)
+					{
+						printf("\n Received String (Debug): %s", endbuffer);
+						break;
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		printf("\n TCP clientSock is not Connected \n");
+	}
 }
 
 /*	static void bt_ack_or_nack_response(uint8_t command)
@@ -599,7 +754,7 @@ static void bt_send_ack_or_nack_response(uint8_t command)
 	response.length = EOS_SIZE + CHKSUM_SIZE;
 	response.eos = EOS;
 	response.chksum = compute_crc_16((uint8_t *)&response,(sizeof(response)-CHKSUM_SIZE));
-//	printf("%s: -- ACK/NACK: %x\n", __func__, command); 
+	//	printf("%s: -- ACK/NACK: %x\n", __func__, command);
 	API_BLE_Transmit((uint8_t *)&response, sizeof(response));
 }
 
@@ -618,8 +773,10 @@ void Load_record_header_to_buffer(void)
 	MemCpy(temp.data, BT_flash_buffer, REC_HEADER_LEN);
 	temp.eos = EOS;
 	temp.chksum = compute_crc_16((uint8_t *)&temp,(sizeof(temp) - CHKSUM_SIZE));
-	printf("%s --> Length: %d\n", __func__, sizeof(temp)); 
-	API_BLE_Transmit((uint8_t *)&temp, sizeof(temp));
+	printf("%s --> Length: %d\n", __func__, sizeof(temp));
+	//API_BLE_Transmit((uint8_t *)&temp, sizeof(temp));
+	wifi_send_data((uint8_t*)&temp, sizeof(temp));
+
 }
 
 /*	void Load_Raw_Data_To_Buffer()
@@ -631,9 +788,9 @@ void Load_Raw_Data_To_Buffer(uint8_t command)
 {
 	uint16_t length = BT_RAW_DATA_LENGTH + EOS_SIZE + CHKSUM_SIZE;
 	uint16_t crc_value = 0;
-
 	bt_tx_buff[0] = SOS;
 	bt_tx_buff[1] = command;
+
 	MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE), &length, LENGTH_SIZE); //2 is to skip those many bytes (SOS, COR each one byte)
 	MemCpy(bt_tx_buff + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE),(((uint8_t*)(BT_flash_buffer)) + REC_HEADER_LEN + (BT_RAW_DATA_LENGTH * skip_count)), BT_RAW_DATA_LENGTH);
 	bt_tx_buff[BT_RAW_DATA_LENGTH + (SOS_SIZE + CMD_SIZE + LENGTH_SIZE)] = EOS; //fill EOS after raw data(240)and 4 bytes SOS, COR,length 2 bytes
@@ -725,7 +882,10 @@ void bt_firmware_request_response(void)
 	frame.sos = SOS;
 	frame.cmd = EOR;
 	frame.length = FW_VER_SIZE + EOS_SIZE + CHKSUM_SIZE;
-	MemCpy(&frame.data, FIRMWARE_VERSION, sizeof(FIRMWARE_VERSION));
+	frame.data[0] = 1; // major fw version
+	frame.data[1] = 0; // minor fw version
+	frame.data[2] = 0; // bug fix
+	//MemCpy(&frame.data, FIRMWARE_VERSION, sizeof(FIRMWARE_VERSION));
 	frame.eos = EOS;
 	frame.chksum = compute_crc_16((uint8_t*)&frame, sizeof(frame)-CHKSUM_SIZE);
 	API_BLE_Transmit((uint8_t*)&frame, sizeof(frame));
@@ -761,6 +921,13 @@ int BTL_validate_and_copy2buf(uint8_t * fw_buff)
 	FW_buff_index += bt_total_received_bytes - 7;
 	printf ("bt_total_received_bytes: %d\n", bt_total_received_bytes);
 	while (validation_completed != TRUE) { 
+
+		if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
+	    {
+			API_display_backlight_on();
+			API_DISP_Display_Screen(BLUETOOTH_DISCONNECTED);
+			return BLUETOOTH_DISCONNECTED;
+		}
 		if(fw_buff[index1] == 0){ // indicates that end the record arrived
 			FW_complete_data_received = true;
 			validation_completed = TRUE;
@@ -813,7 +980,8 @@ int read_firmware_data (uint8_t * ota_write_data, int BUFFSIZE)
 
 	if (FW_data_len > BUFFSIZE){
 		printf("Firmware data is more than the buffer size\n");
-		return -1;
+		FW_data_len = 0;
+		return 2;
 	}
 	
 	data_len = FW_data_len;

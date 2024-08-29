@@ -56,8 +56,10 @@ extern bool FW_complete_data_received;
 
 int read_firmware_data (uint8_t * ota_write_data, int BUFFSIZE);
 bool is_firmware_data_available (void);
-bool start_firmware_Upgrade(void);
+char start_firmware_Upgrade(void);
 bool Firmware_upgrade (void);
+bool diagnostic(void);
+void print_sha256 (const uint8_t *image_hash, const char *label);
 
 
 #endif

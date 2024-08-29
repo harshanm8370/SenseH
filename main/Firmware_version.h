@@ -8,8 +8,8 @@
 *****************************************************************************************/
 
 
-#define FIRMWARE_VER      		"APP:2201-01-02"
-#define FIRMWARE_VERSION  		" 2201-01-02"
+#define FIRMWARE_VER      		"SHB 0.11"
+#define FIRMWARE_VERSION  		"SHB 0.11"
 #define FW_VER_SIZE				10
 
 #endif

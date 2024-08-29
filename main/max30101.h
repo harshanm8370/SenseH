@@ -1,5 +1,5 @@
-#ifndef MAX_MAX86150_H
-#define MAX_MAX86150_H
+#ifndef MAX_MAX30101_H
+#define MAX_MAX30101_H
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -21,7 +21,10 @@ typedef uint8_t byte;
   void setPulseWidth(uint8_t pulseWidth);
 
   void setPulseAmplitudeRed(uint8_t value);
+  void setRANGE(uint8_t amplitude);
   void setPulseAmplitudeIR(uint8_t value);
+  void setProxythresh(uint8_t amplitude);
+  void setpilotPulseAmplitudeProximity(uint8_t amplitude);
   void setPulseAmplitudeProximity(uint8_t value);
 
   void setProximityThreshold(uint8_t threshMSB);
@@ -54,6 +57,7 @@ typedef uint8_t byte;
 
   //FIFO Reading
   uint16_t Max86150_CheckDataAvailibity(void); //Checks for new data and fills FIFO
+  uint16_t Max30101_CheckDataAvailibity(void);
   uint8_t available(void); //Tells caller how many new samples are available (head - tail)
   void nextSample(void); //Advances the tail of the sense array
   uint32_t getFIFORed(void); //Returns the FIFO sample pointed to by tail
@@ -64,6 +68,7 @@ typedef uint8_t byte;
   uint8_t getWritePointer(void);
   uint8_t getReadPointer(void);
   void Max86150_Clear_Fifo(void); //Sets the read/write pointers to zero
+  void Max30101_Clear_Fifo(void);
 
   //Proximity Mode Interrupt Threshold
   void setPROXINTTHRESH(uint8_t val);
@@ -74,8 +79,9 @@ typedef uint8_t byte;
 
   // Detecting ID/Revision
   uint8_t getRevisionID();
-  uint8_t readPartID();
+  uint8_t readPartID(uint8_t regaddr);
 	uint8_t readRegLED();
+	extern  uint32_t ppg_count;
 
   // Setup the IC with user selectable settings
   //void setup(byte powerLevel = 0x1F, byte sampleAverage = 4, byte ledMode = 3, int sampleRate = 400, int pulseWidth = 411, int adcRange = 4096);
@@ -84,22 +90,23 @@ typedef uint8_t byte;
   uint8_t readRegister8(uint8_t address, uint8_t reg);
   void writeRegister8(uint8_t address, uint8_t reg, uint8_t value);
 
-  void API_MAX86150_I2C_Init(void);
+  void API_MAX30101_I2C_Init(void);
   void API_MAX86150_I2C_DeInit(void);
 
   void readRevisionID();
 
   void bitMask(uint8_t reg, uint8_t mask, uint8_t thing);
   void Max86150_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledMode, int sampleRate, int pulseWidth, int adcRange);
+  void Max30101_Configure_Registers(byte powerLevel, byte sampleAverage, byte ledMode, int sampleRate, int pulseWidth, int adcRange);
 
   esp_err_t API_max86150_Read_brust(uint8_t address, uint8_t reg_start_addr,uint8_t data_buff[],uint8_t nbf_bytes);
 
   void API_max86150_drdy_handle(void);
   uint16_t API_MAX86150_Check_NewData(void);
 
-  bool API_MAX86150_Setup(void);
+  bool API_MAX30101_Setup(void);
   bool API_MAX86150_Raw_Data_capture(uint32_t Red_data[],uint32_t IR_data[],uint32_t ECG_Data[],uint32_t nbf_samples,bool is_dummy_capture,uint8_t red_or_ir_or_ecg);
-
+  bool API_MAX30101_Raw_Data_capture_new(uint32_t Red_data[],uint32_t IR_data[],uint16_t capture_number,bool is_dummy_capture);
   void API_DRDY_Pulse_Count(void); // DRDY Count
 
 #endif

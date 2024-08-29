@@ -19,86 +19,208 @@
 #include "push_button.h"
 #include "API_timer.h"
 #include <math.h>
-#include "max86150.h"
+#include "max30101.h"
 #include "API_IO_Exp.h"
 #include "API_ADS.h"
 #include "Error_Handling.h"
 #include "API_Flash_org.h"
 #include "Quick_Test.h"
+#include "bluetooth.h"
 
 bool Lead12_Data_Capture(void);
-
+bool Lead12_Data_Capture_new(uint32_t vlead);
+uint32_t flagECG=1,offfset=0;
+extern bool  MV50 ;
 
 bool Lead12_Test(void)
 {
 	uint16_t result[4] = {0};
+		uint32_t vlead;
 
-	printf("\n12 Lead ECG Test Started");
+		printf("\n12 Lead ECG Test Started");
 
-	Is_time_displayed = TRUE;
-	API_DISP_Toggle_Date_Time();
+		Is_time_displayed = TRUE;
+		//API_DISP_Toggle_Date_Time();
 
-	if((Selected_PID_type == VALID_PID) || (Selected_PID_type == GUEST_PID))
-	{
+		if((Selected_PID_type == VALID_PID) || (Selected_PID_type == GUEST_PID))
+		{
 
-			if(API_Flash_Org_Check_For_Memory_Free())
-			{
-                // Disp quick test 1 screen
-				API_IO_Exp_Power_Control(EN_VLED,LOW);
-				API_IO_Exp_Power_Control(EN_ANALOG,LOW);
-				API_IO_Exp_Power_Control(EN_IR,LOW);
-				API_Buzzer_Sound(SHORT_BEEP);
-
-				API_DISP_Display_Screen(DISP_ECG_12_LEAD_SCREEN);
-				//Delay_ms(2000);
-
-				printf("\nEnteriing into 12 Lead ECG Init");
-
-
-				if(API_ECG_Init())
+				if(API_Flash_Org_Check_For_Memory_Free())
 				{
-					printf("\nECG L2 Init Done!");
+	                // Disp quick test 1 screen
+					API_IO_Exp_Power_Control(EN_VLED,LOW);
+					API_IO_Exp_Power_Control(EN_ANALOG,HIGH);
+					API_IO_Exp_Power_Control(EN_IR,LOW);
+					API_Buzzer_Sound(SHORT_BEEP);
 
-					API_DISP_Display_Screen(DISP_TEST_IN_PROGRESS);
+					API_DISP_Display_Screen(DISP_ECG_12_LEAD_SCREEN);
+					//Delay_ms(2000);
 
-					Lead12_Data_Capture();
+					printf("\nEnteriing into 12 Lead ECG Init");
 
-					API_Disp_Quick_Test_Result(result);
-					Delay_ms(2000);
-					// TODO; retry when raw data is not good
-					//Filter;
+
+					RECORD_OPS_STATUS flash_write_status;
+				    offfset = 0;
+				    MemSet(BT_flash_buffer,0,sizeof(BT_flash_buffer));
+
+					API_Update_Record_Header(ECG_12_LEAD,&record_header);
+
+					MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
+					offfset = REC_HEADER_LEN;
+
+
+					if(API_ECG_Init())// We need to check secquence after Quickvital
+					{
+						printf("\nECG L2 Init Done!");
+
+						API_DISP_Display_Screen(DISP_TEST_IN_PROGRESS);
+
+	//					Lead12_Data_Capture();
+						for(vlead=0;vlead<=5;vlead++)
+						{
+							if(!(Lead12_Data_Capture_new(vlead)))
+							{
+								return 0;
+							}
+							if(!vlead)
+							{
+							
+								MemCpy((void*)BT_flash_buffer+offfset,(void*)ECG_Lead1_buff,(600*4));
+								offfset +=(600*4);
+
+								MemCpy((void*)BT_flash_buffer+offfset,(void*)ECG_Lead2_buff,(600*4));
+								offfset += (600*4);
+							}
+	
+							MemCpy((void*)BT_flash_buffer+offfset,(void*)ECG_Lead3_buff,(600*4));
+							offfset += (600*4);
+						}
+						flash_write_status = API_Flash_Write_Record(ECG_12_LEAD,(void *)BT_flash_buffer);
+
+					    if(flash_write_status != WRITE_RECORDS_SUCCESS) Catch_RunTime_Error(LEAD12_ECG_DATA_STORE_TO_FLASH_FAIL);
+
+
+						IsValidRecordsInFlash = 1;
+
+						API_Disp_Quick_Test_Result();
+						Delay_ms(2000);
+						// TODO; retry when raw data is not good
+						//Filter;
+					}
+					else
+					{
+						printf("\n12 Lead ECG Init Fail");
+					}
+
 				}
+
 				else
 				{
-					printf("\n12 Lead ECG Init Fail");
+					printf("\nDevice Memory Full... Please sync the data");
+					if(MV50)
+					{
+					 API_DISP_Memory_Full_Status();
+					 for(int delete_rec = 1; delete_rec <=50; delete_rec++)
+					 {
+						 printf("\n 12 Lead Deleting Record = %d",delete_rec);
+						 erase_one_record(ECG_12_LEAD);
+						 API_Flash_Check_Update_Valid_Record_Status();
+					 }
+					 MV50 = 0;
+					}
 				}
+				printf("\nTotal SPO2 Records = %ld", get_records_count(SPO2));
+				printf("\nTotal BP1 Records = %ld", get_records_count(BP1));
+				printf("\nTotal ECG L1&L2 Records = %ld", get_records_count(ECG_6_Lead));
+				printf("\nTotal 12LEAD Records = %ld", get_records_count(ECG_12_LEAD));
+		}
 
-			}
+		else
+		{
+	        printf("\nPlease select the PID");
+	        API_Disp_Quick_test_screen(DISP_QT_PLEASE_REGISTER_PID);
+		}
 
-			else
-			{
-				printf("\nDevice Memory Full... Please sync the data");
-				 API_DISP_Memory_Full_Status();
-			}
-	}
+		 API_IO_Exp_Power_Control(EN_VLED,LOW);
+		 API_IO_Exp_Power_Control(EN_ANALOG,LOW);
+		 API_IO_Exp_Power_Control(EN_IR,LOW);
 
-	else
-	{
-        printf("\nPlease select the PID");
-        API_Disp_Quick_test_screen(DISP_QT_PLEASE_REGISTER_PID);
-	}
+		// Delay_ms(2000);
+	  	 API_Buzzer_Sound(SHORT_BEEP);
 
-	 API_IO_Exp_Power_Control(EN_VLED,LOW);
-	 API_IO_Exp_Power_Control(EN_ANALOG,LOW);
-	 API_IO_Exp_Power_Control(EN_IR,LOW);
+	  	 printf("\nTest completed.");
 
-	 Delay_ms(2000);
-  	 API_Buzzer_Sound(SHORT_BEEP);
 
-  	 printf("\nTest completed.");
-	return true;
+
+		return true;
 }
 
+bool Lead12_Data_Capture_new(uint32_t vlead)
+{
+	RECORD_OPS_STATUS flash_write_status;
+	uint32_t offfset = 0;
+	uint16_t raw_data_index;
+
+	printf("\n[%s:%d:%s]", __FILE__, __LINE__, __func__);
+
+	API_Update_Record_Header(ECG_12_LEAD,&record_header);
+	offfset = REC_HEADER_LEN;
+
+	Select_Vlead(vlead);
+
+	API_IO_Exp1_P1_write_pin(DC_LEAD_OFF_V,HIGH);
+	API_Disp_Lead_Count(6+vlead);
+
+	MemSet(ECG_Lead1_buff,0,sizeof(ECG_Lead1_buff)); // In this block making use of ECG_Lead1_buff to capture I lead data.
+	MemSet(ECG_Lead2_buff,0,sizeof(ECG_Lead2_buff)); // In this block making use of ECG_Lead2_buff to capture II lead data.
+	MemSet(ECG_Lead3_buff,0,sizeof(ECG_Lead3_buff)); // In this block making use of ECG_Lead3_buff to capture V lead data.
+
+	if( API_ECG_Reginit_12Lead_new() == ECG_NO_ERROR)
+	{
+		API_ECG_Start_Conversion();
+		printf("\n Lead I Lead II V-%ld ECG Data capturing", vlead+1);
+		API_Disp_Exit_Text();
+		for(raw_data_index=0; raw_data_index<(ECG_IN_SECONDS*SET_ODR); raw_data_index++)
+		{
+			if(IsUSB_Charger_Connected() || API_Push_Btn_Get_Buttton_Press())
+			{
+				return  0;
+			}
+			API_ECG_Capture_Samples_3Lead(ECG_Lead1_buff + raw_data_index, ECG_Lead2_buff+raw_data_index, ECG_Lead3_buff+raw_data_index);
+
+		}
+		API_Clear_Display(DISP_BOTTOM_SEC,BLUE);
+		API_ECG_Stop_Conversion();
+	}
+	else
+	{
+		printf("\n12 Lead ECG Register Init Failed");
+	}
+
+if(!vlead)
+{
+	printf("\n Lead- I ECG Data capturing");
+	for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
+	{
+	   printf("\n%f",ECG_Lead1_buff[i]);
+	}
+
+	printf("\n Lead- II ECG Data capturing");
+	for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
+	{
+	   printf("\n%f",ECG_Lead2_buff[i]);
+	}
+}
+
+
+	printf("\n V-%ld ECG Data capturing", vlead+1);
+	for(int i=0;i<(ECG_IN_SECONDS*SET_ODR);i++)
+	{
+	   printf("\n%f",ECG_Lead3_buff[i]);
+	}
+
+	return true;
+}
 
 bool Lead12_Data_Capture(void)
 {
@@ -112,11 +234,11 @@ bool Lead12_Data_Capture(void)
 	MemCpy(BT_flash_buffer,&record_header,REC_HEADER_LEN);
 	offfset = REC_HEADER_LEN;
 
-	Select_Vlead(LEAD6);
+	Select_Vlead(VGND);
 
 	API_Disp_Lead_Count(6);
 
-	Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,true);
+	Capture_PPG_ECG_Data(CAPTURE_ECG_L1_AND_L2,true); // This is capturing L1& L2, i.e CH1(24bit) CH2(24bit)
 
 	if( API_ECG_Reginit_12Lead() != ECG_NO_ERROR)
 		{
@@ -176,50 +298,50 @@ void Select_Vlead(VLEAD_TYPE_t vlead_type)
    switch(vlead_type)
 	 {
 
-	   case LEAD6:
-	   {
-			API_IO_Exp2_P0_write_pin(ECG12_A0, LOW);
-			API_IO_Exp2_P0_write_pin(ECG12_A1, LOW);
-			API_IO_Exp2_P0_write_pin(ECG12_A2, LOW);
+		   case V1:
+		   {
+				API_IO_Exp2_P0_write_pin(ECG12_A0, LOW);
+				API_IO_Exp2_P0_write_pin(ECG12_A1, LOW);
+				API_IO_Exp2_P0_write_pin(ECG12_A2, LOW);
 
-			break;
-	   }
-		   case VLEAD1:
+				break;
+		   }
+		   case V2:
 		   {
 			   API_IO_Exp2_P0_write_pin(ECG12_A0, HIGH);
 			   API_IO_Exp2_P0_write_pin(ECG12_A1, LOW);
 			   API_IO_Exp2_P0_write_pin(ECG12_A2, LOW);
 			   break;
 		   }
-		   case VLEAD2:
+		   case V3:
 		   {
 			   API_IO_Exp2_P0_write_pin(ECG12_A0, LOW);
 			   API_IO_Exp2_P0_write_pin(ECG12_A1, HIGH);
 			   API_IO_Exp2_P0_write_pin(ECG12_A2, LOW);
 			   break;
 		   }
-		   case VLEAD3:
+		   case V4:
 		   {
 				API_IO_Exp2_P0_write_pin(ECG12_A0, HIGH);
 				API_IO_Exp2_P0_write_pin(ECG12_A1, HIGH);
 				API_IO_Exp2_P0_write_pin(ECG12_A2, LOW);
 			   break;
 		   }
-		   case VLEAD4:
+		   case V5:
 		   {
 				API_IO_Exp2_P0_write_pin(ECG12_A0, LOW);
 				API_IO_Exp2_P0_write_pin(ECG12_A1, LOW);
 				API_IO_Exp2_P0_write_pin(ECG12_A2, HIGH);
 			   break;
 		   }
-		   case VLEAD5:
+		   case V6:
 		   {
 				API_IO_Exp2_P0_write_pin(ECG12_A0, HIGH);
 				API_IO_Exp2_P0_write_pin(ECG12_A1, LOW);
 				API_IO_Exp2_P0_write_pin(ECG12_A2, HIGH);
 			   break;
 		   }
-		   case VLEAD6:
+		   case VGND:
 		   {
 				API_IO_Exp2_P0_write_pin(ECG12_A0, LOW);
 				API_IO_Exp2_P0_write_pin(ECG12_A1, HIGH);

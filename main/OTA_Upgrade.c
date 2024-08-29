@@ -15,6 +15,7 @@
 #include "driver/gpio.h"
 #include "errno.h"
 #include "esp_log.h"
+#include "bluetooth.h"
 
 #include "OTA_Upgrade.h"
 #include "API_utility.h"
@@ -25,6 +26,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include "API_timer.h"
+
+extern bool ota_flag;
 
 #define BUFFSIZE 			1024
 #define HASH_LEN 			32 /* SHA-256 digest length */
@@ -38,7 +41,7 @@ static uint8_t ota_write_data[BUFFSIZE + 1] = { 0 };
 
 static FIRMWARE_UPGRADE_STATE_t Upgrade_state;
 
-static void print_sha256 (const uint8_t *image_hash, const char *label)
+void print_sha256 (const uint8_t *image_hash, const char *label)
 {
     char hash_print[HASH_LEN * 2 + 1];
     hash_print[HASH_LEN * 2] = 0;
@@ -48,7 +51,7 @@ static void print_sha256 (const uint8_t *image_hash, const char *label)
     ESP_LOGI(TAG, "%s: %s", label, hash_print);
 }
 
-static bool ota_firmware_upgrade(void)
+static char ota_firmware_upgrade(void)
 {
 	int timer;
 	int data_read;
@@ -84,7 +87,17 @@ static bool ota_firmware_upgrade(void)
 	timer = TIME_OUT_DELAY * 2;
     while (1)
     {
-		int data_read = read_firmware_data (ota_write_data, BUFFSIZE);
+	    data_read = read_firmware_data (ota_write_data, BUFFSIZE);
+
+		if(data_read == 2)
+		{
+			return 2;
+		}
+
+		if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
+		{
+		      return FALSE;
+		}
 
         if (data_read > 0) {
             if (image_header_was_checked == false) {
@@ -122,6 +135,7 @@ static bool ota_firmware_upgrade(void)
 
 
 
+
     ESP_LOGI(TAG, "Total Write binary data length: %d", binary_file_length);
     if (FW_complete_data_received != true) {
         ESP_LOGE(TAG, "Error in receiving complete file");
@@ -151,7 +165,7 @@ static bool ota_firmware_upgrade(void)
     return true;
 }
 
-static bool diagnostic(void)
+bool diagnostic(void)
 {
     gpio_config_t io_conf;
     io_conf.intr_type    = GPIO_INTR_DISABLE;
@@ -171,9 +185,9 @@ static bool diagnostic(void)
 	  return 0;
 }
 
-bool start_firmware_Upgrade(void)
+char start_firmware_Upgrade(void)
 {
-	bool ret;
+	char ret;
 
     ESP_LOGI(TAG, "OTA example app_main start");
 
@@ -231,20 +245,35 @@ bool start_firmware_Upgrade(void)
 
 bool Firmware_upgrade (void)
 {
+	char ret;
 	API_DISP_Display_Screen(DISP_DEVICE_UPGRADING);
-
-	if(start_firmware_Upgrade())
+	Delay_ms(5000);
+	API_display_backlight_off();
+    ret = start_firmware_Upgrade();
+    if(ret == 2) // Paired condition
+    {
+        return 0;
+    }
+    else if(ret == true)
 	{
+		API_display_backlight_on();
 		API_DISP_Display_Screen(DISP_DEVICE_UPGRADED);
+		ota_flag = 0;
+		API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
+		Delay_ms(5000);
+		esp_restart();
 	}
-
 	else
 	{
+		API_display_backlight_on();
 		API_DISP_Display_Screen(DISP_DEVICE_UPGRADATION_FAIL);
+		ota_flag = 0;
+		API_IO_Exp1_P1_write_pin(NOTIFICATION_LED,HIGH);
+		Delay_ms(5000);
+		esp_restart();
 	}
 
-	Delay_ms(5000);
-	esp_restart();
+
 
 	return true;
 }
