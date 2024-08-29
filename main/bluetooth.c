@@ -147,6 +147,7 @@ bool BT_process_requests(void)
 		bt_total_received_bytes = API_BLE_Receive(bt_rx_buff);
 		printf("\nData received from BLE");
 	}
+
 	if (BUF_EMPTY == bt_total_received_bytes)
 	{
 		bt_send_ack_or_nack_response(NACK_INVALID_PACKET);

@@ -50,7 +50,7 @@ uint8_t qv_flag,mv_flag;
 bool BLE_DS;
 extern bool ota_data_avlbl;
 extern uint32_t FW_data_len;
-#define test 0
+#define test 1//PID screen
 
 
 
@@ -271,7 +271,7 @@ TaskHandle_t myTaskHandle = NULL;
 								//ota_flag = 0;
 								Is_Test_In_Progress = false;
 								break;
-							}
+							  }
 
 							case MULTI_VITALS:{
 								Is_Test_In_Progress = true;
