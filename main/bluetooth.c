@@ -802,6 +802,13 @@ void Load_Raw_Data_To_Buffer(uint8_t command)
  *	\param[in]	void
  *	\return		void
  */
+
+
+
+
+
+
+
 static void send_record_snapsot_response(void)
 {
 	REC_SNAP_RES record_snapshot_res;
@@ -883,7 +890,7 @@ void bt_firmware_request_response(void)
 	frame.length = FW_VER_SIZE + EOS_SIZE + CHKSUM_SIZE;
 	frame.data[0] = 1; // major fw version
 	frame.data[1] = 0; // minor fw version
-	frame.data[2] = 0; // bug fix
+	frame.data[2] = 4; // bug fix
 	//MemCpy(&frame.data, FIRMWARE_VERSION, sizeof(FIRMWARE_VERSION));
 	frame.eos = EOS;
 	frame.chksum = compute_crc_16((uint8_t*)&frame, sizeof(frame)-CHKSUM_SIZE);

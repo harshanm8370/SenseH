@@ -297,75 +297,30 @@ bool LOD_N =0;
 	gpio_set_level(ECG_CSn_VCS, 1);
 
 	// API_IO_Exp_Power_Control(EN_VLED,HIGH);
-	 API_IO_Exp_Power_Control(EN_ANALOG,HIGH);
+	 API_IO_Exp_Power_Control(EN_ANALOG,HIGH); // enabling ADS1293 power supply
 	// API_IO_Exp_Power_Control(EN_IR,HIGH);
 
 
-	if((Selected_PID_type == VALID_PID) || (Selected_PID_type == GUEST_PID))
+	if((Selected_PID_type == VALID_PID) || (Selected_PID_type == GUEST_PID)) //chcking PID is VALID
 	{
-			if(API_Flash_Org_Check_For_Memory_Free())
+			if(API_Flash_Org_Check_For_Memory_Free()) //checking for flash space
 			{
 
-				//API_Buzzer_Sound(SHORT_BEEP);
 
-//				for(int i=0;i<91;i++)
-//				{
-//					Store_QuickTest1_Data_To_Flash();
-//				}
-				API_Disp_Quick_Test_Icon();
+				API_Disp_Quick_Test_Icon(); // displaying SPO2,BP & ECG symbol
 
-				API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER);
+				API_Disp_Quick_test_screen(DISP_QT_PLACE_FINGER); //prompting user to place finger
 
 				printf("\nEnteriing into ECG init");
 
-				Enable_Power_Supply();
-			//	Select_Vlead(LEAD6);// Enable only 6 lead
-				API_IO_Exp_Power_Control(EN_IR,LOW);
-				API_ECG_Chip_Reset();
-
-				/*	if(API_ECG_Init())
-				{
-
-					if(API_ECG_Lead_OFF_Detect(LEAD2))
-					{
-						API_Disp_Display_Lead_Connection_Status((uint8_t)LEAD2);
-
-						 API_Disp_Quick_test_screen(DISP_QT_TEST_IN_PROGRESS);
-						 API_Disp_Quick_Test_Icon();
-
-						bool status = QUICK_Test1();
-
-						if(status == false)
-						{
-
-						}
-
-						Disable_Power_Supply();
-
-						return false;
-					}
-					API_ECG_Chip_Reset();
-				}*/
-				/*  uint8_t ret;
-				float temp;
-				 while(1)
-				 {
-				       Delay_ms(100);
-					   writeRegister8(MAX30101_ADDR,0x21,0x01);
-
-					   ret = (readPartID(0x20) & 0x0F);
-					   temp = ret * 0.0625;
-				       temp = temp + readPartID(0x1F);
-				       printf("\n %f",temp);
-
-				}*/
-
-				//uint8_t ret;
-
-				//printf("\n\t\t\t%d",gpio_get_level(25));
+				Enable_Power_Supply(); // enabling power supply for all sensors
 
 
-				 if(API_MAX30101_Setup())
+				API_ECG_Chip_Reset(); //reseting ECG chip(ADS123)
+
+
+
+				 if(API_MAX30101_Setup()) //initializing PPG sensor (MAX30102)
 				 {
 					if((API_ECG_Init()))
 						{
@@ -2339,7 +2294,7 @@ void Enable_Power_Supply(void)
 {
 	//API_IO_Exp_Power_Control(EN_VLED,HIGH);
 	API_IO_Exp_Power_Control(EN_ANALOG,HIGH);
-	API_IO_Exp_Power_Control(EN_IR,HIGH);
+	//API_IO_Exp_Power_Control(EN_IR,HIGH);
 	Delay_ms(500);
 }
 

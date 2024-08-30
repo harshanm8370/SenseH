@@ -69,82 +69,30 @@ TaskHandle_t myTaskHandle = NULL;
 	printf("\nSystem turning on..");
 
 
-	//xTaskCreate(myTask, "My Task", configMINIMAL_STACK_SIZE, NULL, 5, NULL);
-	// Start the scheduler
-   // vTaskStartScheduler();
+    PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[ECG_CSn_VCS], PIN_FUNC_GPIO); //Ecg chip select initialising as GPIO
 
-	/*API_IO_Exp_PowerOnReset_Configuration();
+    gpio_set_direction(ECG_CSn_VCS, GPIO_MODE_OUTPUT);  //setting csn as output pin
 
-	API_Battery_monitor_Init();
-
-	if(IsUSB_Charger_Connected())
-	{
-        if(API_ADC_Read_Battery_Voltage() < (FUEL_GUAGE_MIN_VOLTAGE+0.4))
-        {
-          printf("\nLow Battery Voltage.. Device Shutting Down.");
-          EnterSleepMode(SYSTEM_DEEP_SLEEP);
-        }
-	}*/
-
-    PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[ECG_CSn_VCS], PIN_FUNC_GPIO);
-
-    gpio_set_direction(ECG_CSn_VCS, GPIO_MODE_OUTPUT);
-    gpio_set_direction(MAX30101_DRDY_INTR_PIN,GPIO_MODE_INPUT);
-    gpio_set_pull_mode(MAX30101_DRDY_INTR_PIN,GPIO_PULLUP_ONLY);
-    gpio_set_level(ECG_CSn_VCS, 1);
+    gpio_set_level(ECG_CSn_VCS, 1); // initializing as high
 
 
-	API_TIMER_Run_1MS_Timer();
+	API_TIMER_Run_1MS_Timer(); //timer init
 
-	API_IO_Exp_init();
-	//API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
-    //API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
+	API_IO_Exp_init(); //IOEXP init
 
-    Interfaces_init();
+    Interfaces_init(); // max30102,flash,push button,spi,i2c,battery monitor inits
     API_IO_Exp1_P0_write_pin(HIBERNATE,HIGH);//it should be high to  initialize the max30102
-    //API_RUN_TEMPERATURE_TEST();
 
-	if(API_Flash_Initialize_Data_pointers() == RECORDS_UPDATE_FAILED)
+	if(API_Flash_Initialize_Data_pointers() == RECORDS_UPDATE_FAILED) // initialising the pointers
 	   {
 		   printf("\n Fail: API_Flash_Initialize_Data_pointers");
 	   }
 
-		/*** Testing code, need to be removed during the Release */
 
-		/**************************************************************/
-	//	TestFlashStorage();
-
-	//	while(1){}
-		/**************************************************************/
+	  API_DISP_SenseSemi_Logo(STATIC_IMAGE); //displaing SenseH LOGO while bootup
+	  API_DISP_Firmware_Version(); //function display current FW version
 
 
-	  API_DISP_SenseSemi_Logo(STATIC_IMAGE);
-	  API_DISP_Firmware_Version();
-
-//	/* Delay Provided for the User to read the Firmware version */
-//	Delay_ms(3000);
-//	POR_Init();
-//	/** Testing */
-//	/***************************************************/
-
-//	API_TCP_Server();
-//	Delay_ms(10000);
-//	disconnect_wifi();
-//	Delay_ms(100000);
-//API_TCP_Server();
-//while(1)
-//{
-//	//API_TCP_Server();
-//
-//
-//	//Delay_ms(30000);
-//
-//   // disconnect_wifi();
-//
-//	//Delay_ms(30000);
-//
-//	//wifi_restart();
-//}
 #if test
 	Selected_PID_type = VALID_PID;
 #endif
@@ -153,47 +101,38 @@ TaskHandle_t myTaskHandle = NULL;
 		char datetime[18]; // Assuming you want to store the result in a char array
 	    const char *customFormat = "%Y-%m-%d %H:%M:%S"; // Example date-time format
 
-	      API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW);
+	      API_IO_Exp1_P0_write_pin(EFM_DISP_EN2,LOW); //EN1 &EN2 represents the display brightness for more refer the data sheet
 	      API_IO_Exp1_P1_write_pin(EFM_DISP_EN1,HIGH);
-	  //  uint16_t result[5] ={0};
 
-	    //API_Disp_Quick_Test_Result(result);
-	    //Delay_ms(15000);
-	     /* API_IO_Exp_Power_Control(EN_VLED,LOW);
-	      while(1)
-	      {
-	      printf("\nDevice ID = 0x%2X.\n",readPartID(0xFF));
-	      }*/
+    	  API_Check_USB_Charger_Connection_Display_Notification(); //checking charger is connected or not
 
-    	  API_Check_USB_Charger_Connection_Display_Notification();
 
 	while(1)
 	{
-		//ota_flag = 1;
 		if(flash_data.sys_mode == DEVICE_ACTIVE_MODE)
 		{
-			    if(Detect_low_battery_display_notification()==false)
+			    if(Detect_low_battery_display_notification()==false) // check and update battery level
 				{
 #if test
 			    	 state = VIEW_SCREEN;
 #else
-			    	 state = API_Disp_Select_PID_Screen();
+			    	 state = API_Disp_Select_PID_Screen(); //PID screen it will on till user sents PID through APK
 			    	 Device_stat = 1;
 #endif
 			    	    if(state == VIEW_SCREEN)
 			    	    {
-			    	    	state = API_Display_View_Screen();
+			    	    	state = API_Display_View_Screen(); // Test screen will be there after PID is pushed into SenseH
 			    	    	//ota_flag = 1;
 			    	    	//API_RTC_Update_Date_Time(8, 8, 2023, 16, 24, 17);
-							API_RTC_Get_Date_Time(datetime, customFormat);
+							API_RTC_Get_Date_Time(datetime, customFormat); //update date and time received from APK
 							printf("Formatted Date and Time: %s\n", datetime);
 			    	    }
 
 
 
-						if(state == DATA_SYNC)
+						if(state == DATA_SYNC)  // when data sync is in progress state will be returning DATA_SYNC
 						{
-							HandleDataSync();
+							HandleDataSync();  //During data sync this code will be running. It will turn-off display for power saving blink LED to notify the user data sync in progress
 							if(BLE_DS)
 							{
 								Selected_PID_type = 0;
@@ -213,19 +152,14 @@ TaskHandle_t myTaskHandle = NULL;
 
 						if(state)
 						{
-							API_TIMER_Kill_Timer(USER_INACTIVE_TIMEOUT);
+							API_TIMER_Kill_Timer(USER_INACTIVE_TIMEOUT); //stoping the timer since there is user operation
 						}
-				/*	     if(Is_Device_Paired == BT_DISCONNECTED) // Paired condition
-						 {
-								Selected_PID_type = PID_NOT_SELECTED;
-						 }*/
 
 						switch(state)
 						{
 							case QUICK_VITALS:{
-                                qv_flag = 11;
+                                qv_flag = BP_FLAG; //Setting flag for BP(ECGl1&PPG IR)
                                 Device_stat = 2;
-							//	Is_Test_In_Progress = true;
 #if !test
 								if(Is_Device_Paired == DC) // Paired condition
 								{
@@ -233,7 +167,7 @@ TaskHandle_t myTaskHandle = NULL;
 								   Selected_PID_type = PID_NOT_SELECTED;
 								}
 #endif
-								Run_Quick_Vital();
+								Run_Quick_Vital(); // getting into Test function
 								Device_stat  = 3;
 #if !test
 								if(Is_Device_Paired == DC) // Paired condition
@@ -248,7 +182,7 @@ TaskHandle_t myTaskHandle = NULL;
 							}
 
 							case ECG6LEAD:{
-								qv_flag = 12;
+								qv_flag = ECG6_FLAG;
 								Device_stat = 2;
 								//	Is_Test_In_Progress = true;
 #if !test
@@ -258,7 +192,7 @@ TaskHandle_t myTaskHandle = NULL;
 									Selected_PID_type = PID_NOT_SELECTED;
 								}
 #endif
-								Run_Quick_Vital();
+								Run_Quick_Vital();// getting into Test function
 								FW_data_len =0;
 								Device_stat  = 3;
 #if !test
@@ -284,7 +218,7 @@ TaskHandle_t myTaskHandle = NULL;
 									Selected_PID_type = PID_NOT_SELECTED;
 							    }
 #endif
-								Run_Multi_Vital();
+								Run_Multi_Vital(); //multivital test part
 								Device_stat = 3;
 #if !test
 								if(Is_Device_Paired == DC) // Paired condition

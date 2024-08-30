@@ -2583,6 +2583,7 @@ uint8_t left_offset = 0;
   			Is_Device_Paired = DEFAULT;// to avoid Redisplaying the same thing again
   		}
 
+
   		else if(Is_Device_Paired == BT_DISCONNECTED) // disconnected condition
 		{
 			API_Disp_BT_Icon(WHITE);
@@ -2591,6 +2592,12 @@ uint8_t left_offset = 0;
 			ret_msg = NO_TEST;
 			break;
 		}
+  		else if(Is_Device_Paired == DC)
+  		{
+  			Selected_PID_type = PID_NOT_SELECTED;
+  			ret_msg = NO_TEST;
+  			break;
+  		}
 
   		//printf("\nbtn_press=%d\n",btn_press);
   	}

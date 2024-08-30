@@ -253,7 +253,9 @@ typedef enum{
 	TEST_EXIT,
 	DATA_SYNC,
 	VIEW_SCREEN,
-	OTA
+	OTA,
+	BP_FLAG =11,
+	ECG6_FLAG,
 }SELECTED_TEST_t;
 
 
